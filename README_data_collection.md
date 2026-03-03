@@ -1,4 +1,4 @@
-# GIS & Data Collection Module
+# Data Collection & Geo Spatial Mapping Module
 
 The GIS (Geographic Information System) module allows users to track and visualize infectious disease cases on an interactive map.
 

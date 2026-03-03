@@ -4,7 +4,7 @@ EpiSense is a comprehensive web-based platform designed for infectious disease s
 
 ## 🚀 Key Modules
 
-- **GIS & Data Collection**: Interactive mapping for real-time disease case tracking.
+- **Data Collection & Geo Spatial Mapping**: Interactive mapping for real-time disease case tracking.
 - **Data Visualization**: Advanced charts and spatial analysis of epidemiological data.
 - **Statistical Tests**: Comprehensive suite of parametric and non-parametric tests.
 - **Mathematical Modeling**: Simulation of SIR, SEIR, SIS, and Network models.
