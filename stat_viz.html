@@ -186,6 +186,38 @@
             padding-right: 1.5rem !important;
         }
 
+        .btn-generate {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .btn-generate:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
 
         @media (max-width: 768px) {
             .module-container {
@@ -193,7 +225,12 @@
             }
 
             .viz-card {
+                padding: 0.8rem;
+            }
+
+            .controls-panel {
                 padding: 1.2rem;
+                gap: 1.2rem;
             }
 
             .tabs {
@@ -279,7 +316,7 @@
             Back to Dashboard
         </a>
 
-        <header style="text-align: left; margin-bottom: 2rem;">
+        <header style="text-align: center; margin-bottom: 2.5rem;">
             <h1
                 style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
                 Stat Visualization</h1>
@@ -408,7 +445,7 @@
                     <div class="stat-card"
                         style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); min-height: 100px; display: flex; align-items: center; justify-content: center;">
                         <div id="formula-display"
-                            style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 1.2rem; color: #fff; width: 100%;">
+                            style="font-style: italic; font-size: 1.2rem; color: #fff; width: 100%;">
                             <!-- Formulas injected by JS -->
                         </div>
 
@@ -460,21 +497,27 @@
                         Mean and Skewness react, while the Median stays stubborn!
                     </div>
 
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                        <button class="btn-generate btn-outline btn-pill"
-                            style="flex: 1; padding: 0.6rem; min-width: 120px;" onclick="applySkewExample('base')">
-                            <i class="fas fa-users"></i> Base (₹10k)
-                        </button>
-                        <button class="btn-generate btn-pill"
-                            style="background: linear-gradient(135deg, #60a5fa, #3b82f6); border: none; flex: 1; padding: 0.6rem; min-width: 120px;"
-                            onclick="applySkewExample('left')">
-                            <i class="fas fa-arrow-left"></i> Add Outlier (₹100)
-                        </button>
-                        <button class="btn-generate btn-pill"
-                            style="background: linear-gradient(135deg, #f472b6, #db2777); border: none; flex: 1; padding: 0.6rem; min-width: 120px;"
-                            onclick="applySkewExample('right')">
-                            <i class="fas fa-arrow-right"></i> Add Outlier (₹1L)
-                        </button>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                        <!-- Line 1: Base Button -->
+                        <div style="display: flex; width: 100%;">
+                            <button class="btn-generate btn-outline btn-pill" style="flex: 1; padding: 0.6rem;"
+                                onclick="applySkewExample('base')">
+                                <i class="fas fa-users"></i> Base (₹10k)
+                            </button>
+                        </div>
+                        <!-- Line 2: Outlier Buttons -->
+                        <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+                            <button class="btn-generate btn-pill"
+                                style="background: linear-gradient(135deg, #60a5fa, #3b82f6); border: none; flex: 1; padding: 0.6rem; min-width: 140px;"
+                                onclick="applySkewExample('left')">
+                                <i class="fas fa-arrow-left"></i> Add Outlier (₹100)
+                            </button>
+                            <button class="btn-generate btn-pill"
+                                style="background: linear-gradient(135deg, #f472b6, #db2777); border: none; flex: 1; padding: 0.6rem; min-width: 140px;"
+                                onclick="applySkewExample('right')">
+                                <i class="fas fa-arrow-right"></i> Add Outlier (₹1L)
+                            </button>
+                        </div>
                     </div>
 
                     <div id="example-dataset-display"
@@ -579,8 +622,10 @@
                 </p>
                 <input type="file" id="dataset-upload" accept=".csv, .txt" style="display: none;"
                     onchange="handleDatasetUpload(event)">
-                <button class="btn-generate" onclick="document.getElementById('dataset-upload').click()">
-                    <i class="fas fa-upload"></i> Upload Dataset
+                <button class="btn-generate btn-pill"
+                    style="background: linear-gradient(135deg, #0284c7, #0ea5e9); border: none; padding: 0.8rem 2.5rem; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); color: #fff;"
+                    onclick="document.getElementById('dataset-upload').click()">
+                    <i class="fas fa-file-import"></i> Upload Your Dataset
                 </button>
                 <div id="dataset-results"
                     style="margin-top: 1.5rem; display: none; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border); width: 100%; max-width: 600px; text-align: left;">
@@ -613,106 +658,140 @@
 
 
     <div id="z-viz" class="viz-card" style="display: none;">
-        <div class="viz-centered">
-            <!-- Morphing Section -->
-            <div
-                style="width: 100%; margin-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2rem; display: flex; flex-direction: column; align-items: center;">
-                <div class="controls-panel">
-                    <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;"><i class="fas fa-magic"></i> 1.
-                        Normal Distribution Morphing</h3>
-                    <p class="subtitle"
-                        style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #cbd5e1; line-height: 1.6;">
-                        <strong>What is Morphing?</strong> Imagine comparing heights of people from two different
-                        countries.
-                        One measures in <em>cm</em> (μ=170, σ=10) and the other in <em>inches</em> (μ=67, σ=4).
-                        To compare them fairly, we "morph" (standardize) both into <strong>Z-scores</strong>.
-                        Standardization follows two simple steps:
-                    </p>
-                    <ul
-                        style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 2rem; padding-left: 1.2rem; line-height: 1.6;">
-                        <li><strong style="color: var(--primary-blue);">1. Shift (Centering):</strong> Subtract the Mean
-                            (μ) from every value. This physically slides the peak to <strong>0</strong>.</li>
-                        <li><strong style="color: var(--primary-pink);">2. Scale (Standardizing):</strong> Divide by the
-                            SD (σ). This squashes or stretches the curve so the width becomes exactly
-                            <strong>1</strong>.
-                        </li>
-                    </ul>
-                    <p
-                        style="color: #94a3b8; font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; font-style: italic;">
-                        Goal: Match your distribution to the <strong>dashed white baseline</strong> (μ=0, σ=1).
-                    </p>
-
-                    <div class="control-group">
-                        <label>Initial Mean: <span id="morph-mean-val">50</span></label>
-                        <input type="range" id="morph-mean-slider" min="-10" max="100" value="50" step="1"
-                            oninput="throttledUpdateMorph()">
-                    </div>
-                    <div class="control-group" style="margin-top: 1rem;">
-                        <label>Initial SD: <span id="morph-sd-val">15</span></label>
-                        <input type="range" id="morph-sd-slider" min="1" max="30" value="15" step="1"
-                            oninput="throttledUpdateMorph()">
-                    </div>
-                    <div class="control-group"
-                        style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <label style="color: var(--primary-blue); font-weight: 800; margin: 0;">Morphing Progress
-                                (%)</label>
-                            <button id="morph-animate-btn" class="btn-generate btn-pill"
-                                style="padding: 0.4rem 1rem; font-size: 0.8rem; background: linear-gradient(135deg, #00e5ff, #007bff); border: none; min-width: 120px;"
-                                onclick="toggleMorphAnimation()">
-                                <i class="fas fa-play"></i> Auto-Animate
-                            </button>
-                        </div>
-                        <input type="range" id="morph-slider" min="0" max="100" value="0" step="1"
-                            oninput="throttledUpdateMorph()" style="margin-top: 0.5rem;">
-                        <div
-                            style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: monospace; font-size: 0.85rem;">
-                            <span style="color: #cbd5e1;">Target Mean: <span id="curr-mean"
-                                    style="color: #fff; font-weight: bold;">0.00</span></span>
-                            <span style="color: #cbd5e1;">Target SD: <span id="curr-sd"
-                                    style="color: #fff; font-weight: bold;">1.00</span></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="chart-wrapper" style="max-width: 800px; margin-top: 2rem;">
-                    <canvas id="morphChart"></canvas>
+        <!-- Hero Section -->
+        <div
+            style="text-align: center; margin-bottom: 2.5rem; width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <div style="text-align: center; margin-bottom: 1.5rem; width: 100%; max-width: 800px;">
+                <h2 style="color: #fff; font-size: 2.2rem; margin-bottom: 1rem;">
+                    Standard Normal <span style="color: var(--primary-pink);">(Z-Score)</span>
+                </h2>
+                <p style="color: #94a3b8; font-size: 1.1rem; max-width: 700px; margin: 0 auto;">
+                    The ultimate statistical benchmark. We "morph" any complex data into a simplified
+                    <strong>Mean=0, SD=1</strong> scale for fair comparison.
+                </p>
+                <div style="margin-top: 1.2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn-generate btn-pill" onclick="startMorphAnimation()"
+                        style="background: linear-gradient(135deg, var(--primary-pink), #db2777); border: none; padding: 0.8rem 1.8rem;">
+                        <i class="fas fa-play-circle"></i> Start Auto-Morph Animation
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Z-Table Section -->
-            <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-                <div class="controls-panel">
-                    <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;">2. Standard Normal (Z-Table)</h3>
-                    <div class="control-group">
-                        <label>Show Areas</label>
-                        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
-                            <label
-                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400; text-transform: none;">
-                                <input type="checkbox" id="show-1sd" onchange="updateZChart()"> ±1σ (68.2%)
-                            </label>
-                            <label
-                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400; text-transform: none;">
-                                <input type="checkbox" id="show-2sd" onchange="updateZChart()"> ±2σ (95.4%)
-                            </label>
-                            <label
-                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400; text-transform: none;">
-                                <input type="checkbox" id="show-3sd" onchange="updateZChart()"> ±3σ (99.7%)
-                            </label>
-                        </div>
+        <!-- Section 1: Morphing -->
+        <h3
+            style="color: var(--primary-pink); margin-bottom: 1.5rem; text-align: left; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+            <i class="fas fa-magic"></i> 1. Normal Distribution Morphing
+        </h3>
+        <div class="viz-layout" style="margin-bottom: 4rem; align-items: stretch;">
+            <!-- Left Column: Controls -->
+            <div class="controls-panel" style="margin-bottom: 0;">
+                <div
+                    style="background: rgba(255,255,255,0.03); border-left: 4px solid var(--primary-pink); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h4 style="color: #fff; margin-bottom: 0.8rem;">The "Height" Analogy</h4>
+                    <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; margin: 0;">
+                        Comparing heights in <strong>cm</strong> (μ=170) vs <strong>inches</strong> (μ=67) is hard.
+                        Standardization "morphs" both into <strong>Z-scores</strong> so you can compare them
+                        apples-to-apples.
+                    </p>
+                </div>
+
+                <h3 style="color: var(--primary-blue); margin-bottom: 0.8rem;"><i class="fas fa-calculator"></i> Manual
+                    Steps</h3>
+                <ul
+                    style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 1.5rem; padding-left: 1.2rem; line-height: 1.8;">
+                    <li><strong style="color: #00e5ff;">Step A: Shift</strong> — Subtract the Mean (μ).</li>
+                    <li><strong style="color: #f472b6;">Step B: Scale</strong> — Divide by SD (σ).</li>
+                </ul>
+
+                <div class="control-group">
+                    <label>Initial Mean: <span id="morph-mean-val">50</span></label>
+                    <input type="range" id="morph-mean-slider" min="-10" max="100" value="50" step="1"
+                        oninput="throttledUpdateMorph()">
+                </div>
+                <div class="control-group" style="margin-top: 1rem;">
+                    <label>Initial SD: <span id="morph-sd-val">15</span></label>
+                    <input type="range" id="morph-sd-slider" min="1" max="30" value="15" step="1"
+                        oninput="throttledUpdateMorph()">
+                </div>
+                <!-- Morphing Progress -->
+                <div class="control-group"
+                    style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 0.8rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label style="color: var(--primary-blue); font-weight: 800; margin: 0;">Progress (%)</label>
+                        <button id="morph-animate-btn" class="btn-generate btn-pill"
+                            style="padding: 0.4rem 1rem; font-size: 0.8rem; background: linear-gradient(135deg, #00e5ff, #007bff); border: none; min-width: 110px;"
+                            onclick="toggleMorphAnimation()">
+                            <i class="fas fa-play"></i> Auto-Animate
+                        </button>
                     </div>
-                    <div class="control-group">
-                        <label>Z-Score Value: <span id="z-val">0</span></label>
-                        <input type="range" id="z-slider" min="-4" max="4" value="0" step="0.1"
-                            oninput="throttledUpdateZ()">
-                    </div>
-                    <div class="stat-card" style="text-align: left;">
-                        <span class="stat-label">Z-Score Formula</span>
-                        <code style="color: var(--primary-pink); font-size: 1.1rem;">Z = (X - μ) / σ</code>
+                    <input type="range" id="morph-slider" min="0" max="100" value="0" step="1"
+                        oninput="throttledUpdateMorph()">
+                    <div
+                        style="display: flex; justify-content: space-between; font-family: monospace; font-size: 0.8rem;">
+                        <span style="color: #cbd5e1;">Target Mean: <span id="curr-mean"
+                                style="color: #fff; font-weight: bold;">0.00</span></span>
+                        <span style="color: #cbd5e1;">Target SD: <span id="curr-sd"
+                                style="color: #fff; font-weight: bold;">1.00</span></span>
                     </div>
                 </div>
-                <div class="chart-wrapper" style="max-width: 800px; margin-top: 2rem;">
-                    <canvas id="zChart"></canvas>
+            </div>
+            <!-- Right Column: Visual -->
+            <div class="chart-wrapper" style="margin-top: 0;">
+                <canvas id="morphChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Section 2: Z-Table -->
+        <h3
+            style="color: var(--primary-pink); margin-bottom: 1.5rem; text-align: left; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-top: 2rem;">
+            <i class="fas fa-table"></i> 2. Standard Normal (Z-Table)
+        </h3>
+        <div class="viz-layout" style="align-items: stretch;">
+            <!-- Left Column: Controls -->
+            <div class="controls-panel" style="margin-bottom: 0;">
+                <p style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 1.5rem; line-height: 1.6;">
+                    Once standardized, any value becomes a <strong>Z-score</strong>. This allows us to calculate
+                    probability (area under the curve) using a standard table.
+                </p>
+
+                <div class="stat-card"
+                    style="text-align: left; margin-bottom: 1.5rem; border-left: 4px solid var(--primary-pink); background: rgba(255,255,255,0.02);">
+                    <span class="stat-label">The Z-Score Formula</span>
+                    <code
+                        style="color: var(--primary-pink); font-size: 1.4rem; display: block; margin-top: 0.5rem;">Z = (X - μ) / σ</code>
+                    <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">Where X is raw value, μ is mean,
+                        σ is SD.</p>
                 </div>
+
+                <div class="control-group">
+                    <label>Show Areas</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.8rem;">
+                        <label
+                            style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+                            <input type="checkbox" id="show-1sd" onchange="updateZChart()"> ±1σ
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+                            <input type="checkbox" id="show-2sd" onchange="updateZChart()"> ±2σ
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+                            <input type="checkbox" id="show-3sd" onchange="updateZChart()"> ±3σ
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group" style="margin-top: 1.5rem;">
+                    <label>Z-Score Value: <span id="z-val"
+                            style="color: var(--primary-pink); font-weight: bold;">0</span></label>
+                    <input type="range" id="z-slider" min="-4" max="4" value="0" step="0.1"
+                        oninput="throttledUpdateZ()">
+                </div>
+            </div>
+            <!-- Right Column: Visual -->
+            <div class="chart-wrapper" style="margin-top: 0;">
+                <canvas id="zChart"></canvas>
             </div>
         </div>
     </div>
@@ -768,7 +847,8 @@
                         </div>
 
                         <div class="control-group" style="margin-top: 1rem;">
-                            <label style="font-size: 0.8rem; opacity: 0.8;">Confidence Intervals to Show:</label>
+                            <label style="font-size: 0.8rem; opacity: 0.8;">Confidence Intervals to
+                                Show:</label>
                             <div style="display: flex; gap: 10px; margin-top: 0.5rem;">
                                 <label
                                     style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem;">
@@ -823,11 +903,11 @@
 
             <div class="charts-grid-2">
                 <!-- Population Column -->
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div class="chart-wrapper" style="height: 320px;">
-                        <div
-                            style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 8px; font-size: 0.8rem; color: #fff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); z-index: 10;">
-                            Population Distribution</div>
+                <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                    <div
+                        style="align-self: center; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; color: #fff; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; letter-spacing: 0.5px;">
+                        Population Distribution</div>
+                    <div class="chart-wrapper" style="height: 320px; margin-top: 0;">
                         <canvas id="popChart"></canvas>
                     </div>
                     <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
@@ -843,11 +923,11 @@
                 </div>
 
                 <!-- CLT Column -->
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div class="chart-wrapper" style="height: 320px;">
-                        <div
-                            style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; color: #fff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(255,255,255,0.05); z-index: 10; font-weight: 600;">
-                            Sampling Distribution (Means)</div>
+                <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                    <div
+                        style="align-self: center; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; color: #fff; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; letter-spacing: 0.5px;">
+                        Sampling Distribution (Means)</div>
+                    <div class="chart-wrapper" style="height: 320px; margin-top: 0;">
                         <canvas id="cltChart"></canvas>
                     </div>
                     <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
@@ -878,11 +958,13 @@
 
 
             <!-- Confidence Interval Chart -->
-            <div class="chart-wrapper" style="height: 250px;">
+            <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.5rem;">
                 <div
-                    style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; color: #fff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(255,255,255,0.05); z-index: 10; font-weight: 600;">
+                    style="align-self: center; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; color: #fff; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; letter-spacing: 0.5px;">
                     Visual History: Confidence Intervals</div>
-                <canvas id="ciChart"></canvas>
+                <div class="chart-wrapper" style="height: 250px; margin-top: 0;">
+                    <canvas id="ciChart"></canvas>
+                </div>
             </div>
 
             <!-- Statistical Glossary Section -->
@@ -897,15 +979,17 @@
                         style="margin: 0; background: rgba(96, 165, 250, 0.05); border-top: 4px solid #60a5fa;">
                         <h5 style="color: #60a5fa; margin-bottom: 0.8rem; font-size: 1rem;"><i class="fas fa-users"></i>
                             Population Mean (μ)</h5>
-                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">The true
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">The
+                            true
                             average value of the entire population.</p>
-                        <div
-                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; ">
                             <div style="color: #60a5fa; font-weight: bold; margin-bottom: 4px;">Formula:</div>
                             <code style="font-size: 1.1rem; color: #fff;">μ = ΣX / N</code>
-                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current Pop):
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current
+                                Pop):
                             </div>
-                            <div id="ex-pop-mean" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                            <div id="ex-pop-mean" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting
+                                for
                                 generation...</div>
                         </div>
                     </div>
@@ -914,15 +998,17 @@
                         style="margin: 0; background: rgba(96, 165, 250, 0.05); border-top: 4px solid #60a5fa;">
                         <h5 style="color: #60a5fa; margin-bottom: 0.8rem; font-size: 1rem;"><i
                                 class="fas fa-arrows-alt-h"></i> Population SD (σ)</h5>
-                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">Average
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">
+                            Average
                             distance of population points from the mean.</p>
-                        <div
-                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; ">
                             <div style="color: #60a5fa; font-weight: bold; margin-bottom: 4px;">Formula:</div>
                             <code style="font-size: 1.1rem; color: #fff;">σ = √[ Σ(X-μ)² / N ]</code>
-                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current Pop):
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current
+                                Pop):
                             </div>
-                            <div id="ex-pop-sd" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                            <div id="ex-pop-sd" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting
+                                for
                                 generation...</div>
                         </div>
                     </div>
@@ -931,15 +1017,18 @@
                         style="margin: 0; background: rgba(233, 30, 99, 0.05); border-top: 4px solid var(--primary-pink);">
                         <h5 style="color: var(--primary-pink); margin-bottom: 0.8rem; font-size: 1rem;"><i
                                 class="fas fa-vial"></i> Sample Mean (x̄)</h5>
-                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">The average
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">The
+                            average
                             value calculated from a specific sample size (n).</p>
-                        <div
-                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
-                            <div style="color: var(--primary-pink); font-weight: bold; margin-bottom: 4px;">Formula:
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; ">
+                            <div style="color: var(--primary-pink); font-weight: bold; margin-bottom: 4px;">
+                                Formula:
                             </div>
                             <code style="font-size: 1.1rem; color: #fff;">x̄ = Σx / n</code>
-                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last Draw):</div>
-                            <div id="ex-sample-mean" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last
+                                Draw):</div>
+                            <div id="ex-sample-mean" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">
+                                Waiting for
                                 draw...</div>
                         </div>
                     </div>
@@ -948,15 +1037,18 @@
                         style="margin: 0; background: rgba(233, 30, 99, 0.05); border-top: 4px solid var(--primary-pink);">
                         <h5 style="color: var(--primary-pink); margin-bottom: 0.8rem; font-size: 1rem;"><i
                                 class="fas fa-microscope"></i> Sample SD (s)</h5>
-                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">Estimated
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">
+                            Estimated
                             spread of the population using (n-1) degrees of freedom.</p>
-                        <div
-                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
-                            <div style="color: var(--primary-pink); font-weight: bold; margin-bottom: 4px;">Formula:
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; ">
+                            <div style="color: var(--primary-pink); font-weight: bold; margin-bottom: 4px;">
+                                Formula:
                             </div>
                             <code style="font-size: 1.1rem; color: #fff;">s = √[ Σ(x-x̄)² / (n-1) ]</code>
-                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last Draw):</div>
-                            <div id="ex-sample-sd" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last
+                                Draw):</div>
+                            <div id="ex-sample-sd" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">
+                                Waiting for
                                 draw...</div>
                         </div>
                     </div>
@@ -965,15 +1057,18 @@
                         style="margin: 0; background: rgba(0, 230, 118, 0.05); border-top: 4px solid #00e676;">
                         <h5 style="color: #00e676; margin-bottom: 0.8rem; font-size: 1rem;"><i
                                 class="fas fa-chart-line"></i> Standard Error (SE)</h5>
-                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">Quantifies
-                            the precision of the sample mean. <strong>Used for calculating Confidence Intervals and
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">
+                            Quantifies
+                            the precision of the sample mean. <strong>Used for calculating Confidence Intervals
+                                and
                                 conducting Hypothesis Testing.</strong></p>
-                        <div
-                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; ">
                             <div style="color: #00e676; font-weight: bold; margin-bottom: 4px;">Formula:</div>
                             <code style="font-size: 1.1rem; color: #fff;">SE = σ / √n</code>
-                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current):</div>
-                            <div id="ex-se" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for draw...
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current):
+                            </div>
+                            <div id="ex-se" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                                draw...
                             </div>
                         </div>
                     </div>
@@ -983,16 +1078,20 @@
                         <h5 style="color: #f472b6; margin-bottom: 0.8rem; font-size: 1rem;"><i
                                 class="fas fa-bullseye"></i> <span id="ci-tile-title">95% Confidence Interval
                                 (CI)</span></h5>
-                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">A precision
-                            range that captures the true population mean with a specific level of certainty. <strong>The
-                                interval width is determined by the Standard Error (SE).</strong></p>
-                        <div
-                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">A
+                            precision
+                            range that captures the true population mean with a specific level of certainty.
+                            <strong>The
+                                interval width is determined by the Standard Error (SE).</strong>
+                        </p>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; ">
                             <div style="color: #f472b6; font-weight: bold; margin-bottom: 4px;">Formula:</div>
                             <code style="font-size: 1.1rem; color: #fff;"
                                 id="ci-tile-formula">CI = x̄ ± (1.96 * SE)</code>
-                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last Draw):</div>
-                            <div id="ex-ci" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for draw...
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last
+                                Draw):</div>
+                            <div id="ex-ci" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                                draw...
                             </div>
                         </div>
                     </div>
@@ -1002,13 +1101,15 @@
                         <h5 style="color: #a855f7; margin-bottom: 0.8rem; font-size: 1rem;"><i
                                 class="fas fa-graduation-cap"></i> CLT & Why it Matters?</h5>
                         <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">
-                            Sample means follow a <strong>Normal Distribution</strong> regardless of population shape,
+                            Sample means follow a <strong>Normal Distribution</strong> regardless of population
+                            shape,
                             if <i>n</i> is large enough.</p>
-                        <div
-                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
-                            <div style="color: #a855f7; font-weight: bold; margin-bottom: 4px;">Significance:</div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; ">
+                            <div style="color: #a855f7; font-weight: bold; margin-bottom: 4px;">Significance:
+                            </div>
                             <p style="font-size: 0.85rem; color: #fff; opacity: 0.9; margin: 0;">Allows making
-                                inferential predictions about a population without knowing its true distribution shape.
+                                inferential predictions about a population without knowing its true distribution
+                                shape.
                             </p>
                         </div>
                     </div>
@@ -1052,8 +1153,8 @@
     </div>
 
     <script>
-        let normalChart, zChart, morphChart, cltChart;
-        let skewnessChart, kurtosisChart;
+        let normalChart, zChart, morphChart, cltChart, popChart;
+        let skewnessChart, kurtosisChart, ciChart;
 
         function handleDatasetUpload(event) {
             const file = event.target.files[0];
@@ -1255,7 +1356,8 @@
         let ciHistory = []; // Stores { mean, lower, upper, hit }
         let currentPopMean = 0;
         let currentPopSD = 0;
-        let ciChart;
+        let popMin = 0;
+        let popMax = 100;
 
         function generatePopulation() {
             const min = parseInt(document.getElementById('pop-min').value);
@@ -1292,6 +1394,14 @@
             const popVar = populationValues.reduce((a, b) => a + Math.pow(b - currentPopMean, 2), 0) / size;
             currentPopSD = Math.sqrt(popVar);
 
+            // Safer Min/Max for large arrays
+            popMin = populationValues[0];
+            popMax = populationValues[0];
+            for (let i = 1; i < populationValues.length; i++) {
+                if (populationValues[i] < popMin) popMin = populationValues[i];
+                if (populationValues[i] > popMax) popMax = populationValues[i];
+            }
+
             document.getElementById('pop-mean').innerText = currentPopMean.toFixed(2);
             document.getElementById('pop-sd').innerText = currentPopSD.toFixed(2);
 
@@ -1313,9 +1423,10 @@
         }
 
         function plotPopulation() {
+            if (!document.getElementById('popChart')) return;
             const ctx = document.getElementById('popChart').getContext('2d');
-            const min = Math.floor(Math.min(...populationValues));
-            const max = Math.ceil(Math.max(...populationValues));
+            const min = popMin;
+            const max = popMax;
 
             // Generate Normal Curve for Overlay (Normalized to 0-1 range)
             const curveData = [];
@@ -1706,11 +1817,12 @@
         }
 
         function updateCLTChart() {
+            if (!document.getElementById('cltChart')) return;
             const ctx = document.getElementById('cltChart').getContext('2d');
             const n = parseInt(document.getElementById('sample-n-slider').value);
 
-            const min = Math.floor(Math.min(...populationValues));
-            const max = Math.ceil(Math.max(...populationValues));
+            const min = popMin;
+            const max = popMax;
 
             // For a Dot Plot, we can use a scatter chart where Y is the stack height.
             // We'll bin the means slightly so they stack even if not identical.
@@ -1923,8 +2035,8 @@
             ciChart.data.datasets[1].backgroundColor = recentCI.map(d => d.hit ? 'rgba(0, 230, 118, 0.6)' : 'rgba(255, 23, 68, 0.6)');
 
             // Adjust X axis to current population range
-            const minVal = Math.floor(Math.min(...populationValues));
-            const maxVal = Math.ceil(Math.max(...populationValues));
+            const minVal = popMin;
+            const maxVal = popMax;
             ciChart.options.scales.x.min = minVal;
             ciChart.options.scales.x.max = maxVal;
 
@@ -2250,7 +2362,6 @@
         let morphAnimFrame = null;
 
         function toggleMorphAnimation() {
-            const btn = document.getElementById('morph-animate-btn');
             if (isMorphAnimating) {
                 stopMorphAnimation();
             } else {
@@ -2258,11 +2369,31 @@
             }
         }
 
+        function updateAnimButtons(active) {
+            const btns = [
+                document.getElementById('morph-animate-btn'),
+                document.querySelector('button[onclick="startMorphAnimation()"]') // The Hero button
+            ];
+
+            btns.forEach(btn => {
+                if (!btn) return;
+                if (active) {
+                    btn.innerHTML = '<i class="fas fa-stop-circle"></i> Stop Animation';
+                    btn.style.background = 'linear-gradient(135deg, #ff5252, #db2777)';
+                } else {
+                    btn.innerHTML = btn.id === 'morph-animate-btn' ? '<i class="fas fa-play"></i> Auto-Animate' : '<i class="fas fa-play-circle"></i> Start Auto-Morph Animation';
+                    btn.style.background = btn.id === 'morph-animate-btn' ? 'linear-gradient(135deg, #00e5ff, #007bff)' : 'linear-gradient(135deg, var(--primary-pink), #db2777)';
+                }
+            });
+        }
+
         function startMorphAnimation() {
+            if (isMorphAnimating) {
+                stopMorphAnimation();
+                return;
+            }
             isMorphAnimating = true;
-            const btn = document.getElementById('morph-animate-btn');
-            btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
-            btn.style.background = 'linear-gradient(135deg, #ff5252, #db2777)';
+            updateAnimButtons(true);
 
             const slider = document.getElementById('morph-slider');
             // If already at 100, reset to 0
@@ -2286,9 +2417,7 @@
         function stopMorphAnimation() {
             isMorphAnimating = false;
             if (morphAnimFrame) cancelAnimationFrame(morphAnimFrame);
-            const btn = document.getElementById('morph-animate-btn');
-            btn.innerHTML = '<i class="fas fa-play"></i> Auto-Animate';
-            btn.style.background = 'linear-gradient(135deg, #00e5ff, #007bff)';
+            updateAnimButtons(false);
         }
 
         function updateMorphChart() {
@@ -2825,16 +2954,18 @@
             // while the tail stretches out. The Skew-Normal naturally shifts the mean, so we don't need to manually center it as aggressively, 
             // but we will apply a slight offset so the bulk of the data doesn't walk completely off the left side of the screen when skew is high.
 
-            let locationOffset = 100 - (alpha * 5); // Shift base location left when alpha is positive to keep the bulk centered
+            // locationOffset shift: We use 10.25 as base to represent ₹10,250 
+            // This harmonizes the "Main" visual with the "Concrete Example"
+            let locationOffset = 10.25 - (alpha * 0.5);
             const sMean = locationOffset;
-            const baseSd = 50; // Widen base SD so the curve isn't a tiny spike
+            const baseSd = 5; // Narrower SD to fit the 10 range better
 
             // Scale and shift so that we can center it nicely
-            for (let x = -50; x <= 450; x += 2) {
+            for (let x = -30; x <= 150; x += 1) {
                 sLabels.push(x.toString());
 
-                // Normal Benchmark (Centered purely at 100)
-                let zBase = (x - 100) / baseSd;
+                // Normal Benchmark (Centered purely at 10.25)
+                let zBase = (x - 10.25) / baseSd;
                 let probBase = Math.exp(-0.5 * zBase * zBase) / (baseSd * Math.sqrt(2 * Math.PI));
                 sBaseData.push(probBase);
 
@@ -2854,7 +2985,7 @@
             // Numerical Integration
             let wideLabels = [];
             let wideData = [];
-            for (let x = -200; x <= 800; x += 1) {
+            for (let x = -100; x <= 300; x += 0.5) {
                 wideLabels.push(x);
                 let z = (x - sMean) / baseSd;
                 let phi = Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
