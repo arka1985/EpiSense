@@ -45,7 +45,8 @@
             flex-direction: column;
             gap: 1.5rem;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            will-change: transform, opacity;
         }
 
         .viz-card:hover {
@@ -146,6 +147,45 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Centered Layout for Z-Score */
+        .viz-centered {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .viz-centered .controls-panel {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .placeholder-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .placeholder-box i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .btn-pill {
+            border-radius: 50px !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+        }
+
 
         @media (max-width: 768px) {
             .module-container {
@@ -417,20 +457,20 @@
                         Mean and Skewness react, while the Median stays stubborn!
                     </div>
 
-                    <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
-                        <button class="btn-generate btn-outline" style="padding: 0.5rem; font-size: 0.8rem; flex: 1;"
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="btn-generate btn-outline btn-pill" style="flex: 1; padding: 0.6rem;"
                             onclick="applySkewExample('base')">
-                            <i class="fas fa-users"></i> Base (₹10k - 10.5k)
+                            <i class="fas fa-users"></i> Base
                         </button>
-                        <button class="btn-generate"
-                            style="background: #60a5fa; border: none; padding: 0.5rem; font-size: 0.8rem; flex: 1;"
+                        <button class="btn-generate btn-pill"
+                            style="background: linear-gradient(135deg, #60a5fa, #3b82f6); border: none; flex: 1; padding: 0.6rem;"
                             onclick="applySkewExample('left')">
-                            <i class="fas fa-arrow-left"></i> Add ₹100 (Left)
+                            <i class="fas fa-arrow-left"></i> Left
                         </button>
-                        <button class="btn-generate"
-                            style="background: #f472b6; border: none; padding: 0.5rem; font-size: 0.8rem; flex: 1;"
+                        <button class="btn-generate btn-pill"
+                            style="background: linear-gradient(135deg, #f472b6, #db2777); border: none; flex: 1; padding: 0.6rem;"
                             onclick="applySkewExample('right')">
-                            <i class="fas fa-arrow-right"></i> Add ₹100,000 (Right)
+                            <i class="fas fa-arrow-right"></i> Right
                         </button>
                     </div>
 
@@ -570,74 +610,72 @@
 
 
     <div id="z-viz" class="viz-card" style="display: none;">
-        <!-- Morphing Section -->
-        <div class="viz-layout"
-            style="margin-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2rem;">
-            <div class="controls-panel">
-                <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;"><i class="fas fa-magic"></i> 1. Normal
-                    Distribution Morphing</h3>
-                <p class="subtitle" style="margin-bottom: 1rem; font-size: 0.85rem;">Watch a custom distribution "morph"
-                    into a Standard Normal (μ=0, σ=1).</p>
+        <div class="viz-centered">
+            <!-- Morphing Section -->
+            <div
+                style="width: 100%; margin-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2rem; display: flex; flex-direction: column; align-items: center;">
+                <div class="controls-panel">
+                    <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;"><i class="fas fa-magic"></i> 1.
+                        Normal Distribution Morphing</h3>
+                    <p class="subtitle" style="margin-bottom: 1rem; font-size: 0.85rem;">Watch a custom distribution
+                        "morph" into a Standard Normal (μ=0, σ=1).</p>
 
-                <div class="control-group">
-                    <label>Initial Mean: <span id="morph-mean-val">50</span></label>
-                    <input type="range" id="morph-mean-slider" min="-10" max="100" value="50" step="1"
-                        oninput="throttledUpdateMorph()">
+                    <div class="control-group">
+                        <label>Initial Mean: <span id="morph-mean-val">50</span></label>
+                        <input type="range" id="morph-mean-slider" min="-10" max="100" value="50" step="1"
+                            oninput="throttledUpdateMorph()">
+                    </div>
+                    <div class="control-group" style="margin-top: 1rem;">
+                        <label>Initial SD: <span id="morph-sd-val">15</span></label>
+                        <input type="range" id="morph-sd-slider" min="1" max="30" value="15" step="1"
+                            oninput="throttledUpdateMorph()">
+                    </div>
+                    <div class="control-group"
+                        style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <label style="color: var(--primary-blue); font-weight: 800;">Morphing Progress (%)</label>
+                        <input type="range" id="morph-slider" min="0" max="100" value="0" step="1"
+                            oninput="throttledUpdateMorph()" style="margin-top: 0.5rem;">
+                    </div>
                 </div>
-                <div class="control-group" style="margin-top: 1rem;">
-                    <label>Initial SD: <span id="morph-sd-val">15</span></label>
-                    <input type="range" id="morph-sd-slider" min="1" max="30" value="15" step="1"
-                        oninput="throttledUpdateMorph()">
-                </div>
-                <div class="control-group"
-                    style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                    <label style="color: var(--primary-blue); font-weight: 800;">Morphing Progress (%)</label>
-                    <input type="range" id="morph-slider" min="0" max="100" value="0" step="1"
-                        oninput="throttledUpdateMorph()" style="margin-top: 0.5rem;">
+                <div class="chart-wrapper" style="max-width: 800px; margin-top: 2rem;">
+                    <canvas id="morphChart"></canvas>
                 </div>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="morphChart"></canvas>
-            </div>
-        </div>
 
-        <!-- Z-Table Section -->
-        <div class="viz-layout">
-            <div class="controls-panel">
-                <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;">2. Standard Normal (Z-Table)</h3>
-                <div class="control-group">
-                    <label>Show Areas</label>
-                    <label
-                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400; text-transform: none;">
-                        <input type="checkbox" id="show-1sd" onchange="updateZChart()"
-                            style="width: auto; height: auto;">
-                        ±1σ (68.2%)
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400; text-transform: none;">
-                        <input type="checkbox" id="show-2sd" onchange="updateZChart()"
-                            style="width: auto; height: auto;">
-                        ±2σ (95.4%)
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400; text-transform: none;">
-                        <input type="checkbox" id="show-3sd" onchange="updateZChart()"
-                            style="width: auto; height: auto;">
-                        ±3σ (99.7%)
-                    </label>
+            <!-- Z-Table Section -->
+            <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <div class="controls-panel">
+                    <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;">2. Standard Normal (Z-Table)</h3>
+                    <div class="control-group">
+                        <label>Show Areas</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400; text-transform: none;">
+                                <input type="checkbox" id="show-1sd" onchange="updateZChart()"> ±1σ (68.2%)
+                            </label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400; text-transform: none;">
+                                <input type="checkbox" id="show-2sd" onchange="updateZChart()"> ±2σ (95.4%)
+                            </label>
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400; text-transform: none;">
+                                <input type="checkbox" id="show-3sd" onchange="updateZChart()"> ±3σ (99.7%)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Z-Score Value: <span id="z-val">0</span></label>
+                        <input type="range" id="z-slider" min="-4" max="4" value="0" step="0.1"
+                            oninput="throttledUpdateZ()">
+                    </div>
+                    <div class="stat-card" style="text-align: left;">
+                        <span class="stat-label">Z-Score Formula</span>
+                        <code style="color: var(--primary-pink); font-size: 1.1rem;">Z = (X - μ) / σ</code>
+                    </div>
                 </div>
-                <div class="control-group">
-                    <label>Z-Score Value: <span id="z-val">0</span></label>
-                    <input type="range" id="z-slider" min="-4" max="4" value="0" step="0.1"
-                        oninput="throttledUpdateZ()">
+                <div class="chart-wrapper" style="max-width: 800px; margin-top: 2rem;">
+                    <canvas id="zChart"></canvas>
                 </div>
-                <div class="stat-card" style="text-align: left;">
-                    <span class="stat-label">Z-Score Formula</span>
-                    <code style="color: var(--primary-pink); font-size: 1.1rem;">Z = (X - μ) / σ</code>
-                </div>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="zChart"></canvas>
             </div>
         </div>
     </div>
@@ -730,14 +768,16 @@
                 style="margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="control-group">
                     <label>Last Sample Values</label>
-                    <textarea id="sample-values-display" readonly class="input-light"
-                        style="height: 100px; font-family: monospace; font-size: 0.8rem; resize: none;"></textarea>
+                    <div id="sample-values-container" class="placeholder-box" style="height: 120px; overflow-y: auto;">
+                        <i class="fas fa-vial"></i>
+                        <span>No samples drawn yet.</span>
+                    </div>
                 </div>
                 <div class="control-group">
                     <label>Confidence Interval Bounds</label>
-                    <div id="ci-bounds-display" class="input-light"
-                        style="height: 100px; padding: 10px; font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow-y: auto;">
-                        <span style="opacity: 0.5;">No samples drawn yet.</span>
+                    <div id="ci-bounds-container" class="placeholder-box" style="height: 120px; overflow-y: auto;">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Waiting for generation...</span>
                     </div>
                 </div>
             </div>
@@ -1335,8 +1375,22 @@
             document.getElementById('sample-sd').innerText = '-';
             document.getElementById('se-theo').innerText = '-';
             document.getElementById('se-sim').innerText = '-';
-            document.getElementById('sample-values-display').value = '';
-            document.getElementById('ci-bounds-display').innerHTML = '<span style="opacity: 0.5;">No samples drawn yet.</span>';
+            // document.getElementById('sample-values-display').value = ''; // Old element
+            // document.getElementById('ci-bounds-display').innerHTML = '<span style="opacity: 0.5;">No samples drawn yet.</span>'; // Old element
+
+            const valContainer = document.getElementById('sample-values-container');
+            if (valContainer) {
+                valContainer.innerHTML = '<i class="fas fa-vial"></i><span>No samples drawn yet.</span>';
+                valContainer.classList.add('placeholder-box');
+                valContainer.style.padding = ''; // Reset padding
+            }
+
+            const boundContainer = document.getElementById('ci-bounds-container');
+            if (boundContainer) {
+                boundContainer.innerHTML = '<i class="fas fa-chart-line"></i><span>Waiting for generation...</span>';
+                boundContainer.classList.add('placeholder-box');
+                boundContainer.style.padding = ''; // Reset padding
+            }
 
             const historyContainer = document.getElementById('sample-history-tiles');
             if (historyContainer) {
@@ -1498,16 +1552,21 @@
             const sampleId = lastEntry ? lastEntry.id : '-';
 
             // Update Text History (Optional, keeping as fallback/reference if still in DOM)
-            const displayBox = document.getElementById('sample-values-display');
+            // const displayBox = document.getElementById('sample-values-display'); // Old element
 
             // Show history of last 30 samples in premium tiles
             const historyCount = 30;
             const history = ciHistory.slice(-historyCount).reverse();
 
-            if (displayBox && lastEntry) {
+            // New sample values container
+            const valContainer = document.getElementById('sample-values-container');
+            if (valContainer && lastEntry) {
                 const vals = lastEntry.sampleValues.map(v => Math.round(v)).join(', ');
-                displayBox.value = `Sample S${lastEntry.id} (n=${n}, mean=${lastEntry.mean.toFixed(2)}):\n[${vals}]`;
+                valContainer.innerHTML = `<textarea readonly class="input-light" style="width:100%; height:100px; border:none; background:transparent; font-family:monospace; color:#fff; resize:none;">${vals}</textarea>`;
+                valContainer.classList.remove('placeholder-box');
+                valContainer.style.padding = '5px';
             }
+
 
             const historyContainer = document.getElementById('sample-history-tiles');
             if (historyContainer) {
@@ -1529,8 +1588,8 @@
                 }).join('');
             }
 
-            // Display CI Bounds
-            const boundsBox = document.getElementById('ci-bounds-display');
+            // Display CI Bounds (New container)
+            const boundsBox = document.getElementById('ci-bounds-container');
             if (boundsBox && lastEntry) {
                 boundsBox.innerHTML = `
                     <div style="font-weight: bold; color: var(--primary-pink); margin-bottom: 5px;">Sample S${sampleId} Bounds:</div>
@@ -1538,6 +1597,8 @@
                     <div style="color: #00e676;">95% CI: [${lastEntry.ci95.lower.toFixed(2)}, ${lastEntry.ci95.upper.toFixed(2)}]</div>
                     <div style="color: #f472b6;">99% CI: [${lastEntry.ci99.lower.toFixed(2)}, ${lastEntry.ci99.upper.toFixed(2)}]</div>
                 `;
+                boundsBox.classList.remove('placeholder-box');
+                boundsBox.style.padding = '10px';
             }
 
             // Calculate SEs
@@ -1552,7 +1613,7 @@
 
                 // Update Glossary Examples (Dynamic)
                 if (lastEntry) {
-                    const seVal = lastSD / Math.sqrt(n);
+                    // const seVal = lastSD / Math.sqrt(n); // This was not used
                     document.getElementById('ex-sample-mean').innerHTML = `Σx=${lastSample.reduce((a, b) => a + b, 0).toFixed(0)}, n=${n} → <b>${lastMean.toFixed(2)}</b>`;
                     document.getElementById('ex-sample-sd').innerHTML = `df=${n - 1} → <b>${lastSD.toFixed(2)}</b>`;
                     document.getElementById('ex-se').innerHTML = `σ=${currentPopSD.toFixed(2)}, √n=${Math.sqrt(n).toFixed(2)} → <b>${theoreticalSE.toFixed(2)}</b>`;
@@ -3011,15 +3072,11 @@
         // --- Concrete 20-Number Example Dataset Flow ---
         let base20Dataset = [];
 
+        const fixedBase20 = [10120, 10240, 10310, 10080, 10450, 10190, 10380, 10210, 10290, 10150, 10410, 10330, 10050, 10480, 10200, 10360, 10270, 10110, 10390, 10250];
+
         function applySkewExample(type) {
-            // Generate base dataset if it doesn't exist
             if (base20Dataset.length === 0 || type === 'base') {
-                base20Dataset = [];
-                for (let i = 0; i < 20; i++) {
-                    // Random normal-ish spread between 10000 and 10500
-                    let val = 10000 + (Math.random() * 500);
-                    base20Dataset.push(val);
-                }
+                base20Dataset = [...fixedBase20];
             }
 
             let currentDataset = [...base20Dataset];
