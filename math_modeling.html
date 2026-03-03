@@ -201,10 +201,11 @@
             <div id="info-network"
                 style="display: none; background: rgba(167, 139, 250, 0.05); border-left: 4px solid #a78bfa; padding: 1.5rem; border-radius: 12px; color: var(--text-dim);">
                 <h3 style="color: #a78bfa; margin-bottom: 0.5rem; font-size: 1.2rem;">Network Model</h3>
-                <p style="margin-bottom: 0.8rem;">Simulates disease spread through a social contact network. Each node
-                    represents an individual, and edges represent potential transmission links.</p>
-                <p><strong>Example:</strong> Realistic modeling for <strong>HIV/AIDS</strong> transmission through
-                    sexual networks or localized outbreaks in specific social clusters.</p>
+                <p style="margin-bottom: 0.8rem;">Simulates disease spread through a social contact network. This model
+                    assumes that individuals are nodes in a graph, and transmission occurs only between connected nodes.
+                </p>
+                <p><strong>Example:</strong> Modeling a <strong>School Outbreak</strong>, where children only interact
+                    with their classmates and teachers (localized clusters).</p>
             </div>
 
             <!-- Equations Column -->
@@ -228,9 +229,9 @@
                     <p>$\frac{dI}{dt} = \frac{\beta S I}{N} - \gamma I$</p>
                 </div>
                 <div id="equations-network" style="display: none;">
-                    <p>$P(\text{inf}) = 1 - (1 - T)^k$</p>
-                    <p>Where $T$ is transmission prob,</p>
-                    <p>$k$ is number of infected contacts.</p>
+                    <p>$P(\text{inf} | k ) = 1 - (1 - T)^k$</p>
+                    <p>$\frac{dI}{dt} \approx (\text{Contacts}) \cdot T \cdot \frac{S}{N} \cdot I - R \cdot I$</p>
+                    <p>Where $T$ is Trans. Prob, $R$ is Recovery Prob.</p>
                 </div>
             </div>
         </div>
@@ -238,11 +239,11 @@
         <div class="viz-card">
             <div class="controls">
                 <div class="control-group">
-                    <label>Transmission Rate (β): <span id="beta-val">0.3</span></label>
+                    <label id="beta-label">Transmission Rate (β): <span id="beta-val">0.3</span></label>
                     <input type="range" id="beta" min="0" max="1" step="0.01" value="0.3" oninput="runSimulation()">
                 </div>
                 <div class="control-group">
-                    <label>Recovery Rate (γ): <span id="gamma-val">0.1</span></label>
+                    <label id="gamma-label">Recovery Rate (γ): <span id="gamma-val">0.1</span></label>
                     <input type="range" id="gamma" min="0" max="1" step="0.01" value="0.1" oninput="runSimulation()">
                 </div>
                 <div class="control-group" id="control-sigma" style="display: none;">
@@ -345,11 +346,13 @@
             document.getElementById('info-sir').style.display = model === 'SIR' ? 'block' : 'none';
             document.getElementById('info-seir').style.display = model === 'SEIR' ? 'block' : 'none';
             document.getElementById('info-sis').style.display = model === 'SIS' ? 'block' : 'none';
+            document.getElementById('info-network').style.display = model === 'NETWORK' ? 'block' : 'none';
 
             // Toggle equations
             document.getElementById('equations-sir').style.display = model === 'SIR' ? 'block' : 'none';
             document.getElementById('equations-seir').style.display = model === 'SEIR' ? 'block' : 'none';
             document.getElementById('equations-sis').style.display = model === 'SIS' ? 'block' : 'none';
+            document.getElementById('equations-network').style.display = model === 'NETWORK' ? 'block' : 'none';
 
             // Toggle extra controls
             document.getElementById('control-sigma').style.display = model === 'SEIR' ? 'flex' : 'none';
@@ -360,14 +363,21 @@
             // Toggle SIR/SIS/SEIR specific controls based on model
             const isODE = model !== 'NETWORK';
             document.getElementById('beta').closest('.control-group').style.display = isODE ? 'flex' : 'none';
-            document.getElementById('gamma').closest('.control-group').style.display = isODE ? 'flex' : 'none';
+
+            // Re-label gamma as Recovery Prob (R) for Network model
+            const gammaLabel = document.getElementById('gamma-label');
+            if (model === 'NETWORK') {
+                gammaLabel.innerHTML = `Recovery Prob (R): <span id="gamma-val">${document.getElementById('gamma').value}</span>`;
+            } else {
+                gammaLabel.innerHTML = `Recovery Rate (γ): <span id="gamma-val">${document.getElementById('gamma').value}</span>`;
+            }
 
             // Update subtitle
             document.getElementById('model-subtitle').innerText = `Infectious Disease Epidemiology (${model} Model)`;
 
             // Trigger MathJax rendering
             if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise();
+                window.MathJax.typesetPromise().catch((err) => console.log('MathJax error:', err));
             }
 
             runSimulation();
@@ -395,7 +405,7 @@
             if (activeModel === 'SEIR') {
                 R0 = beta / gamma;
             } else if (activeModel === 'NETWORK') {
-                R0 = k_avg * T_prob;
+                R0 = (k_avg * T_prob) / (gamma > 0 ? gamma : 0.001);
             } else {
                 R0 = beta / gamma;
             }
@@ -446,11 +456,14 @@
                     I += dI * dt;
                     R = 0;
                 } else if (activeModel === 'NETWORK') {
-                    // Simple mean-field approximation for network spread visualization
-                    const p_inf = 1 - Math.pow(1 - T_prob, (I / N) * k_avg);
+                    // Mean-field approximation for network spread visualization
+                    const infectedFraction = I / N;
+                    const p_inf = 1 - Math.pow(1 - T_prob, infectedFraction * k_avg);
+
                     dS = -p_inf * S;
-                    dI = p_inf * S - (gamma > 0 ? gamma : 0.1) * I;
-                    dR = (gamma > 0 ? gamma : 0.1) * I;
+                    dI = p_inf * S - (gamma * I);
+                    dR = (gamma * I);
+
                     S += dS * dt;
                     I += dI * dt;
                     R += dR * dt;
