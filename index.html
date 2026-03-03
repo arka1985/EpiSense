@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EpiSense - Scaling Epidemiology</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -158,6 +163,40 @@
 
         <footer>
             <div class="footer-content">
+                <!-- PWA Download Instructions -->
+                <div
+                    style="margin-bottom: 3rem; padding: 2rem; background: rgba(255,255,255,0.03); border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                    <h3
+                        style="color: var(--text-white); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="color: var(--primary-blue);">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Install EpiSense as a Standalone App
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                        <div>
+                            <h4 style="color: #60a5fa; margin-bottom: 0.5rem; font-size: 1rem;">Android (Chrome)</h4>
+                            <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.5;">
+                                1. Open <strong>EpiSense</strong> in Chrome.<br>
+                                2. Tap the <strong>three dots (⋮)</strong> in the top right.<br>
+                                3. Select <strong>'Install app'</strong> or <strong>'Add to Home screen'</strong>.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 style="color: #f472b6; margin-bottom: 0.5rem; font-size: 1rem;">iPhone (Safari)</h4>
+                            <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.5;">
+                                1. Open <strong>EpiSense</strong> in Safari.<br>
+                                2. Tap the <strong>Share button</strong> (square with up arrow).<br>
+                                3. Scroll down and tap <strong>'Add to Home Screen'</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dev-label">Developed By</div>
                 <div class="dev-name">Dr. Arkaprabha Sau</div>
                 <div class="dev-creds">
@@ -229,6 +268,15 @@
                 stars.forEach(s => s.style.transform = 'scale(1)');
             });
         });
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.log('Service Worker registration failed', err));
+            });
+        }
     </script>
 </body>
 
