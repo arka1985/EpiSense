@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biostatistical Tests - EpiSense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* Base Styles reused from EpiSense */
+        .module-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            color: var(--text-white);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        .viz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Form Inputs */
+        select,
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            padding: 0.8rem 1.5rem;
+            background: var(--primary-blue);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-pink);
+        }
+
+        .btn-primary:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        /* Tables */
+        .stats-table-wrapper {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Wizard Buttons */
+        .wizard-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 1.2rem;
+            border-radius: 12px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .wizard-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #34d399;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 211, 153, 0.15);
+        }
+
+        .wizard-btn.parametric-btn:hover {
+            border-color: #60a5fa;
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.15);
+        }
+
+        .wizard-btn.nonparametric-btn:hover {
+            border-color: #f472b6;
+            box-shadow: 0 4px 12px rgba(244, 114, 182, 0.15);
+        }
+
+        .tag-normal {
+            background: rgba(0, 230, 118, 0.2);
+            color: #00e676;
+        }
+
+        .tag-skewed {
+            background: rgba(244, 114, 182, 0.2);
+            color: #f472b6;
+        }
+
+        .tag-cat {
+            background: rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+        }
+
+        /* Output Box */
+        .result-box {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1.5rem;
+            display: none;
+            /* hidden initially */
+        }
+
+        .p-value-display {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            color: #fff;
+        }
+
+        .sig-yes {
+            color: #f472b6;
+        }
+
+        .sig-no {
+            color: #60a5fa;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem; position: relative;">
+            <h1
+                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Understanding Basic Statistical Testing</h1>
+            <p class="subtitle" style="margin: 0;">Learn the foundations of biostatistics, upload your dataset, and
+                perform automated hypothesis tests.</p>
+        </header>
+
+        <!-- 0A. Unified Educational Block: Radically Simplified -->
+        <div class="viz-card"
+            style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(96,165,250,0.08) 100%);">
+            <div class="card-title"
+                style="color: #60a5fa; font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: none; margin-bottom: 0;">
+                🚦 Statistics for Beginners: The Bare Minimum
+            </div>
+
+            <!-- Intuitive Concepts Layout -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+
+                <!-- Box 1 -->
+                <div
+                    style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border-top: 4px solid #94a3b8; text-align: center;">
+                    <div style="margin-bottom: 0.8rem; color: #94a3b8;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem;">1. The
+                        Baseline Assumption</div>
+                    <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem;">(The "Null Hypothesis")</div>
+                    <p style="font-size: 1.05rem; color: #fff; line-height: 1.4; margin-bottom: 1rem;">
+                        <strong>Assume nothing interesting is happening.</strong>
+                    </p>
+                    <ul
+                        style="text-align: left; font-size: 0.95rem; color: #cbd5e1; padding-left: 1.5rem; opacity: 0.9;">
+                        <li>The drug does nothing.</li>
+                        <li>The patient is perfectly healthy.</li>
+                        <li>There is no difference between groups.</li>
+                    </ul>
+                </div>
+
+                <!-- Box 2 -->
+                <div
+                    style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border-top: 4px solid #f472b6; text-align: center;">
+                    <div style="margin-bottom: 0.8rem; color: #f472b6;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <circle cx="15.5" cy="15.5" r="1.5"></circle>
+                            <circle cx="15.5" cy="8.5" r="1.5"></circle>
+                            <circle cx="8.5" cy="15.5" r="1.5"></circle>
+                        </svg>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #f472b6; margin-bottom: 0.5rem;">2. The
+                        P-Value</div>
+                    <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem;">(The Surprise Score)</div>
+                    <p style="font-size: 1.05rem; color: #fff; line-height: 1.4; margin-bottom: 1rem;">
+                        <strong>If the Baseline Assumption is true, how likely was this data to occur <em>by chance
+                                only</em>?</strong>
+                    </p>
+                    <div
+                        style="background: rgba(244, 114, 182, 0.1); padding: 0.8rem; border-radius: 6px; font-size: 0.9rem; color: #cbd5e1; text-align: left;">
+                        A P-value of <strong>0.03</strong> means we would only see this data by chance 3% of the time.
+                        We are very surprised!
+                    </div>
+                </div>
+
+                <!-- Box 3 -->
+                <div
+                    style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border-top: 4px solid #34d399; text-align: center;">
+                    <div style="margin-bottom: 0.8rem; color: #34d399;">
+                        <!-- Legal Scale Icon / Balance -->
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Pivot / Center Post -->
+                            <path d="M12 3v18"></path>
+                            <!-- Base -->
+                            <path d="M9 21h6"></path>
+                            <!-- Main Beam -->
+                            <path d="M3 7h18"></path>
+                            <!-- Left Scale Platform -->
+                            <path d="M3 7l2 8h-4z"></path>
+                            <!-- Right Scale Platform -->
+                            <path d="M21 7l2 8h-4z"></path>
+                            <!-- Hangers left -->
+                            <path d="M3 7v8"></path>
+                            <!-- Hangers right -->
+                            <path d="M21 7v8"></path>
+                        </svg>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #34d399; margin-bottom: 0.5rem;">3. The
+                        Verdict</div>
+                    <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem;">(The 0.05 Rule)</div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem; text-align: left;">
+                        <div
+                            style="background: rgba(52, 211, 153, 0.1); padding: 0.8rem; border-radius: 6px; border-left: 3px solid #34d399;">
+                            <strong style="color: #34d399;">If p &le; 0.05:</strong><br>
+                            <span style="font-size: 0.95rem; color: #e2e8f0;">We found something real! Reject the
+                                Baseline Assumption.<br><strong style="color: #34d399; font-size: 0.85rem;">(Difference
+                                    is Statistically Significant)</strong></span>
+                        </div>
+                        <div
+                            style="background: rgba(148, 163, 184, 0.1); padding: 0.8rem; border-radius: 6px; border-left: 3px solid #94a3b8;">
+                            <strong style="color: #cbd5e1;">If p &gt; 0.05:</strong><br>
+                            <span style="font-size: 0.95rem; color: #e2e8f0;">It's probably just noise. Keep the
+                                Baseline Assumption.<br><strong style="color: #cbd5e1; font-size: 0.85rem;">(Difference
+                                    is Not Statistically Significant)</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- The Big Why: Graphical Explanation -->
+            <div
+                style="margin-top: 2rem; background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                <div class="grid-2" style="align-items: center; gap: 2rem;">
+                    <div>
+                        <h3 style="color: #fbbf24; margin-bottom: 1.5rem; font-size: 1.3rem;">Why do we NEVER say "We
+                            proved the Baseline Assumption is true or Null Hypothesis is Accepted"?</h3>
+
+                        <div style="display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1.5rem;">
+                            <div style="color: #60a5fa;">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    <path d="M8 14h.01"></path>
+                                    <path d="M12 14h.01"></path>
+                                    <path d="M16 14h.01"></path>
+                                    <path d="M8 18h.01"></path>
+                                    <path d="M12 18h.01"></path>
+                                    <path d="M16 18h.01"></path>
+                                </svg>
+                            </div>
+                            <div
+                                style="background: rgba(251, 191, 36, 0.1); padding: 1.2rem; border-radius: 8px; border-left: 4px solid #fbbf24; flex: 1;">
+                                <strong
+                                    style="color: #fbbf24; font-size: 1.1rem; display: block; margin-bottom: 0.5rem;">The
+                                    Lesson</strong>
+                                <p style="font-size: 0.95rem; margin: 0; color: #e2e8f0; line-height: 1.5;">
+                                    Imagine a patient arriving at the emergency room with severe abdominal pain. The
+                                    doctor
+                                    suspects appendicitis and orders a CT scan or ultrasound to look for evidence of
+                                    inflammation.<br><br>
+                                    Now, if the scan clearly shows an inflamed appendix, the diagnosis is confirmed. But
+                                    if
+                                    the scan does not show convincing signs of appendicitis, it does not prove that the
+                                    patient is perfectly healthy; <strong style="color: #fbbf24;">it simply means that,
+                                        based on the current evidence,
+                                        there
+                                        is not enough proof to confirm the disease.</strong><br><br>
+                                    This is exactly how a p-value works in hypothesis testing. The baseline assumption
+                                    (null
+                                    hypothesis) assumes "no disease" or "no effect." A small p-value suggests that the
+                                    observed findings would be very unlikely if there were truly no disease, so we
+                                    <strong style="color: #f472b6;">reject
+                                        the null hypothesis.</strong> A large p-value, however, <strong
+                                        style="color: #f472b6;">does not prove that there is no
+                                        disease
+                                        or no effect;</strong> it only indicates that the evidence we observed is not
+                                    strong enough
+                                    to
+                                    confidently rule out chance.<br><br>
+                                    In essence, a p-value <strong style="color: #fbbf24;">measures the strength of
+                                        evidence against the null
+                                        hypothesis—it
+                                        does not prove that the null hypothesis is true.</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- P-Value Tail Graph & Interactive Slider -->
+                    <div>
+                        <!-- Chart Header -->
+                        <div style="margin-bottom: 1rem; color: #94a3b8; font-size: 0.95rem;">
+                            <span
+                                style="font-size: 1.2rem; font-weight: 700; display: block; margin-bottom: 0.2rem; color: #fbbf24;">Baseline
+                                (Nothing Happening)</span>
+                            Most results land safely in the middle.
+                        </div>
+
+                        <div style="position: relative; height: 350px; width: 100%;">
+                            <canvas id="pValueChart"
+                                style="background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);"></canvas>
+                        </div>
+
+                        <!-- Interactive Controls -->
+                        <div
+                            style="margin-top: 1.5rem; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <label for="pValueSlider" style="color: #cbd5e1; font-weight: 600;">Play with the
+                                    Surprise Score (P-Value):</label>
+                                <span id="pValueDisplay" style="font-size: 1.2rem; font-weight: 700; color: #f472b6;">p
+                                    = 0.03</span>
+                            </div>
+                            <input type="range" id="pValueSlider" min="0.00" max="0.20" step="0.01" value="0.03"
+                                style="width: 100%; accent-color: #f472b6;">
+
+                            <div style="margin-top: 1.5rem; text-align: center;">
+                                <div id="pVerdictBadge"
+                                    style="display: inline-block; padding: 0.8rem 1.5rem; border-radius: 30px; font-weight: 700; font-size: 1.1rem; background: rgba(244, 114, 182, 0.2); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.5);">
+                                    Null Hypothesis Rejected (There is a statistically significant difference)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ========================================== -->
+        <!-- STEP 2: DATA UPLOAD CARD (ALWAYS VISIBLE)  -->
+        <!-- ========================================== -->
+        <div class="viz-card" style="margin-bottom: 3rem;">
+            <div class="card-title" style="color: #f472b6;">Step 2: Upload Dataset (CSV)</div>
+
+            <div
+                style="background: rgba(96, 165, 250, 0.1); border-left: 3px solid #60a5fa; padding: 1rem; border-radius: 6px; margin-bottom: 2rem;">
+                <strong style="color: #60a5fa; font-size: 0.95rem; display: block; margin-bottom: 0.5rem;">💡 How to
+                    prepare your data:</strong>
+                <p style="font-size: 0.85rem; color: #e2e8f0; margin: 0; line-height: 1.4;">
+                    Your CSV must have <strong>headers</strong> in the first row. Each column represents one variable,
+                    and each row represents one patient.
+                    Example format:<br>
+                    <code
+                        style="display: block; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; color: #a78bfa; white-space: pre-wrap; font-family: monospace;">Group, Age, BloodPressure, Outcome
+Treatment, 45, 120.5, Recovered
+Control, 52, 135.2, Not Recovered
+Treatment, 38, 118.0, Recovered
+Control, 61, 142.8, Not Recovered
+Treatment, 41, 122.1, Not Recovered
+Control, 55, 138.5, Recovered
+Treatment, 33, 115.4, Recovered
+Control, 48, 129.0, Recovered</code>
+                <div style="margin-top: 1rem;">
+                    <button onclick="downloadExcelTemplate()" class="btn-primary"
+                        style="background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.5); font-size: 0.85rem; padding: 0.5rem 1rem;">
+                        📥 Download Excel Template (.xlsx)
+                    </button>
+                </div>
+                </p>
+
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <label for="csv-file">Choose a CSV or Excel File:</label>
+                    <input type="file" id="csv-file" accept=".csv, .xlsx, .xls">
+                </div>
+                <div>
+                    <label for="csv-text">Or Paste CSV Data Here:</label>
+                    <textarea id="csv-text"
+                        placeholder="Group,Age,BloodPressure,Outcome&#10;Treatment,45,120.5,Recovered&#10;Control,52,135..."></textarea>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button class="btn-primary" style="flex: 1;" onclick="loadData()">Load & Analyze Data</button>
+                <button class="btn-primary" style="background: rgba(255,255,255,0.1); color: var(--text-dim);"
+                    onclick="resetData()">Clear Data</button>
+            </div>
+            <div id="data-status" style="margin-top: 1rem; color: var(--text-dim); font-size: 0.9rem;">Waiting for raw
+                data...</div>
+
+            <!-- Descriptive Stats Card (Moved inside Step 2) -->
+            <div class="viz-card" id="desc-card"
+                style="display: none; margin-top: 2rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
+                <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 1.2rem;">📊 Calculated Descriptive Statistics</span>
+                    <div style="font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <label for="desc-group-select" style="color: #cbd5e1;">Group By (Optional):</label>
+                        <select id="desc-group-select" onchange="generateDescriptiveStats()"
+                            style="padding: 0.4rem; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                            <option value="">-- None (Whole Dataset) --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="stats-table-wrapper">
+                    <table id="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Type</th>
+                                <th>N</th>
+                                <th>Mean / Mode</th>
+                                <th>Median</th>
+                                <th>Std Dev</th>
+                                <th>Min/Max</th>
+                                <th>Distribution Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Tests in EpiSense -->
+        <div class="viz-card"
+            style="margin-bottom: 2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05);">
+            <div class="card-title" style="color: #60a5fa; font-size: 1.3rem; margin-bottom: 1.5rem;">📊 Available Tests
+                in EpiSense</div>
+            <div class="grid-3"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+
+                <!-- Comparisons -->
+                <div
+                    style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 3px solid #60a5fa;">
+                    <div style="font-weight: 700; color: #60a5fa; margin-bottom: 0.5rem; font-size: 1rem;">Comparison of
+                        Means</div>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem; margin: 0; line-height: 1.6;">
+                        <li><strong>Independent T-test</strong> (2 groups)</li>
+                        <li><strong>Paired T-test</strong> (Before/After)</li>
+                        <li><strong>One-Way ANOVA</strong> (3+ groups)</li>
+                        <li>Mann-Whitney / Kruskal-Wallis (Non-parametric)</li>
+                    </ul>
+                </div>
+
+                <!-- Relationships -->
+                <div
+                    style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 3px solid #fbbf24;">
+                    <div style="font-weight: 700; color: #fbbf24; margin-bottom: 0.5rem; font-size: 1rem;">Relationships
+                        & Trends</div>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem; margin: 0; line-height: 1.6;">
+                        <li><strong>Pearson's r</strong> (Linear Correlation)</li>
+                        <li>Spearman's Rho (Rank Correlation)</li>
+                        <li>Scatter Plot Visualizations</li>
+                    </ul>
+                </div>
+
+                <!-- Categorical -->
+                <div
+                    style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 3px solid #f472b6;">
+                    <div style="font-weight: 700; color: #f472b6; margin-bottom: 0.5rem; font-size: 1rem;">Categorical
+                        Data</div>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem; margin: 0; line-height: 1.6;">
+                        <li><strong>Pearson Chi-Square</strong> (Groups/Outcomes)</li>
+                        <li><strong>Fisher's Exact Test</strong> (Small Samples)</li>
+                        <li>2x2 Contingency Tables</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TOP LEVEL MODE SELECTOR (Now Step 3) -->
+        <h3 style="color: #fff; margin-bottom: 1rem; text-align: center; font-size: 1.5rem;">Step 3: Choose Testing
+            Method</h3>
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; justify-content: center;">
+            <button id="btn-mode-summary" class="btn-primary"
+                style="flex: 1; max-width: 300px; font-size: 1.1rem; padding: 1rem; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);"
+                onclick="setMode('summary')">
+                🧮 Summary Stats Calculator
+            </button>
+            <button id="btn-mode-raw" class="btn-primary"
+                style="flex: 1; max-width: 300px; font-size: 1.1rem; padding: 1rem; background: rgba(255,255,255,0.1); color: var(--text-dim);"
+                onclick="setMode('raw')">
+                📊 Analyze Raw Data (CSV)
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MODE: RAW DATA ANALYSIS CONTAINER          -->
+        <!-- ========================================== -->
+        <div id="raw-data-mode-container" style="display: none;">
+
+            <!-- NEW: Sub-tile for Normality Checking -->
+            <div class="viz-card" id="normality-checker-card" style="margin-bottom: 3rem; display: none;">
+                <div class="card-title" style="color: #60a5fa;">Data Distribution & Normality Checker</div>
+                <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Before choosing a statistical test (Parametric
+                    vs
+                    Non-Parametric), you must check if your continuous data follows a Normal "Bell Curve" distribution.
+                </p>
+
+                <!-- Normality Data Controls -->
+                <div
+                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                    <h4 style="color: #fff; margin-bottom: 1rem;">Select Variable to Test for Normality:</h4>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <select id="normality-var-select"
+                            style="flex: 1; padding: 0.8rem; border-radius: 8px; background: #fff; border: 1px solid rgba(255,255,255,0.2); color: #1e293b; font-weight: 500;">
+                            <option value="" disabled selected>-- Upload Data First --</option>
+                        </select>
+                        <button class="btn-primary" onclick="runNormalityChecks()">Run Normality Checks</button>
+                    </div>
+                </div>
+
+                <!-- Visualizations Grid (Histogram, Box, QQ) -->
+                <div class="grid-3" style="gap: 1.5rem; margin-bottom: 2rem;">
+                    <div
+                        style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem;">
+                        <h5
+                            style="color: #cbd5e1; text-align: center; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                            1. Histogram
+                            <button onclick="downloadCanvas('normalityHistogram', 'Histogram')"
+                                style="background:none; border:none; color:#60a5fa; cursor:pointer; font-size:0.8rem;"
+                                title="Download PNG">📥</button>
+                        </h5>
+                        <div style="position: relative; height: 250px; width: 100%;">
+                            <canvas id="normalityHistogram"></canvas>
+                        </div>
+                    </div>
+                    <div
+                        style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem;">
+                        <h5
+                            style="color: #cbd5e1; text-align: center; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                            2. Box Plot Approximation
+                            <button onclick="downloadCanvas('normalityBoxPlot', 'BoxPlot')"
+                                style="background:none; border:none; color:#60a5fa; cursor:pointer; font-size:0.8rem;"
+                                title="Download PNG">📥</button>
+                        </h5>
+                        <div style="position: relative; height: 250px; width: 100%;">
+                            <canvas id="normalityBoxPlot"></canvas>
+                        </div>
+                    </div>
+                    <div
+                        style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem;">
+                        <h5
+                            style="color: #cbd5e1; text-align: center; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                            3. Q-Q Plot
+                            <button onclick="downloadCanvas('normalityQQPlot', 'QQPlot')"
+                                style="background:none; border:none; color:#60a5fa; cursor:pointer; font-size:0.8rem;"
+                                title="Download PNG">📥</button>
+                        </h5>
+                        <div style="position: relative; height: 250px; width: 100%;">
+                            <canvas id="normalityQQPlot"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistical Test Result Banner -->
+                <div id="normality-test-results"
+                    style="display: none; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <h3 style="color: #fbbf24; margin-bottom: 0.5rem;">Mathematical Normality Tests</h3>
+
+                        <div style="display: flex; gap: 2rem; margin-bottom: 1rem; color: var(--text-dim);">
+                            <div id="ks-stat-readout"
+                                style="background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 6px;">
+                                <strong>Kolmogorov-Smirnov:</strong> D = -, p = -
+                            </div>
+                            <div id="sw-stat-readout"
+                                style="background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 6px;">
+                                <strong>D'Agostino-Pearson (K²):</strong> K² = -, p = -
+                            </div>
+                        </div>
+
+                        <div id="normality-verdict-badge"
+                            style="padding: 1rem 2rem; border-radius: 30px; font-weight: 700; font-size: 1.2rem; background: rgba(255,255,255,0.1); color: #fff;">
+                            Awaiting Data...
+                        </div>
+                        <p id="normality-interpretation" style="margin-top: 1rem; color: #cbd5e1; max-width: 600px;">
+                            Upload data and select a continuous variable to see the mathematical verdict.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-tile C: Interactive Test Selector Wizard -->
+            <div class="viz-card" style="margin-bottom: 3rem;">
+                <div class="card-title" style="color: #34d399;">Interactive Statistical Test Selector</div>
+                <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Not sure which test to run? Answer a few quick
+                    questions to decode the perfect statistical test for your data.</p>
+
+                <!-- Pre-Wizard: Available Tests Visual Grid -->
+                <div style="margin-bottom: 2rem;">
+                    <h4
+                        style="color: #cbd5e1; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                        Available Tests in EpiSense:</h4>
+                    <div class="grid-3" style="gap: 1rem;">
+                        <div
+                            style="background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #60a5fa; margin-bottom: 0.3rem;">Unpaired t-test</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Parametric, 2 Independent Groups</div>
+                        </div>
+                        <div
+                            style="background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #60a5fa; margin-bottom: 0.3rem;">Paired t-test</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Parametric, 2 Paired Groups</div>
+                        </div>
+                        <div
+                            style="background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #60a5fa; margin-bottom: 0.3rem;">One-Way ANOVA</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Parametric, 3+ Groups</div>
+                        </div>
+                        <div
+                            style="background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #f472b6; margin-bottom: 0.3rem;">Mann-Whitney U</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Non-Parametric, 2 Independent</div>
+                        </div>
+                        <div
+                            style="background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #f472b6; margin-bottom: 0.3rem;">Wilcoxon Signed-Rank
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Non-Parametric, 2 Paired</div>
+                        </div>
+                        <div
+                            style="background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #f472b6; margin-bottom: 0.3rem;">Kruskal-Wallis</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Non-Parametric, 3+ Groups</div>
+                        </div>
+                        <div
+                            style="background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #a78bfa; margin-bottom: 0.3rem;">Chi-Square</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Categorical vs Categorical</div>
+                        </div>
+                        <div
+                            style="background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #34d399; margin-bottom: 0.3rem;">Pearson Correlation
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Parametric, Continuous vs Continuous</div>
+                        </div>
+                        <div
+                            style="background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-weight: 600; color: #34d399; margin-bottom: 0.3rem;">Spearman Correlation
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Non-Parametric Continuous/Ordinal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Section -->
+                <div id="wizard-container"
+                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2rem; min-height: 250px;">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <span
+                            style="background: rgba(52, 211, 153, 0.2); color: #34d399; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Test
+                            Selection Wizard</span>
+                    </div>
+                    <!-- Step 1: Goal -->
+                    <div id="wizard-step-1" class="wizard-step active-step">
+                        <h4 style="margin-bottom: 1.5rem; color: #fff; font-size: 1.3rem; text-align: center;">1. What
+                            is
+                            the primary goal of your analysis?</h4>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <button class="wizard-btn" onclick="wizardAnswer('goal', 'compare')">
+                                <span style="font-size: 1.2rem;">⚖️</span>
+                                <div>
+                                    <strong style="display: block; font-size: 1.05rem;">Compare differences between
+                                        groups</strong>
+                                    <span style="font-size: 0.85rem; opacity: 0.7; font-weight: normal;">e.g., Drug A vs
+                                        Drug B, Placebo vs Treatment</span>
+                                </div>
+                            </button>
+                            <button class="wizard-btn" onclick="wizardAnswer('goal', 'correlate')">
+                                <span style="font-size: 1.2rem;">📈</span>
+                                <div>
+                                    <strong style="display: block; font-size: 1.05rem;">Find a correlation between
+                                        variables</strong>
+                                    <span style="font-size: 0.85rem; opacity: 0.7; font-weight: normal;">e.g., Age vs
+                                        Blood
+                                        Pressure, Height vs Weight</span>
+                                </div>
+                            </button>
+                            <button class="wizard-btn" onclick="wizardAnswer('goal', 'categorical')">
+                                <span style="font-size: 1.2rem;">📊</span>
+                                <div>
+                                    <strong style="display: block; font-size: 1.05rem;">Analyze frequencies of
+                                        categorical
+                                        data</strong>
+                                    <span style="font-size: 0.85rem; opacity: 0.7; font-weight: normal;">e.g.,
+                                        Male/Female
+                                        counts, Pass/Fail, Yes/No</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Number of Groups (If Compare) -->
+                    <div id="wizard-step-2" class="wizard-step" style="display: none;">
+                        <h4 style="margin-bottom: 1.5rem; color: #fff; font-size: 1.3rem; text-align: center;">2. How
+                            many
+                            groups are you comparing?</h4>
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="wizard-btn" style="flex: 1; text-align: center; justify-content: center;"
+                                onclick="wizardAnswer('groups', 2)">
+                                <div>
+                                    <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.3rem;">Exactly 2
+                                        Groups</strong>
+                                    <span style="font-size: 0.85rem; opacity: 0.7; font-weight: normal;">e.g., Male vs
+                                        Female</span>
+                                </div>
+                            </button>
+                            <button class="wizard-btn" style="flex: 1; text-align: center; justify-content: center;"
+                                onclick="wizardAnswer('groups', 3)">
+                                <div>
+                                    <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.3rem;">3 or More
+                                        Groups</strong>
+                                    <span style="font-size: 0.85rem; opacity: 0.7; font-weight: normal;">e.g., Low,
+                                        Medium,
+                                        High Doses</span>
+                                </div>
+                            </button>
+                        </div>
+                        <button class="btn-primary"
+                            style="margin-top: 1rem; background: transparent; color: var(--text-dim); padding: 0.5rem;"
+                            onclick="wizardBack(1)">← Back</button>
+                    </div>
+
+                    <!-- Step 3: Are samples paired? (If 2 Groups) -->
+                    <div id="wizard-step-3" class="wizard-step" style="display: none;">
+                        <h4 style="margin-bottom: 1.5rem; color: #fff; font-size: 1.3rem; text-align: center;">3. Are
+                            the
+                            samples independent or paired?</h4>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <button class="wizard-btn" onclick="wizardAnswer('paired', false)">
+                                <span style="font-size: 1.2rem;">👥</span>
+                                <div>
+                                    <strong style="display: block; font-size: 1.05rem;">Independent Samples</strong>
+                                    <span style="font-size: 0.85rem; opacity: 0.7; font-weight: normal;">Different
+                                        subjects
+                                        in each group (e.g., Control group vs Treatment group)</span>
+                                </div>
+                            </button>
+                            <button class="wizard-btn" onclick="wizardAnswer('paired', true)">
+                                <span style="font-size: 1.2rem;">🔄</span>
+                                <div>
+                                    <strong style="display: block; font-size: 1.05rem;">Paired / Dependent
+                                        Samples</strong>
+                                    <span style="font-size: 0.85rem; opacity: 0.7; font-weight: normal;">Same subjects
+                                        measured twice (e.g., Pre-treatment vs Post-treatment)</span>
+                                </div>
+                            </button>
+                        </div>
+                        <button class="btn-primary"
+                            style="margin-top: 1rem; background: transparent; color: var(--text-dim); padding: 0.5rem;"
+                            onclick="wizardBack(2)">← Back</button>
+                    </div>
+
+                    <!-- Step 4: Parametric Assumption -->
+                    <div id="wizard-step-4" class="wizard-step" style="display: none;">
+                        <h4 style="margin-bottom: 1.5rem; color: #fff; font-size: 1.3rem; text-align: center;">Final
+                            Question: Does your continuous data map to a Normal Distribution?</h4>
+                        <div
+                            style="background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+                            <span style="font-size: 0.9rem; color: #e2e8f0;"><strong>Tip:</strong> Look at your
+                                descriptive
+                                stats table. If the data is heavily skewed or your sample size is very tiny (N < 10), it
+                                    might not be normal.</span>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="wizard-btn parametric-btn"
+                                style="flex: 1; text-align: center; justify-content: center; background: rgba(96, 165, 250, 0.15); border-color: rgba(96, 165, 250, 0.3);"
+                                onclick="wizardAnswer('parametric', true)">
+                                <div>
+                                    <strong
+                                        style="display: block; font-size: 1.1rem; color: #60a5fa; margin-bottom: 0.3rem;">Yes,
+                                        it's roughly Normal</strong>
+                                    <span
+                                        style="font-size: 0.85rem; color: rgba(96, 165, 250, 0.8); font-weight: normal;">(Proceed
+                                        with Parametric)</span>
+                                </div>
+                            </button>
+                            <button class="wizard-btn nonparametric-btn"
+                                style="flex: 1; text-align: center; justify-content: center; background: rgba(244, 114, 182, 0.15); border-color: rgba(244, 114, 182, 0.3);"
+                                onclick="wizardAnswer('parametric', false)">
+                                <div>
+                                    <strong
+                                        style="display: block; font-size: 1.1rem; color: #f472b6; margin-bottom: 0.3rem;">No,
+                                        it's Skewed / Don't Know</strong>
+                                    <span
+                                        style="font-size: 0.85rem; color: rgba(244, 114, 182, 0.8); font-weight: normal;">(Proceed
+                                        with Non-Parametric)</span>
+                                </div>
+                            </button>
+                        </div>
+                        <button class="btn-primary"
+                            style="margin-top: 1rem; background: transparent; color: var(--text-dim); padding: 0.5rem;"
+                            onclick="wizardBack('auto')">← Back</button>
+                    </div>
+
+                    <!-- Result Step -->
+                    <div id="wizard-result" class="wizard-step" style="display: none; text-align: center;">
+                        <h3 style="color: #34d399; margin-bottom: 0.5rem;">🎯 Recommended Statistical Test</h3>
+                        <div id="wizard-test-name"
+                            style="font-size: 1.8rem; font-weight: 700; color: #fff; margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        </div>
+                        <p id="wizard-test-desc"
+                            style="color: var(--text-dim); max-width: 600px; margin: 0 auto 1.5rem;">
+                        </p>
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <button class="btn-primary" onclick="wizardSelectTest()">Load this test ↓</button>
+                            <button class="btn-primary"
+                                style="background: rgba(255,255,255,0.1); color: var(--text-dim);"
+                                onclick="wizardReset()">Start Over</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- 3. Hypothesis Test Card -->
+            <div class="viz-card" id="test-card" style="display: none;">
+                <div class="card-title">3. Statistical Hypothesis Testing</div>
+
+                <label for="test-type">Select Statistical Test:</label>
+                <select id="test-type" onchange="updateVariableSelectors()"
+                    style="width: 100%; padding: 0.8rem; border-radius: 8px; background: #fff; border: 1px solid rgba(255,255,255,0.2); color: #1e293b; font-weight: 500; margin-bottom: 1rem;">
+                    <option value="" disabled selected>-- Choose a Test --</option>
+                    <optgroup label="Compare 2 Groups (Categorical vs Continuous)">
+                        <option value="t-test">Unpaired t-test (Parametric)</option>
+                        <option value="mann-whitney">Mann-Whitney U Test (Non-parametric)</option>
+                    </optgroup>
+                    <optgroup label="Compare 2 Paired Variables (Continuous vs Continuous)">
+                        <option value="paired-t">Paired t-test (Parametric)</option>
+                        <option value="wilcoxon">Wilcoxon Signed-Rank Test (Non-parametric)</option>
+                    </optgroup>
+                    <optgroup label="Compare >2 Groups (Categorical vs Continuous)">
+                        <option value="anova">One-Way ANOVA (Parametric)</option>
+                        <option value="kruskal">Kruskal-Wallis Test (Non-parametric)</option>
+                    </optgroup>
+                    <optgroup label="Compare Categorical Variables (Categorical vs Categorical)">
+                        <option value="chi-square">Chi-Square Test</option>
+                        <option value="fisher">Fisher Exact Test (2x2 Only)</option>
+                    </optgroup>
+                    <optgroup label="Correlation (Continuous vs Continuous)">
+                        <option value="pearson">Pearson Correlation (Linear)</option>
+                        <option value="spearman">Spearman Correlation (Ranked)</option>
+                    </optgroup>
+                    <optgroup label="Proportions">
+                        <option value="z-test">Z-Test (Proportions/Large Sample N></option>
+                    </optgroup>
+                </select>
+
+                <div class="grid-2" style="margin-top: 1.5rem;" id="variable-selectors-container">
+                    <!-- Dropdowns will be generated here -->
+                </div>
+
+                <button class="btn-primary" id="run-test-btn" style="margin-top: 1rem; width: 100%; display: none;"
+                    onclick="runTest()">Run Test & Interpret</button>
+
+                <div id="result-box" class="result-box">
+                    <div
+                        style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">
+                        Test Result Overview</div>
+                    <div id="test-name-display"
+                        style="font-weight: 600; font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary-blue);">
+                    </div>
+
+                    <div class="grid-2" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">Test Statistic</div>
+                            <div id="stat-value" style="font-size: 1.5rem; font-family: monospace;">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">P-Value</div>
+                            <div id="p-value" class="p-value-display">-</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.5rem;">Interpretation (α
+                            =
+                            0.05)</div>
+                        <div id="interpretation" style="line-height: 1.5; font-size: 1.1rem;"></div>
+                    </div>
+
+                    <!-- High-Resolution Visualization for Raw Data Test -->
+                    <div id="raw-test-chart-viz"
+                        style="margin-top: 2rem; display: none; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                        <canvas id="test-result-chart"></canvas>
+                    </div>
+                </div>
+                <!-- Universal Download for Raw Data Test Chart -->
+                <div id="raw-test-chart-container" style="display: none; margin-top: 1.5rem; text-align: center;">
+                    <button class="btn-primary" onclick="downloadCanvas('test-result-chart', 'EpiSense_Test_Plot')"
+                        style="background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                        📥 Download Result Plot
+                    </button>
+                </div>
+            </div>
+
+            <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+                <div class="footer-content">
+                    <div class="dev-label">Developed By</div>
+                    <div class="dev-name">Dr. Arkaprabha Sau</div>
+                    <div class="dev-creds">MBBS, MD (Gold Medalist)... PhD (CSE)</div>
+                    <div class="disclaimer">For educational purposes only. Verify results with standard textbooks.</div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Algorithm Scripts -->
+        <script src="stats_algo.js"></script>
+
+        <!-- Render Educational Charts -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                renderEducationalCharts();
+            });
+
+            function renderEducationalCharts() {
+                // Function to generate Normal Distribution PDF
+                function normalPDF(x, mean, sd) {
+                    return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
+                }
+
+                // Function to generate Skewed Distribution (Log-Normal loosely)
+                function logNormalPDF(x, mu, sigma) {
+                    if (x <= 0) return 0;
+                    return (1 / (x * sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((Math.log(x) - mu) / sigma, 2));
+                }
+
+                // 1. Distributions Chart (Parametric vs Non-Parametric)
+                const distCanvas = document.getElementById('distributionChart');
+                if (distCanvas) {
+                    const distCtx = distCanvas.getContext('2d');
+                    const xLabels = [];
+                    const normalData = [];
+                    const skewedData = [];
+
+                    for (let x = 0; x <= 10; x += 0.2) {
+                        xLabels.push(x.toFixed(1));
+                        normalData.push(normalPDF(x, 5, 1.5));
+                        skewedData.push(logNormalPDF(x, 1, 0.6) * 0.5); // scaled for visual parity
+                    }
+
+                    new Chart(distCtx, {
+                        type: 'line',
+                        data: {
+                            labels: xLabels,
+                            datasets: [
+                                {
+                                    label: 'Normal (Parametric-Safe)',
+                                    data: normalData,
+                                    borderColor: '#60a5fa',
+                                    backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 0
+                                },
+                                {
+                                    label: 'Skewed (Use Non-Parametric)',
+                                    data: skewedData,
+                                    borderColor: '#f472b6',
+                                    backgroundColor: 'rgba(244, 114, 182, 0.2)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 0
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: '#e2e8f0', usePointStyle: true } },
+                                tooltip: { enabled: false }
+                            },
+                            scales: {
+                                x: { display: false },
+                                y: { display: false, min: 0 }
+                            }
+                        }
+                    });
+                }
+
+                // --- 2. Interactive P-Value Null Hypothesis Chart --- //
+                const pValCanvas = document.getElementById('pValueChart');
+                if (pValCanvas) {
+                    const pValCtx = pValCanvas.getContext('2d');
+                    let pValueChartInstance = null;
+
+                    function renderPValueChart(currentPValue) {
+                        const pLabels = [];
+                        const nullCurve = [];
+                        const pTailArea = [];
+
+                        // Map p-value (0.01 to 0.20) to a Z-score threshold roughly for a 1-tailed test visualization
+                        // P = 0.05 is approx Z = 1.645
+                        // We'll approximate the threshold Z visually
+                        let thresholdZ = 2.0;
+                        if (currentPValue <= 0.01) thresholdZ = 2.5;
+                        else if (currentPValue <= 0.03) thresholdZ = 2.0;
+                        else if (currentPValue <= 0.05) thresholdZ = 1.65;
+                        else if (currentPValue <= 0.10) thresholdZ = 1.28;
+                        else if (currentPValue <= 0.15) thresholdZ = 1.0;
+                        else thresholdZ = 0.8;
+
+                        // Generate standard normal from -4 to 4
+                        for (let x = -4; x <= 4; x += 0.1) {
+                            pLabels.push(x.toFixed(1));
+                            const y = normalPDF(x, 0, 1);
+                            nullCurve.push(y);
+
+                            // Color the tail past the dynamic Z threshold
+                            if (x >= thresholdZ) {
+                                pTailArea.push(y);
+                            } else {
+                                pTailArea.push(null); // Transparent everywhere else
+                            }
+                        }
+
+                        if (pValueChartInstance) {
+                            pValueChartInstance.destroy();
+                        }
+
+                        pValueChartInstance = new Chart(pValCtx, {
+                            type: 'line',
+                            data: {
+                                labels: pLabels,
+                                datasets: [
+                                    {
+                                        label: 'P-value (Surprise Zone)',
+                                        data: pTailArea,
+                                        borderColor: '#f472b6',
+                                        backgroundColor: 'rgba(244, 114, 182, 0.6)',
+                                        fill: true,
+                                        tension: 0.4,
+                                        pointRadius: 0,
+                                        order: 1
+                                    },
+                                    {
+                                        label: 'Baseline Assumption (Nothing Happening)',
+                                        data: nullCurve,
+                                        borderColor: '#fbbf24', // golden
+                                        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                                        fill: true,
+                                        borderDash: [5, 5],
+                                        tension: 0.4,
+                                        pointRadius: 0,
+                                        order: 2
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                animation: { duration: 300 }, // Smooth transition
+                                plugins: {
+                                    legend: { position: 'bottom', labels: { color: '#e2e8f0', usePointStyle: true, font: { size: 11 } } },
+                                    tooltip: { enabled: false }
+                                },
+                                scales: {
+                                    x: { title: { display: true, text: 'Test Result Extremity', color: '#94a3b8' }, ticks: { display: false }, grid: { display: false } },
+                                    y: { display: false, min: 0 }
+                                }
+                            }
+                        });
+                    }
+
+                    // Initialize Chart
+                    renderPValueChart(0.03);
+
+                    // Setup Interactive Slider
+                    const slider = document.getElementById('pValueSlider');
+                    const display = document.getElementById('pValueDisplay');
+                    const badge = document.getElementById('pVerdictBadge');
+
+                    slider.addEventListener('input', function (e) {
+                        const pVal = parseFloat(e.target.value);
+                        display.innerText = `p = ${pVal.toFixed(2)}`;
+
+                        // Update badge conditionally
+                        if (pVal <= 0.05) {
+                            badge.innerText = "Null Hypothesis Rejected (There is a statistically significant difference)";
+                            badge.style.background = "rgba(244, 114, 182, 0.2)";
+                            badge.style.color = "#f472b6";
+                            badge.style.borderColor = "rgba(244, 114, 182, 0.5)";
+                        } else {
+                            badge.innerText = "Failed to Reject Null Hypothesis (There is no statistically significant difference)";
+                            badge.style.background = "rgba(148, 163, 184, 0.2)";
+                            badge.style.color = "#cbd5e1";
+                            badge.style.borderColor = "rgba(148, 163, 184, 0.5)";
+                        }
+
+                        // Redraw chart tail dynamically
+                        renderPValueChart(pVal);
+                    });
+                } // end pValCanvas if
+            }
+        </script>
+
+    </div> <!-- END RAW DATA MODE CONTAINER -->
+
+
+    <!-- ========================================== -->
+    <!-- MODE: SUMMARY STATS CALCULATOR CONTAINER   -->
+    <!-- ========================================== -->
+    <div id="summary-stats-mode-container" style="display: block;">
+
+        <div class="viz-card">
+            <div class="card-title" style="color: #fbbf24;">🧮 Fast Summary Statistics Calculator</div>
+            <p style="color: var(--text-dim); margin-bottom: 2rem;">
+                Bypass raw data uploads. If you already have the summary statistics (Means, Standard Deviations, Sample
+                Sizes, or Contingency Tables) from a paper or previous analysis, select the test below to calculate the
+                P-Value instantly.
+            </p>
+
+            <!-- 1. Select Test -->
+            <div style="margin-bottom: 2rem;">
+                <label style="color: #cbd5e1; font-weight: 600; display: block; margin-bottom: 0.5rem;">1. Select
+                    Statistical Test:</label>
+                <select id="summary-test-select" onchange="buildSummaryInputs()"
+                    style="width: 100%; max-width: 500px; padding: 0.8rem; border-radius: 8px; background: #fff; border: 1px solid rgba(255,255,255,0.2); color: #1e293b; font-weight: 600;">
+                    <option value="" disabled selected>-- Choose a Test --</option>
+                    <option value="unpaired-t">Unpaired T-Test (Two Independent Groups)</option>
+                    <option value="paired-t">Paired T-Test (Two Dependent Groups)</option>
+                    <option value="chi-square">Chi-Square Test (2x2 Categorical Table)</option>
+                    <option value="fisher-exact">Fisher's Exact Test (2x2 Small Sample)</option>
+                    <option value="anova">One-Way ANOVA (3+ Groups)</option>
+                    <option value="correlation">Correlation (Pearson's R & N)</option>
+                </select>
+            </div>
+
+            <!-- Split Panel Layout: Inputs vs Context -->
+            <div class="grid-2" style="gap: 3rem;">
+
+                <!-- Left Panel: Interactive Inputs -->
+                <div>
+                    <!-- 2. Dynamic Input Area (Injected via JS) -->
+                    <div id="summary-inputs-container" style="margin-bottom: 2rem;">
+                        <!-- JS will build the grid of inputs here based on the dropdown selection -->
+                    </div>
+
+                    <!-- 3. Calculate Button -->
+                    <button id="btn-calc-summary" class="btn-primary"
+                        style="display: none; width: 100%; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);"
+                        onclick="runSummaryCalculation()">Calculate P-Value</button>
+                </div>
+
+                <!-- Right Panel: Mathematical Context -->
+                <div id="summary-context-container" style="display: none; flex-direction: column; gap: 1rem;">
+                    <div
+                        style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 12px; padding: 1.5rem; height: 100%;">
+                        <h4
+                            style="color: #60a5fa; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Mathematical Context
+                        </h4>
+
+                        <div id="summary-context-formula"
+                            style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 6px; font-family: monospace; color: #f472b6; font-size: 1.1rem; margin-bottom: 1rem; overflow-x: auto; text-align: center;">
+                            <!-- Formula Injected Here -->
+                        </div>
+
+                        <div id="summary-context-explanation"
+                            style="color: #e2e8f0; line-height: 1.6; font-size: 0.95rem;">
+                            <!-- Plain English explanation injected here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 4. Mathematical Results Banner -->
+            <div id="summary-test-results-banner"
+                style="display: none; margin-top: 3rem; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 2rem; border: 1px solid rgba(251, 191, 36, 0.3);">
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                    <h3 id="summary-result-title" style="color: #fbbf24; margin-bottom: 1rem; font-size: 1.5rem;">Test
+                        Results</h3>
+
+                    <div id="summary-stat-block"
+                        style="display: flex; gap: 2rem; margin-bottom: 1.5rem; justify-content: center; width: 100%;">
+                        <!-- JS Injected Stat readout (e.g. T=2.45, P=0.04) -->
+                    </div>
+
+                    <div id="summary-verdict-badge"
+                        style="padding: 1rem 2rem; border-radius: 30px; font-weight: 700; font-size: 1.3rem; background: rgba(255,255,255,0.1); color: #fff; max-width: 800px; line-height: 1.4;">
+                        Awaiting Calculation...
+                    </div>
+                </div>
+
+                <!-- Plot Injected Here -->
+                <div id="summary-chart-container" style="display: none; margin-top: 2rem; text-align: center;">
+                    <div
+                        style="background: rgba(0,0,0,0.4); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: inline-block; width: 100%; max-width: 800px;">
+                        <canvas id="summary-result-chart"></canvas>
+                        <button id="btn-download-summary-plot" class="btn-primary"
+                            onclick="downloadCanvas('summary-result-chart', 'EpiSense_Summary_Plot')"
+                            style="margin-top: 1.5rem; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                style="display: inline; vertical-align: middle; margin-right: 0.5rem;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download Plot (PNG)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div> <!-- END SUMMARY STATS CONTAINER -->
+
+    </div> <!-- End Main Container -->
+
+    <!-- Auto-initialize the Summary UI if it is the default mode -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Force the initial render of the default selected test
+            if (document.getElementById('summary-stats-mode-container').style.display !== 'none') {
+                document.getElementById('summary-test-select').value = 'unpaired-t';
+                if (typeof buildSummaryInputs === 'function') {
+                    buildSummaryInputs();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

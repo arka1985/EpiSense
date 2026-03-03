@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS Clustering & Public Health - EpiSense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --step-active: var(--primary-blue);
+            --step-inactive: rgba(255, 255, 255, 0.1);
+        }
+
+        .module-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .gis-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        #map {
+            height: 650px;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            z-index: 1;
+            background: #1a1a1a;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .btn-gis {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary-pink);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-gis:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 4px 15px rgba(244, 114, 182, 0.3);
+        }
+
+        .btn-gis.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        .stat-value {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+
+        .case-marker {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .dog-exposure {
+            background: #f472b6;
+        }
+
+        .cat-exposure {
+            background: #60a5fa;
+        }
+
+        .other-exposure {
+            background: #fbbf24;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        #data-table-container {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            font-size: 0.8rem;
+        }
+
+        .mini-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .mini-table th {
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.5);
+            text-align: left;
+            padding: 5px;
+        }
+
+        .mini-table td {
+            padding: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-pill {
+            background: rgba(96, 165, 250, 0.1);
+            color: #60a5fa;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+
+        .gis-select {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: white;
+            margin-bottom: 0.5rem;
+            outline: none;
+        }
+
+        /* Mapping Modal */
+        #mapping-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mapping-card {
+            background: #1a1a1a;
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .map-field {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5"></path>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header
+            style="margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <h1
+                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                GIS & Spatial Clustering
+            </h1>
+            <p class="subtitle" style="margin: 0 auto; max-width: 800px;">
+                Understanding geographic outbreaks through case clustering and hotspot detection.
+                Enter case reports or use dummy data to visualize the spread of public health events.
+            </p>
+        </header>
+
+        <div class="gis-grid">
+            <div class="sidebar">
+                <!-- Data Entry -->
+                <div class="control-card">
+                    <h3>Spatial Data Entry</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1rem;">
+                        Simulate an outbreak or upload incident reports.
+                    </p>
+
+                    <button class="btn-gis" onclick="generateDummyData()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Generate Dummy Outbreak
+                    </button>
+
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input type="file" id="csv-upload" hidden accept=".csv">
+                        <button class="btn-gis secondary" onclick="document.getElementById('csv-upload').click()"
+                            style="flex: 1;">
+                            Upload CSV
+                        </button>
+                    </div>
+
+                    <button class="btn-gis secondary" onclick="downloadSampleCSV()"
+                        style="margin-bottom: 0.5rem; font-size: 0.8rem; border-style: dashed; border-color: var(--primary-blue);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Sample CSV Template
+                    </button>
+
+                    <button class="btn-gis secondary" onclick="openManualEntry()"
+                        style="margin-bottom: 1.5rem; font-size: 0.8rem; border-style: solid; border-color: var(--primary-pink); color: var(--primary-pink);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Manual Data Entry
+                    </button>
+
+                    <h3>Focus Region</h3>
+                    <select id="state-selector" class="gis-select" onchange="focusState(this.value)">
+                        <option value="">Zoom to Entire India</option>
+                    </select>
+
+                    <div id="data-table-container">
+                        <table class="mini-table" id="case-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Lat</th>
+                                    <th>Long</th>
+                                    <th>State</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-dim);">No data loaded
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Clustering Controls -->
+                <div class="control-card">
+                    <h3>Clustering Algorithm</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="font-size: 0.85rem;">Distance Threshold</label>
+                        <input type="range" id="cluster-dist" min="5" max="5000" value="1000" style="width: 100%;">
+                        <div class="stat-item"><span id="dist-val">1.00 km</span></div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="cluster-by-type" style="width: 16px; height: 16px; cursor: pointer;">
+                        <label for="cluster-by-type"
+                            style="font-size: 0.85rem; cursor: pointer; color: var(--text-dim);">Cluster by Exposure
+                            Type</label>
+                    </div>
+
+                    <button class="btn-gis" onclick="runClustering()" id="cluster-btn" disabled>
+                        Detect Clusters
+                    </button>
+
+                    <div id="clustering-stats" style="margin-top: 1rem; display: none;">
+                        <div class="stat-item">Total Cases: <span class="stat-value" id="stat-total">0</span></div>
+                        <div class="stat-item">Clusters Found: <span class="stat-value" id="stat-clusters">0</span>
+                        </div>
+                        <div class="stat-item">Hotspot Cases: <span class="stat-value" id="stat-hotspot">0</span></div>
+                    </div>
+                </div>
+
+                <div class="control-card">
+                    <h3>Legend</h3>
+                    <div id="dynamic-legend">
+                        <p style="font-size: 0.8rem; color: var(--text-dim);">No data loaded to show legend.</p>
+                    </div>
+                </div>
+
+                <button class="btn-gis secondary" onclick="resetData()"
+                    style="margin-bottom: 1rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                    Reset Map & Data
+                </button>
+
+                <button class="btn-gis secondary" onclick="downloadCurrentDataCSV()"
+                    style="margin-bottom: 0.5rem; border-color: #10b981; color: #10b981;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Current Data (CSV)
+                </button>
+
+                <button class="btn-gis" onclick="downloadMapPNG()" style="background: var(--primary-blue);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Map (PNG)
+                </button>
+
+                <!-- Educational Section (Moved to Sidebar) REMOVED -->
+            </div>
+
+            <div style="position: relative; display: flex; flex-direction: column; gap: 1.5rem;">
+                <div id="map"></div>
+                <div id="map-loader"
+                    style="display:none; position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; color: white;">
+                    Loading India Geometry...
+                </div>
+
+                <!-- Educational Section (Consolidated below Map) -->
+                <div class="control-card" style="padding: 1.5rem; border-color: rgba(96, 165, 250, 0.3); width: 100%;">
+                    <h3
+                        style="color: var(--primary-blue); margin-bottom: 0.8rem; font-size: 1.2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        Algorithm Insights & Spatial Logic
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
+                            <p style="margin-bottom: 1rem;">
+                                This module utilizes a <strong>Proximity-Linked Aggregation</strong> (DBSCAN logic) to
+                                identify high-density geographic clusters.
+                            </p>
+                            <div
+                                style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="margin-bottom: 0.8rem;">📍 <strong>Spatial Join:</strong> Pairs points
+                                        within threshold distance.</li>
+                                    <li style="margin-bottom: 0.8rem;">📏 <strong>Threshold:</strong> Clusters only form
+                                        if points overlap in chosen radius.</li>
+                                    <li>🔥 <strong>Hotspot:</strong> Confirmed when density reaches the threshold (min.
+                                        3 points).</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div
+                            style="padding: 1.2rem; background: rgba(244, 114, 182, 0.05); border-left: 4px solid var(--primary-pink); border-radius: 10px;">
+                            <span
+                                style="font-size: 0.9rem; font-weight: 700; color: var(--primary-pink); display: block; margin-bottom: 0.5rem;">EPIDEMIOLOGICAL
+                                VALUE:</span>
+                            <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
+                                Spatial clustering is vital for identifying <strong>Shared Exposure Points</strong>. By
+                                pinpointing where incidents occur in close temporal and spatial proximity, public health
+                                teams can deploy targeted interventions, such as vector control or sanitation
+                                improvements, effectively breaking the chain of transmission.
+                            </p>
+                            <p
+                                style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; font-style: italic;">
+                                Note: Adjust the <strong>Distance Threshold</strong> to vary analysis between
+                                street-level (e.g. 100m) and city-wide (e.g. 5km) trends.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapping Modal -->
+        <div id="mapping-modal">
+            <div class="mapping-card">
+                <h2>Field Mapping</h2>
+                <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Select corresponding columns from your CSV.
+                </p>
+
+                <div id="mapping-fields">
+                    <div class="map-field">
+                        <label>Case ID / Serial</label>
+                        <select id="map-id" class="gis-select"></select>
+                    </div>
+                    <div class="map-field">
+                        <label>Latitude <span style="color:red">*</span></label>
+                        <select id="map-lat" class="gis-select"></select>
+                    </div>
+                    <div class="map-field">
+                        <label>Longitude <span style="color:red">*</span></label>
+                        <select id="map-lng" class="gis-select"></select>
+                    </div>
+                    <div class="map-field">
+                        <label>Exposure Type</label>
+                        <select id="map-type" class="gis-select"></select>
+                    </div>
+                    <div class="map-field">
+                        <label>State Name</label>
+                        <select id="map-state" class="gis-select"></select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn-gis secondary"
+                        onclick="document.getElementById('mapping-modal').style.display='none'">Cancel</button>
+                    <button class="btn-gis" style="margin-bottom:0" onclick="applyMapping()">Load Mapped Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Entry Modal -->
+        <div id="manual-entry-modal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; align-items: center; justify-content: center;">
+            <div class="mapping-card">
+                <h2>Manual Data Entry</h2>
+                <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Enter a single case report manually or capture
+                    your current location.</p>
+
+                <div id="manual-fields">
+                    <div class="map-field">
+                        <label>Case ID / Serial</label>
+                        <input type="text" id="manual-id" class="gis-select" placeholder="e.g. ID-101 (Optional)"
+                            style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
+                    </div>
+
+                    <button class="btn-gis" onclick="captureLocation()"
+                        style="background: #10b981; font-size: 0.85rem; padding: 0.5rem; margin-bottom: 1rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Capture Current Device Location
+                    </button>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="map-field">
+                            <label>Latitude <span style="color:red">*</span></label>
+                            <input type="number" id="manual-lat" class="gis-select" step="any"
+                                placeholder="e.g. 22.5726"
+                                style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
+                        </div>
+                        <div class="map-field">
+                            <label>Longitude <span style="color:red">*</span></label>
+                            <input type="number" id="manual-lng" class="gis-select" step="any"
+                                placeholder="e.g. 88.3639"
+                                style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
+                        </div>
+                    </div>
+
+                    <div class="map-field">
+                        <label>Exposure Type <span style="color:red">*</span></label>
+                        <select id="manual-type" class="gis-select">
+                            <option value="Dog">Dog</option>
+                            <option value="Cat">Cat</option>
+                            <option value="Monkey">Monkey</option>
+                            <option value="Fox">Fox</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="map-field">
+                        <label>State Name</label>
+                        <input type="text" id="manual-state" class="gis-select" placeholder="e.g. WEST BENGAL"
+                            style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="btn-gis secondary"
+                        onclick="document.getElementById('manual-entry-modal').style.display='none'">Cancel</button>
+                    <button class="btn-gis" style="margin-bottom:0" onclick="submitManualEntry()">Add Case</button>
+                </div>
+            </div>
+        </div>
+
+        <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+            <div class="footer-content">
+                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+                <div class="disclaimer">GIS module utilizes Leaflet.js and India GeoJSON for spatial analysis
+                    demonstration.</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="INDIA/india_data.js"></script>
+
+    <script>
+        let map;
+        let indiaLayer;
+        let stateLayers = {};
+        let cases = [];
+        let markers = [];
+        let clusterLayers = [];
+        let rawCSVResults = null;
+        const stateCentroids = {
+            "WEST BENGAL": [22.9868, 87.8550],
+            "MAHARASHTRA": [19.7515, 75.7139],
+            "UTTAR PRADESH": [26.8467, 80.9462],
+            "TAMIL NADU": [11.1271, 78.6569],
+            "RAJASTHAN": [27.0238, 74.2179],
+            "KERALA": [10.8505, 76.2711],
+            "KARNATAKA": [15.3173, 75.7139],
+            "GUJARAT": [22.2587, 71.1924],
+            "BIHAR": [25.0961, 85.3131],
+            "ASSAM": [26.2006, 92.9376],
+            "TELANGANA": [18.1124, 79.0193],
+            "ODISHA": [20.9517, 85.0985],
+            "PUNJAB": [31.1471, 75.3412],
+            "HARYANA": [29.0588, 76.0856],
+            "MADHYA PRADESH": [22.9734, 78.6569]
+        };
+
+        // Initialize Map
+        function initMap() {
+            map = L.map('map').setView([22.5937, 80.9629], 5);
+
+            // Dark Mode Tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            loadIndiaBoundaries();
+        }
+
+        async function loadIndiaBoundaries() {
+            try {
+                document.getElementById('map-loader').style.display = 'block';
+                // Using global constant from india_data.js to bypass CORS issues on file:/// protocol
+                const data = INDIA_GEOJSON;
+
+                indiaLayer = L.geoJSON(data, {
+                    style: {
+                        color: "#404040",
+                        weight: 1,
+                        fillColor: "#262626",
+                        fillOpacity: 0.5
+                    },
+                    onEachFeature: (feature, layer) => {
+                        const name = feature.properties.STNAME || feature.properties.STNAME_SH;
+                        stateLayers[name] = layer;
+                        layer.bindTooltip(name, { sticky: true });
+                    }
+                }).addTo(map);
+
+                // Populate State Selector
+                const selector = document.getElementById('state-selector');
+                const sortedStates = Object.keys(stateLayers).sort();
+                sortedStates.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.innerText = s;
+                    selector.appendChild(opt);
+                });
+
+                document.getElementById('map-loader').style.display = 'none';
+            } catch (error) {
+                console.error("Error loading GeoJSON:", error);
+                document.getElementById('map-loader').innerHTML = "Error loading India map data.";
+            }
+        }
+
+        // Dummy Data Generation
+        function generateDummyData() {
+            clearMap();
+            cases = [];
+            const types = ['Dog', 'Monkey', 'Cat', 'Fox'];
+            const states = Object.keys(stateCentroids);
+
+            // Generate 3 hotspots
+            const hotspotStates = [states[0], states[1], states[2]];
+
+            for (let i = 0; i < 80; i++) {
+                let state;
+                let spread = 1.0;
+
+                // 75% chance to be in a hotspot state
+                if (Math.random() < 0.75) {
+                    state = hotspotStates[Math.floor(Math.random() * hotspotStates.length)];
+                    spread = 0.05; // Tight clustering for city-level (approx 5km)
+                } else {
+                    state = states[Math.floor(Math.random() * states.length)];
+                }
+
+                const center = stateCentroids[state];
+                const lat = center[0] + (Math.random() - 0.5) * spread * 2;
+                const lng = center[1] + (Math.random() - 0.5) * spread * 2;
+                const type = types[Math.floor(Math.random() * types.length)];
+
+                cases.push({
+                    id: i + 1,
+                    lat: lat,
+                    lng: lng,
+                    type: type,
+                    state: state
+                });
+            }
+
+            renderCases();
+            document.getElementById('cluster-btn').disabled = false;
+        }
+
+        function renderCases() {
+            // Update Table
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = cases.slice(0, 20).map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td><span class="info-pill" style="color: ${getTypeColor(c.type)}">${c.type}</span></td>
+                    <td>${c.lat.toFixed(4)}</td>
+                    <td>${c.lng.toFixed(4)}</td>
+                    <td>${c.state}</td>
+                </tr>
+            `).join('');
+            if (cases.length > 20) tbody.innerHTML += `<tr><td colspan="5" style="text-align:center">... +${cases.length - 20} more</td></tr>`;
+
+            // Update Dynamic Legend
+            updateLegend();
+
+            // Clear existing markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            // Add Markers
+            cases.forEach(c => {
+                const color = getTypeColor(c.type);
+                const marker = L.divIcon({
+                    className: `case-marker`,
+                    html: `<div style="background: ${color}; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid white;"></div>`,
+                    iconSize: [8, 8]
+                });
+
+                const m = L.marker([c.lat, c.lng], { icon: marker })
+                    .bindPopup(`<strong>Case #${c.id}</strong><br>Type: ${c.type}<br>State: ${c.state}`)
+                    .addTo(map);
+                markers.push(m);
+            });
+        }
+
+        function getTypeColor(type) {
+            const colors = {
+                'Dog': '#ec4899', // Pink
+                'Cat': '#3b82f6', // Blue
+                'Monkey': '#8b5cf6', // Purple
+                'Fox': '#f59e0b', // Amber
+                'Dog Exposure': '#ec4899',
+                'Cat Exposure': '#3b82f6',
+                'Other': '#f59e0b',
+                'Exposure': '#ec4899',
+                'Malaria': '#10b981',
+                'Dengue': '#f59e0b',
+                'Rabies': '#ef4444'
+            };
+            if (colors[type]) return colors[type];
+
+            // Hash-based color for unknown types
+            let hash = 0;
+            for (let i = 0; i < type.length; i++) {
+                hash = type.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return `hsl(${hash % 360}, 70%, 60%)`;
+        }
+
+        function updateLegend() {
+            const types = [...new Set(cases.map(c => c.type))];
+            const legendDiv = document.getElementById('dynamic-legend');
+
+            if (types.length === 0) {
+                legendDiv.innerHTML = '<p style="font-size: 0.8rem; color: var(--text-dim);">No data loaded to show legend.</p>';
+                return;
+            }
+
+            legendDiv.innerHTML = types.map(type => `
+                <div class="legend-item">
+                    <span class="dot" style="background: ${getTypeColor(type)}"></span> 
+                    ${type}
+                </div>
+            `).join('');
+        }
+
+        function resetData() {
+            clearMap();
+            cases = [];
+            document.getElementById('table-body').innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-dim);">No data loaded</td>
+                </tr>
+            `;
+            document.getElementById('dynamic-legend').innerHTML = '<p style="font-size: 0.8rem; color: var(--text-dim);">No data loaded to show legend.</p>';
+            document.getElementById('cluster-btn').disabled = true;
+            document.getElementById('clustering-stats').style.display = 'none';
+            map.setView([22.5937, 80.9629], 5);
+        }
+
+        function clearMap() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            clusterLayers.forEach(l => map.removeLayer(l));
+            clusterLayers = [];
+            document.getElementById('clustering-stats').style.display = 'none';
+        }
+
+        // Clustering Algorithm (Simple Distance-Based)
+        function runClustering() {
+            clusterLayers.forEach(l => map.removeLayer(l));
+            clusterLayers = [];
+
+            const thresholdMeters = document.getElementById('cluster-dist').value; // meters
+            const thresholdDeg = thresholdMeters / 111320;
+            const clusterByType = document.getElementById('cluster-by-type').checked;
+
+            let handlePointGroup = (points, groupIdxOffset) => {
+                let handled = new Set();
+                let localClusters = [];
+
+                for (let i = 0; i < points.length; i++) {
+                    if (handled.has(i)) continue;
+
+                    let currentCluster = [points[i]];
+                    handled.add(i);
+
+                    for (let j = 0; j < points.length; j++) {
+                        if (handled.has(j)) continue;
+
+                        const dist = getDist(points[i], points[j]);
+                        if (dist < thresholdDeg) {
+                            currentCluster.push(points[j]);
+                            handled.add(j);
+                        }
+                    }
+
+                    if (currentCluster.length >= 3) {
+                        localClusters.push(currentCluster);
+                    }
+                }
+                return localClusters;
+            };
+
+            let finalClusters = [];
+            if (clusterByType) {
+                const types = [...new Set(cases.map(c => c.type))];
+                types.forEach(type => {
+                    const typePoints = cases.filter(c => c.type === type);
+                    finalClusters = finalClusters.concat(handlePointGroup(typePoints));
+                });
+            } else {
+                finalClusters = handlePointGroup(cases);
+            }
+
+            // Visualize Clusters
+            finalClusters.forEach((cluster, idx) => {
+                const lats = cluster.map(c => c.lat);
+                const lngs = cluster.map(c => c.lng);
+                const centerLat = lats.reduce((a, b) => a + b) / lats.length;
+                const centerLng = lngs.reduce((a, b) => a + b) / lngs.length;
+
+                // Bounding Circle (Colored by type if clustered by type)
+                const clusterType = cluster[0].type;
+                const maxDist = Math.max(...cluster.map(c => getDist({ lat: centerLat, lng: centerLng }, c)));
+                const circleColor = clusterByType ? getTypeColor(clusterType) : '#ef4444';
+
+                const circle = L.circle([centerLat, centerLng], {
+                    radius: maxDist * 111320,
+                    color: circleColor,
+                    weight: 2,
+                    fillColor: circleColor,
+                    fillOpacity: 0.15
+                }).bindPopup(`<strong>Cluster #${idx + 1}</strong><br>Type: ${clusterByType ? clusterType : 'Mixed'}<br>Cases: ${cluster.length}`).addTo(map);
+                clusterLayers.push(circle);
+            });
+
+            // Stats
+            document.getElementById('clustering-stats').style.display = 'block';
+            document.getElementById('stat-total').innerText = cases.length;
+            document.getElementById('stat-clusters').innerText = finalClusters.length;
+            document.getElementById('stat-hotspot').innerText = finalClusters.reduce((a, b) => a + b.length, 0);
+
+            if (finalClusters.length > 0) {
+                map.flyTo([finalClusters[0][0].lat, finalClusters[0][0].lng], 7);
+            }
+        }
+
+        function getDist(p1, p2) {
+            return Math.sqrt(Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2));
+        }
+
+        // CSV Upload Handler
+        document.getElementById('csv-upload').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    if (results.data.length === 0) {
+                        alert("The file is empty.");
+                        return;
+                    }
+
+                    rawCSVResults = results;
+                    const headers = results.meta.fields;
+
+                    // Pre-fill dropdowns
+                    ['map-id', 'map-lat', 'map-lng', 'map-type', 'map-state'].forEach(id => {
+                        const sel = document.getElementById(id);
+                        sel.innerHTML = '<option value="">-- Choose Column --</option>' +
+                            headers.map(h => `<option value="${h}">${h}</option>`).join('');
+                    });
+
+                    // Auto-detect common names
+                    const tryMatch = (selId, patterns) => {
+                        const match = headers.find(h => patterns.some(p => h.toLowerCase().includes(p.toLowerCase())));
+                        if (match) document.getElementById(selId).value = match;
+                    };
+
+                    tryMatch('map-id', ['id', 'serial', 'no', 'code']);
+                    tryMatch('map-lat', ['lat', 'y']);
+                    tryMatch('map-lng', ['log', 'long', 'lon', 'x']);
+                    tryMatch('map-type', ['type', 'exposure', 'animal', 'case']);
+                    tryMatch('map-state', ['state', 'region', 'area']);
+
+                    document.getElementById('mapping-modal').style.display = 'flex';
+                }
+            });
+        });
+
+        function applyMapping() {
+            const idCol = document.getElementById('map-id').value;
+            const latCol = document.getElementById('map-lat').value;
+            const lngCol = document.getElementById('map-lng').value;
+            const typeCol = document.getElementById('map-type').value;
+            const stateCol = document.getElementById('map-state').value;
+
+            if (!latCol || !lngCol) {
+                alert("Latitude and Longitude columns are required.");
+                return;
+            }
+
+            const data = rawCSVResults.data.filter(r => r[latCol] && r[lngCol]);
+            clearMap();
+            cases = data.map((r, i) => ({
+                id: idCol ? (r[idCol] || (i + 1)) : (i + 1),
+                lat: parseFloat(r[latCol]),
+                lng: parseFloat(r[lngCol]),
+                type: typeCol ? (r[typeCol] || 'Unknown Exposure') : 'Exposure',
+                state: stateCol ? (r[stateCol] || 'Unknown State') : 'Unknown'
+            }));
+
+            renderCases();
+            document.getElementById('mapping-modal').style.display = 'none';
+            document.getElementById('cluster-btn').disabled = false;
+            map.fitBounds(L.featureGroup(markers).getBounds(), { padding: [50, 50] });
+        }
+
+        function focusState(stateName) {
+            if (!stateName) {
+                map.setView([22.5937, 80.9629], 5);
+                return;
+            }
+            const layer = stateLayers[stateName];
+            if (layer) {
+                map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+            }
+        }
+
+        function downloadMapPNG() {
+            const mapElement = document.getElementById('map');
+            const mapLoader = document.getElementById('map-loader');
+            mapLoader.innerHTML = "Capturing Image...";
+            mapLoader.style.display = "block";
+
+            html2canvas(mapElement, {
+                useCORS: true,
+                allowTaint: true,
+                onclone: (clonedDoc) => {
+                    // Force leaflet controls and text to be captures
+                    clonedDoc.getElementById('map').style.borderRadius = '0';
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `GIS_Spatial_Outbreak_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                mapLoader.style.display = "none";
+                mapLoader.innerHTML = "Loading India Geometry...";
+            });
+        }
+
+        // Threshold Listener
+        document.getElementById('cluster-dist').addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val >= 1000) {
+                document.getElementById('dist-val').innerText = (val / 1000).toFixed(2) + ' km';
+            } else {
+                document.getElementById('dist-val').innerText = val + ' m';
+            }
+        });
+
+        function downloadSampleCSV() {
+            const csvContent = "CaseID,Latitude,Longitude,ExposureType,State\n" +
+                "ID001,22.5726,88.3639,Dog,WEST BENGAL\n" +
+                "ID002,22.5735,88.3642,Dog,WEST BENGAL\n" +
+                "ID003,22.5741,88.3650,Monkey,WEST BENGAL\n" +
+                "ID004,22.5710,88.3620,Cat,WEST BENGAL\n" +
+                "ID005,19.0760,72.8777,Fox,MAHARASHTRA";
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "EpiSense_GIS_Template.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Manual Entry Logic
+        function openManualEntry() {
+            document.getElementById('manual-id').value = '';
+            document.getElementById('manual-lat').value = '';
+            document.getElementById('manual-lng').value = '';
+            document.getElementById('manual-state').value = '';
+            document.getElementById('manual-type').value = 'Dog';
+            document.getElementById('manual-entry-modal').style.display = 'flex';
+        }
+
+        function captureLocation() {
+            if ("geolocation" in navigator) {
+                const btn = event.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "Locating...";
+                btn.disabled = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('manual-lat').value = position.coords.latitude.toFixed(6);
+                        document.getElementById('manual-lng').value = position.coords.longitude.toFixed(6);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    },
+                    (error) => {
+                        alert("Geolocation failed: " + error.message);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        }
+
+        function submitManualEntry() {
+            const lat = parseFloat(document.getElementById('manual-lat').value);
+            const lng = parseFloat(document.getElementById('manual-lng').value);
+
+            if (isNaN(lat) || isNaN(lng)) {
+                alert("Latitude and Longitude are required valid numbers.");
+                return;
+            }
+
+            const newCase = {
+                id: document.getElementById('manual-id').value || `MANUAL-${cases.length + 1}`,
+                lat: lat,
+                lng: lng,
+                type: document.getElementById('manual-type').value,
+                state: document.getElementById('manual-state').value || 'Unknown'
+            };
+
+            cases.push(newCase);
+            renderCases();
+
+            document.getElementById('manual-entry-modal').style.display = 'none';
+            document.getElementById('cluster-btn').disabled = false;
+
+            // Fly to newly added marker
+            map.flyTo([lat, lng], 10);
+        }
+
+        function downloadCurrentDataCSV() {
+            if (cases.length === 0) {
+                alert("No data to download.");
+                return;
+            }
+
+            let csvContent = "CaseID,Latitude,Longitude,ExposureType,State\n";
+            cases.forEach(c => {
+                // simple escape just in case
+                const stateSafe = `"${(c.state || '').replace(/"/g, '""')}"`;
+                const typeSafe = `"${(c.type || '').replace(/"/g, '""')}"`;
+                const idSafe = `"${String(c.id).replace(/"/g, '""')}"`;
+                csvContent += `${idSafe},${c.lat},${c.lng},${typeSafe},${stateSafe}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `EpiSense_Export_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Data Visualizer - EpiSense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@4"></script>
+
+    <style>
+        .module-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            color: var(--text-white);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        .viz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        select,
+        input[type="text"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            padding: 0.8rem 1.5rem;
+            background: var(--primary-pink);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background: #db2777;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 600px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .plot-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .plot-btn {
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-dim);
+            cursor: pointer;
+            text-align: center;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .plot-btn i {
+            font-size: 1.5rem;
+        }
+
+        .plot-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .plot-btn.active {
+            background: var(--primary-pink);
+            color: white;
+            border-color: var(--primary-pink);
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+        }
+
+        .alert-banner {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .customization-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem;">
+            <h1
+                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Basic Data Visualizer</h1>
+            <p class="subtitle" style="margin: 0;">Publication-quality epidemiological charts from your research data.
+            </p>
+        </header>
+
+        <!-- Step 1: Data Upload -->
+        <div class="viz-card">
+            <div class="card-title">Step 1: Upload Your Dataset</div>
+            <div class="grid-3" style="grid-template-columns: 1fr 1.5fr 1fr;">
+                <div>
+                    <label>Upload CSV or Excel:</label>
+                    <input type="file" id="data-file" accept=".csv, .xlsx, .xls" onchange="handleFileUpload(event)">
+                    <div style="font-size: 0.75rem; color: var(--text-dim);">Max 5MB supported.</div>
+                </div>
+                <div>
+                    <label>Or Paste CSV Contents:</label>
+                    <textarea id="data-paste"
+                        placeholder="PatientID,Group,Age,CRP_Level,Response&#10;P001,Group A,45,12.5,Positive&#10;P002,Group A,52,15.2,Negative&#10;P003,Group B,38,10.1,Positive&#10;P004,Group B,60,18.4,Negative&#10;P005,Group A,42,11.8,Positive&#10;P006,Group B,48,16.5,Positive&#10;P007,Group C,55,22.1,Negative&#10;P008,Group C,30,9.5,Positive"
+                        style="height: 120px; margin-bottom: 0;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                    <button class="btn-primary" style="width: 100%; margin-bottom: 1rem;" onclick="loadRawData()">Load
+                        Data</button>
+                    <button class="btn-outline"
+                        style="width: 100%; padding: 0.8rem; border-radius: 8px; cursor: pointer;"
+                        onclick="resetData()">Reset</button>
+                </div>
+            </div>
+            <div id="data-status" style="margin-top: 1rem; font-size: 0.9rem; color: #60a5fa;">Ready to receive data...
+            </div>
+        </div>
+
+        <!-- Step 2: Mapping & Customization -->
+        <div id="mapping-card" class="viz-card" style="display: none;">
+            <div class="card-title">Step 2: Map Variables & Customize</div>
+
+            <div id="alert-box" class="alert-banner"></div>
+
+            <div class="grid-3">
+                <!-- Selectors -->
+                <div>
+                    <label>Independent or Input Variable (X-Axis):</label>
+                    <select id="select-x" onchange="autoValidate()"></select>
+
+                    <label>Dependent Variable (Y-Axis / Values):</label>
+                    <select id="select-y" onchange="autoValidate()">
+                        <option value="">-- None (Count Frequency) --</option>
+                    </select>
+
+                    <label>Grouping / Color Variable:</label>
+                    <select id="select-group" onchange="autoValidate()">
+                        <option value="">-- None --</option>
+                    </select>
+
+                    <label>Color Scheme:</label>
+                    <select id="select-scheme" onchange="autoValidate()">
+                        <option value="default">Default (Corporate Blue)</option>
+                        <option value="vibrant">Vibrant Mix</option>
+                        <option value="pastel">Soft Pastel</option>
+                        <option value="sunset">Sunset Glow</option>
+                    </select>
+                </div>
+
+                <!-- Plot Selection -->
+                <div style="grid-column: span 2;">
+                    <label>Choose Plot Type:</label>
+                    <div class="plot-type-grid">
+                        <button class="plot-btn active" onclick="setPlotType('bar', this)">
+                            <span>📊</span> Bar Plot
+                        </button>
+                        <button class="plot-btn" onclick="setPlotType('pie', this)">
+                            <span>🍕</span> Pie Chart
+                        </button>
+                        <button class="plot-btn" onclick="setPlotType('histogram', this)">
+                            <span>📉</span> Histogram
+                        </button>
+                        <button class="plot-btn" onclick="setPlotType('boxplot', this)">
+                            <span>📦</span> Box Plot
+                        </button>
+                        <button class="plot-btn" onclick="setPlotType('scatter', this)">
+                            <span>✨</span> Scatter Plot
+                        </button>
+                        <button class="plot-btn" onclick="setPlotType('line', this)">
+                            <span>📈</span> Line Chart
+                        </button>
+                        <button class="plot-btn" onclick="setPlotType('kde', this)">
+                            <span>🌊</span> Distribution Plot
+                        </button>
+                        <button class="plot-btn" onclick="setPlotType('regression', this)">
+                            <span>🎯</span> Regression Plot
+                        </button>
+                    </div>
+
+                    <div class="customization-grid">
+                        <div>
+                            <label>Chart Title:</label>
+                            <input type="text" id="chart-title" placeholder="Enter Chart Title">
+                        </div>
+                        <div>
+                            <label>Color Theme:</label>
+                            <select id="color-theme">
+                                <option value="multi">Multicolor</option>
+                                <option value="mono">Monochrome</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="customization-grid">
+                        <div>
+                            <label>X-Axis Legend:</label>
+                            <input type="text" id="chart-x-label" placeholder="e.g. Variable Name">
+                        </div>
+                        <div>
+                            <label>Y-Axis Legend:</label>
+                            <input type="text" id="chart-y-label" placeholder="e.g. Frequency or Mean BP">
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="width: 100%;" onclick="generateVisualization()">Generate
+                        Visualization</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Canvas -->
+        <div id="result-card" class="viz-card" style="display: none;">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Visualization Output</span>
+                <button class="btn-primary" style="background: #34d399; font-size: 0.8rem; padding: 0.5rem 1rem;"
+                    onclick="downloadChart()">
+                    📥 Download High-Res PNG
+                </button>
+            </div>
+            <div class="chart-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-content">
+                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+                <div class="disclaimer">Professional tool for data visualization. Verify results against raw data.</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        let globalData = null;
+        let headers = [];
+        let metadata = {}; // Detect column types
+        let currentPlotType = 'bar';
+        let chartInstance = null;
+
+        /** DATA HANDLING **/
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('data-status').innerText = `File selected: ${file.name}. Click "Load Data" to proceed.`;
+            }
+        }
+
+        function loadRawData() {
+            const fileInput = document.getElementById('data-file');
+            const placeholder = document.getElementById('data-paste');
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                if (file.name.endsWith('.csv')) {
+                    reader.onload = (e) => parseCSV(e.target.result);
+                    reader.readAsText(file);
+                } else {
+                    reader.onload = (e) => {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+                        parseCSV(csv);
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            } else {
+                const data = placeholder.value.trim() || placeholder.getAttribute('placeholder');
+                if (data && data.includes(',')) {
+                    parseCSV(data);
+                } else {
+                    showAlert("Please upload a file or paste data.", "error");
+                }
+            }
+        }
+
+        function parseCSV(content) {
+            Papa.parse(content, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    if (results.data.length === 0) {
+                        showAlert("No data found in file.", "error");
+                        return;
+                    }
+                    globalData = results.data;
+                    headers = Object.keys(globalData[0]);
+                    analyzeMetadata();
+                    populateSelectors();
+                    document.getElementById('mapping-card').style.display = 'block';
+                    document.getElementById('data-status').innerText = `Successfully loaded ${globalData.length} records across ${headers.length} columns.`;
+                    showAlert(`Detected ${headers.length} columns. Mapping available.`, "info");
+                }
+            });
+        }
+
+        function analyzeMetadata() {
+            metadata = {};
+            headers.forEach(h => {
+                const sampleValues = globalData.slice(0, 10).map(row => row[h]);
+                const isNumeric = sampleValues.every(v => v === null || typeof v === 'number');
+                metadata[h] = isNumeric ? 'numerical' : 'categorical';
+            });
+        }
+
+        function populateSelectors() {
+            const selX = document.getElementById('select-x');
+            const selY = document.getElementById('select-y');
+            const selG = document.getElementById('select-group');
+
+            selX.innerHTML = "";
+            selY.innerHTML = '<option value="">-- None (Count Frequency) --</option>';
+            selG.innerHTML = '<option value="">-- None --</option>';
+
+            headers.forEach(h => {
+                const type = metadata[h] === 'numerical' ? '(123)' : '(ABC)';
+                const opt = `<option value="${h}">${h} ${type}</option>`;
+                selX.innerHTML += opt;
+                selY.innerHTML += opt;
+                selG.innerHTML += opt;
+            });
+        }
+
+        /** PLOTTING LOGIC **/
+        function setPlotType(type, btn) {
+            currentPlotType = type;
+            document.querySelectorAll('.plot-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            autoValidate();
+        }
+
+        function autoValidate() {
+            const x = document.getElementById('select-x').value;
+            const y = document.getElementById('select-y').value;
+            const alertBox = document.getElementById('alert-box');
+
+            alertBox.style.display = 'none';
+
+            if (currentPlotType === 'scatter' && (!metadata[x] || metadata[x] !== 'numerical' || !y || metadata[y] !== 'numerical')) {
+                showAlert("Warning: Scatter Plot requires Numerical variables for both X and Y axes.", "error");
+            }
+            if (currentPlotType === 'boxplot' && y && metadata[y] !== 'numerical') {
+                showAlert("Warning: Box Plot 'Values' (Y-axis) should be a Numerical variable.", "error");
+            }
+        }
+
+        function showAlert(msg, type) {
+            const box = document.getElementById('alert-box');
+            box.innerText = msg;
+            box.className = `alert-banner alert-${type}`;
+            box.style.display = 'block';
+        }
+
+        function generateVisualization() {
+            if (!globalData) return;
+            document.getElementById('result-card').style.display = 'block';
+
+            const xField = document.getElementById('select-x').value;
+            const yField = document.getElementById('select-y').value;
+            const groupField = document.getElementById('select-group').value;
+            const title = document.getElementById('chart-title').value || `${currentPlotType.toUpperCase()}: ${xField}`;
+            const xLabel = document.getElementById('chart-x-label').value || xField;
+            const yLabel = document.getElementById('chart-y-label').value || (yField ? `Value of ${yField}` : "Count / Frequency");
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            let config = {
+                type: currentPlotType === 'boxplot' ? 'boxplot' : (currentPlotType === 'histogram' ? 'bar' : currentPlotType),
+                data: { datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: title, color: '#fff', font: { size: 18, weight: 'bold' } },
+                        legend: { display: true, labels: { color: '#cbd5e1' } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: xLabel, color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { title: { display: true, text: yLabel, color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            };
+
+            // Custom specific logic per type
+            try {
+                processDataForChart(config, xField, yField, groupField);
+                chartInstance = new Chart(ctx, config);
+            } catch (err) {
+                showAlert("Error generating chart: " + err.message, "error");
+            }
+        }
+
+        function processDataForChart(config, xField, yField, groupField) {
+            const schemes = {
+                default: ['#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a'],
+                vibrant: ['#60a5fa', '#f472b6', '#34d399', '#fbbf24', '#a78bfa', '#f87171'],
+                pastel: ['#93c5fd', '#fbcfe8', '#6ee7b7', '#fde68a', '#c4b5fd', '#fca5a5'],
+                sunset: ['#fbbf24', '#f59e0b', '#fb7185', '#ec4899', '#db2777', '#9d174d']
+            };
+            const activeScheme = document.getElementById('select-scheme').value;
+            const colors = schemes[activeScheme] || schemes.default;
+            const isMono = document.getElementById('color-theme').value === 'mono';
+
+            if (currentPlotType === 'bar' || currentPlotType === 'pie') {
+                const counts = {};
+                globalData.forEach(row => {
+                    const key = row[xField];
+                    const val = yField ? (parseFloat(row[yField]) || 0) : 1;
+                    counts[key] = (counts[key] || 0) + val;
+                });
+
+                config.data.labels = Object.keys(counts);
+                config.data.datasets.push({
+                    label: yField || 'Value',
+                    data: Object.values(counts),
+                    backgroundColor: (currentPlotType === 'pie' || !isMono) ? colors : colors[0],
+                    borderColor: 'rgba(255,255,255,0.2)',
+                    borderWidth: 1
+                });
+                if (currentPlotType === 'pie') delete config.options.scales;
+
+            } else if (currentPlotType === 'scatter') {
+                if (groupField) {
+                    const grouped = {};
+                    globalData.forEach(row => {
+                        const g = row[groupField] || 'Other';
+                        if (!grouped[g]) grouped[g] = [];
+                        grouped[g].push({ x: row[xField], y: row[yField] });
+                    });
+                    Object.keys(grouped).forEach((g, i) => {
+                        config.data.datasets.push({
+                            label: g,
+                            data: grouped[g],
+                            backgroundColor: colors[i % colors.length]
+                        });
+                    });
+                } else {
+                    config.data.datasets.push({
+                        label: 'Data Points',
+                        data: globalData.map(r => ({ x: r[xField], y: r[yField] })),
+                        backgroundColor: colors[0]
+                    });
+                }
+
+            } else if (currentPlotType === 'boxplot') {
+                const groups = {};
+                globalData.forEach(row => {
+                    const g = xField ? row[xField] : 'All Data';
+                    if (!groups[g]) groups[g] = [];
+                    groups[g].push(row[yField || xField]);
+                });
+
+                const labels = Object.keys(groups);
+                config.data.labels = labels;
+
+                if (!isMono) {
+                    config.data.datasets.push({
+                        label: yField || xField,
+                        backgroundColor: labels.map((_, i) => colors[i % colors.length] + '80'),
+                        borderColor: labels.map((_, i) => colors[i % colors.length]),
+                        borderWidth: 2,
+                        data: Object.values(groups)
+                    });
+                } else {
+                    config.data.datasets.push({
+                        label: yField || xField,
+                        backgroundColor: colors[0] + '80',
+                        borderColor: colors[0],
+                        borderWidth: 2,
+                        data: Object.values(groups)
+                    });
+                }
+
+            } else if (currentPlotType === 'histogram') {
+                // Simplified Histogram using Chart.js bar and manual binning
+                const vals = globalData.map(r => parseFloat(r[xField])).filter(v => !isNaN(v));
+                const min = Math.min(...vals);
+                const max = Math.max(...vals);
+                const binCount = 10;
+                const step = (max - min) / binCount;
+                const bins = new Array(binCount).fill(0);
+                const labels = [];
+                for (let i = 0; i < binCount; i++) {
+                    const rangeStart = min + i * step;
+                    const rangeEnd = min + (i + 1) * step;
+                    labels.push(`${rangeStart.toFixed(1)}-${rangeEnd.toFixed(1)}`);
+                    vals.forEach(v => {
+                        // Last bin is inclusive of both bounds
+                        if (i === binCount - 1) {
+                            if (v >= rangeStart && v <= rangeEnd) bins[i]++;
+                        } else {
+                            if (v >= rangeStart && v < rangeEnd) bins[i]++;
+                        }
+                    });
+                }
+                config.data.labels = labels;
+                config.data.datasets.push({ label: 'Frequency', data: bins, backgroundColor: colors[2] });
+
+            } else if (currentPlotType === 'line') {
+                // Time series or sequential
+                config.data.labels = globalData.map((_, i) => i + 1);
+                config.data.datasets.push({
+                    label: yField || xField,
+                    data: globalData.map(r => r[yField || xField]),
+                    borderColor: colors[4],
+                    fill: false,
+                    tension: 0.1
+                });
+
+            } else if (currentPlotType === 'kde') {
+                const drawKDE = (vals, label, colorIdx) => {
+                    const n = vals.length;
+                    if (n === 0) return null;
+                    const sortedVals = [...vals].sort((a, b) => a - b);
+                    const min = sortedVals[0];
+                    const max = sortedVals[n - 1];
+                    const range = max - min;
+
+                    // Silvermans Rule
+                    const avg = vals.reduce((a, b) => a + b, 0) / n;
+                    const sd = Math.sqrt(vals.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / n) || 1;
+                    const h = 1.06 * sd * Math.pow(n, -0.2);
+
+                    const data = [];
+                    const kdeLabels = [];
+                    const globalMin = Math.min(...globalData.map(r => parseFloat(r[xField])).filter(v => !isNaN(v)));
+                    const globalMax = Math.max(...globalData.map(r => parseFloat(r[xField])).filter(v => !isNaN(v)));
+                    const globalRange = globalMax - globalMin;
+                    const step = (globalRange * 1.4) / 50;
+
+                    for (let x = globalMin - globalRange * 0.2; x <= globalMax + globalRange * 0.2; x += step) {
+                        kdeLabels.push(x.toFixed(2));
+                        let dens = 0;
+                        vals.forEach(v => {
+                            const z = (x - v) / h;
+                            dens += (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * z * z);
+                        });
+                        data.push(dens / (n * h));
+                    }
+                    return { labels: kdeLabels, data: data, label: label, color: colors[colorIdx % colors.length] };
+                };
+
+                config.type = 'line';
+                if (groupField) {
+                    const groups = {};
+                    globalData.forEach(row => {
+                        const g = row[groupField] || 'Other';
+                        if (!groups[g]) groups[g] = [];
+                        const val = parseFloat(row[xField]);
+                        if (!isNaN(val)) groups[g].push(val);
+                    });
+
+                    Object.keys(groups).forEach((g, i) => {
+                        const res = drawKDE(groups[g], g, i);
+                        if (res) {
+                            if (i === 0) config.data.labels = res.labels;
+                            config.data.datasets.push({
+                                label: res.label,
+                                data: res.data,
+                                borderColor: res.color,
+                                backgroundColor: res.color + '44',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0
+                            });
+                        }
+                    });
+                } else {
+                    const vals = globalData.map(r => parseFloat(r[xField])).filter(v => !isNaN(v));
+                    const res = drawKDE(vals, 'All Data', 1);
+                    if (res) {
+                        config.data.labels = res.labels;
+                        config.data.datasets.push({
+                            label: res.label,
+                            data: res.data,
+                            borderColor: res.color,
+                            backgroundColor: res.color + '44',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0
+                        });
+                    }
+                }
+
+            } else if (currentPlotType === 'regression') {
+                const xVals = globalData.map(r => parseFloat(r[xField])).filter(v => !isNaN(v));
+                const yVals = globalData.map(r => parseFloat(r[yField])).filter(v => !isNaN(v));
+
+                const n = xVals.length;
+                let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+                for (let i = 0; i < n; i++) {
+                    sumX += xVals[i]; sumY += yVals[i];
+                    sumXY += xVals[i] * yVals[i]; sumX2 += xVals[i] * xVals[i];
+                }
+                const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+                const intercept = (sumY - slope * sumX) / n;
+
+                const minX = Math.min(...xVals);
+                const maxX = Math.max(...xVals);
+
+                config.type = 'scatter';
+                config.data.datasets.push({
+                    label: 'Data Points',
+                    data: xVals.map((v, i) => ({ x: v, y: yVals[i] })),
+                    backgroundColor: colors[0]
+                });
+                config.data.datasets.push({
+                    type: 'line',
+                    label: `Linear Fit: y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`,
+                    data: [{ x: minX, y: slope * minX + intercept }, { x: maxX, y: slope * maxX + intercept }],
+                    borderColor: '#f87171',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                });
+            }
+        }
+
+        function downloadChart() {
+            const link = document.createElement('a');
+            link.download = 'EpiSense_Visualization.png';
+            link.href = document.getElementById('mainChart').toDataURL('image/png', 1.0);
+            link.click();
+        }
+
+        function resetData() {
+            globalData = null;
+            document.getElementById('data-file').value = "";
+            document.getElementById('data-paste').value = "";
+            document.getElementById('mapping-card').style.display = 'none';
+            document.getElementById('result-card').style.display = 'none';
+            document.getElementById('data-status').innerText = "Ready to receive data...";
+        }
+
+    </script>
+</body>
+
+</html>

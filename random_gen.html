@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Number Generator - EpiSense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <style>
+        .module-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-white);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-generate {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-pink));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: opacity 0.3s;
+        }
+
+        .btn-generate:hover {
+            opacity: 0.9;
+        }
+
+        .results-panel {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            min-height: 100px;
+            word-break: break-all;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .number-badge {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem;">
+            <h1
+                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Random Generator</h1>
+            <p class="subtitle" style="margin: 0;">Sampling tool for epidemiological research.</p>
+        </header>
+
+        <div class="tile" style="cursor: default; hover: none; transform: none; display: block;">
+            <div class="form-group">
+                <label>Minimum Value</label>
+                <input type="number" id="min-val" value="1">
+            </div>
+            <div class="form-group">
+                <label>Maximum Value</label>
+                <input type="number" id="max-val" value="100">
+            </div>
+            <div class="form-group">
+                <label>Count (How many numbers?)</label>
+                <input type="number" id="count-val" value="10">
+            </div>
+            <div class="form-group">
+                <div class="toggle-group">
+                    <span style="color: var(--text-dim);">With Replacement?</span>
+                    <input type="checkbox" id="replacement" style="width: auto;">
+                </div>
+            </div>
+            <button class="btn-generate" onclick="generateRandom()">Generate Numbers</button>
+        </div>
+
+        <div id="results" class="results-panel">
+            <p style="color: var(--text-dim);">Generated numbers will appear here...</p>
+        </div>
+
+        <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+            <div class="footer-content">
+                <div class="dev-label">Developed By</div>
+                <div class="dev-name">Dr. Arkaprabha Sau</div>
+                <div class="dev-creds">
+                    MBBS, MD (Gold Medalist), DPH, Dip. Geriatric Medicine, CCEBDM<br>
+                    PhD (Computer Science & Engineering)
+                </div>
+                <div class="disclaimer">
+                    This is for educational purposes only. Researchers are requested to verify the results based on
+                    standard procedures as per standard epidemiological textbooks. For any errors, bugs, or suggestions,
+                    please email me at
+                    <a href="mailto:arka.doctor@gmail.com" class="contact-link">arka.doctor@gmail.com</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function generateRandom() {
+            const min = parseInt(document.getElementById('min-val').value);
+            const max = parseInt(document.getElementById('max-val').value);
+            const count = parseInt(document.getElementById('count-val').value);
+            const replacement = document.getElementById('replacement').checked;
+            const resultsDiv = document.getElementById('results');
+
+            if (isNaN(min) || isNaN(max) || isNaN(count)) {
+                alert('Please enter valid numbers');
+                return;
+            }
+
+            if (min >= max) {
+                alert('Min must be less than Max');
+                return;
+            }
+
+            const rangeSize = max - min + 1;
+            if (!replacement && count > rangeSize) {
+                alert(`Cannot generate ${count} unique numbers from a range of ${rangeSize}`);
+                return;
+            }
+
+            const results = [];
+            if (replacement) {
+                for (let i = 0; i < count; i++) {
+                    results.push(Math.floor(Math.random() * (max - min + 1)) + min);
+                }
+            } else {
+                const pool = Array.from({ length: rangeSize }, (_, i) => i + min);
+                for (let i = 0; i < count; i++) {
+                    const idx = Math.floor(Math.random() * pool.length);
+                    results.push(pool.splice(idx, 1)[0]);
+                }
+            }
+
+            resultsDiv.innerHTML = '';
+            results.sort((a, b) => a - b).forEach(num => {
+                const badge = document.createElement('div');
+                badge.className = 'number-badge';
+                badge.innerText = num;
+                resultsDiv.appendChild(badge);
+            });
+        }
+    </script>
+</body>
+
+</html>

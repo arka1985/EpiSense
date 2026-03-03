@@ -1,0 +1,31 @@
+Group,Age,BloodPressure,Outcome
+Treatment,45,120.5,Recovered
+Control,52,135.2,Not Recovered
+Treatment,38,118.0,Recovered
+Control,61,142.1,Not Recovered
+Treatment,50,122.4,Recovered
+Treatment,42,125.0,Not Recovered
+Control,58,138.5,Not Recovered
+Control,49,129.8,Recovered
+Treatment,54,119.5,Recovered
+Control,55,140.2,Not Recovered
+Treatment,47,121.1,Recovered
+Control,60,136.7,Not Recovered
+Treatment,44,124.3,Recovered
+Control,53,139.9,Not Recovered
+Treatment,48,117.8,Recovered
+Control,57,144.5,Not Recovered
+Treatment,41,123.6,Recovered
+Control,63,137.4,Not Recovered
+Treatment,39,119.9,Recovered
+Control,51,133.3,Recovered
+Treatment,46,126.1,Not Recovered
+Control,59,141.6,Not Recovered
+Treatment,43,120.8,Recovered
+Control,56,134.5,Recovered
+Treatment,51,122.9,Recovered
+Control,62,143.2,Not Recovered
+Treatment,40,118.5,Recovered
+Control,50,135.8,Not Recovered
+Treatment,49,125.4,Not Recovered
+Control,54,138.1,Not Recovered

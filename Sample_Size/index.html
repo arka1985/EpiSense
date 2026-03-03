@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sample Size Calculation-Visualization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+  <div class="background-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <!-- Canvas for particles if we keep them, or remove bg-canvas if blobs replace it -->
+  <canvas id="bg-canvas"></canvas>
+  <div id="app">
+    <a href="../index.html" class="back-btn"
+      style="align-self: flex-start; margin-bottom: -1rem; z-index: 100; text-decoration: none; font-weight: 600; color: #333; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.5); padding: 0.5rem 1rem; border-radius: 20px; backdrop-filter: blur(5px);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back to Dashboard
+    </a>
+
+    <header>
+      <h1>Sample Size Calculator</h1>
+      <p class="subtitle">Visual Understanding of Sample Size Calculation for Common Epidemiological Studies</p>
+
+      <div class="study-selector-container">
+        <label for="study-type" class="selector-label">Select Study Design:</label>
+        <select id="study-type" class="study-dropdown">
+          <option value="prevalence">Prevalence Study (Cross-Sectional)</option>
+          <option value="case-control">Case-Control Study</option>
+          <option value="cohort">Cohort Study</option>
+          <option value="rct">Randomized Controlled Trial (RCT)</option>
+          <option value="two-means">Comparing Two Means</option>
+          <option value="itt">Sample Size for ITT Studies</option>
+        </select>
+      </div>
+    </header>
+
+    <main class="glass-panel">
+      <div class="visualization-container">
+        <div class="metric">
+          <span class="label">Sample Size (N)</span>
+          <span class="value" id="n-value">0</span>
+          <span class="formula-display" id="formula-display">N = 4PQ / D²</span>
+          <div id="dynamic-params" class="dynamic-params">P = 0.50 Q = 0.50 D = 0.05</div>
+        </div>
+        <div class="visual-representation">
+          <!-- Canvas for specific visual feedback if needed, distinct from bg -->
+          <canvas id="sample-canvas"></canvas>
+          <div id="visual-legend" class="visual-legend"></div>
+        </div>
+      </div>
+
+      <div id="controls-container" class="controls-container">
+        <!-- Dynamic inputs will be injected here by script.js -->
+      </div>
+
+      <div class="info-section">
+        <div class="info-card">
+          <h3>Formula Steps</h3>
+          <div id="formula-steps-content">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+        <div class="info-card">
+          <h3>Interpretation</h3>
+          <div id="interpretation-content">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-line blue-text">Developed By</div>
+      <div class="footer-line pink-text">Dr. Arkaprabha Sau, MBBS, MD (Gold Medalist), DPH, Dip. Geriatric Medicine,
+        CCEBDM</div>
+      <div class="footer-line pink-text">PhD (Computer Science & Engineering)</div>
+
+      <div class="disclaimer">
+        This is for educational purposes only. Researchers are requested to verify the results based on standard
+        procedures as per standard epidemiological textbooks. For any errors, bugs, or suggestions, please email me at
+        <a href="mailto:arka.doctor@gmail.com">arka.doctor@gmail.com</a>
+      </div>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+
+</html>

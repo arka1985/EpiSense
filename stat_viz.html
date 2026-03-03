@@ -1,0 +1,3037 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Visualization - EpiSense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .module-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        .viz-card,
+        .stat-tile {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .viz-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .viz-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            appearance: none;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary-pink);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 10px var(--primary-pink);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            padding: 2.5rem 1rem 1rem 1rem;
+            /* More top padding for titles */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .charts-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1100px) {
+            .charts-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-dim);
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .tab:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab.active {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .input-light {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .btn-generate {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-pink);
+            color: var(--primary-pink);
+        }
+
+        .btn-outline:hover {
+            background: rgba(232, 62, 140, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem;">
+            <h1
+                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Stat Visualization</h1>
+            <p class="subtitle" style="margin: 0;">Exploring Normal Distribution & Central Limit Theorem.</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('sampling')">Population, Sampling & CLT</div>
+            <div class="tab" onclick="switchTab('normal')">Distributions & Contexts</div>
+            <div class="tab" onclick="switchTab('shape')">Shape Analysis (Skew & Kurtosis)</div>
+            <div class="tab" onclick="switchTab('z')">Standard Normal (Z-Score)</div>
+        </div>
+
+        <div id="normal-viz" class="viz-card">
+            <div class="viz-layout">
+                <div class="controls-panel">
+                    <!-- Distribution Selector -->
+                    <div class="control-group">
+                        <label style="color: var(--primary-pink); margin-bottom: 0.5rem;">Select Distribution</label>
+                        <select id="dist-selector" class="input-light" onchange="updateDistChart()"
+                            style="background: rgba(0,0,0,0.3); font-size: 1rem; padding: 10px; border-radius: 8px;">
+                            <option value="normal">Normal (Gaussian)</option>
+                            <option value="t">Student's t-Distribution</option>
+                            <option value="chi">Chi-Square</option>
+                            <option value="binomial">Binomial (Discrete)</option>
+                            <option value="poisson">Poisson (Discrete)</option>
+                            <option value="lognormal">Lognormal</option>
+                            <option value="exponential">Exponential (Survival)</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Context Display -->
+                    <div id="dist-context-box"
+                        style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 4px solid var(--primary-blue); margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <span id="dist-context-text"
+                            style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4;"></span>
+                    </div>
+
+                    <!-- Normal Params -->
+                    <div id="params-dist-normal" class="control-group dist-params">
+                        <div style="margin-top: 5px;">
+                            <label>Mean (μ): <span id="norm-mean-val">0</span></label>
+                            <input type="range" id="norm-mean-slider" min="-20" max="20" value="0" step="0.5"
+                                oninput="updateDistChart()">
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label>Standard Deviation (σ): <span id="norm-sd-val">5</span></label>
+                            <input type="range" id="norm-sd-slider" min="1" max="15" value="5" step="0.5"
+                                oninput="updateDistChart()">
+                        </div>
+                    </div>
+
+                    <!-- T Params -->
+                    <div id="params-dist-t" class="control-group dist-params" style="display:none;">
+                        <div style="margin-top: 5px;">
+                            <label>Degrees of Freedom (ν): <span id="t-df-val">5</span></label>
+                            <input type="range" id="t-df-slider" min="1" max="50" value="5" step="1"
+                                oninput="updateDistChart()">
+                        </div>
+                    </div>
+
+                    <!-- Chi-Square Params -->
+                    <div id="params-dist-chi" class="control-group dist-params" style="display:none;">
+                        <div style="margin-top: 5px;">
+                            <label>Degrees of Freedom (k): <span id="chi-df-val">3</span></label>
+                            <input type="range" id="chi-df-slider" min="1" max="30" value="3" step="1"
+                                oninput="updateDistChart()">
+                        </div>
+                    </div>
+
+                    <!-- Binomial Params -->
+                    <div id="params-dist-binomial" class="control-group dist-params" style="display:none;">
+                        <div style="margin-top: 5px;">
+                            <label>Number of Trials (n): <span id="binom-n-val">20</span></label>
+                            <input type="range" id="binom-n-slider" min="1" max="100" value="20" step="1"
+                                oninput="updateDistChart()">
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label>Probability of Success (p): <span id="binom-p-val">0.5</span></label>
+                            <input type="range" id="binom-p-slider" min="0.01" max="0.99" value="0.5" step="0.01"
+                                oninput="updateDistChart()">
+                        </div>
+                    </div>
+
+                    <!-- Poisson Params -->
+                    <div id="params-dist-poisson" class="control-group dist-params" style="display:none;">
+                        <div style="margin-top: 5px;">
+                            <label>Rate of Events (λ): <span id="pois-l-val">5</span></label>
+                            <input type="range" id="pois-l-slider" min="1" max="30" value="5" step="1"
+                                oninput="updateDistChart()">
+                        </div>
+                    </div>
+
+                    <!-- Lognormal Params -->
+                    <div id="params-dist-lognormal" class="control-group dist-params" style="display:none;">
+                        <div style="margin-top: 5px;">
+                            <label>Location (μ): <span id="log-mu-val">0</span></label>
+                            <input type="range" id="log-mu-slider" min="-2" max="2" value="0" step="0.1"
+                                oninput="updateDistChart()">
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label>Scale (σ): <span id="log-sigma-val">0.5</span></label>
+                            <input type="range" id="log-sigma-slider" min="0.1" max="1.5" value="0.5" step="0.05"
+                                oninput="updateDistChart()">
+                        </div>
+                    </div>
+
+                    <!-- Exponential Params -->
+                    <div id="params-dist-exponential" class="control-group dist-params" style="display:none;">
+                        <div style="margin-top: 5px;">
+                            <label>Hazard Rate (λ): <span id="exp-l-val">1</span></label>
+                            <input type="range" id="exp-l-slider" min="0.1" max="5" value="1" step="0.1"
+                                oninput="updateDistChart()">
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="chart-wrapper">
+                        <canvas id="normalChart"></canvas>
+                    </div>
+
+                    <!-- Formula Display -->
+                    <div class="stat-card"
+                        style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); min-height: 100px; display: flex; align-items: center; justify-content: center;">
+                        <div id="formula-display"
+                            style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 1.2rem; color: #fff; width: 100%;">
+                            <!-- Formulas injected by JS -->
+                        </div>
+
+                    </div>
+                    <div style="text-align: center; font-size: 0.8rem; color: #94a3b8;">
+                        The <strong>Probability Density Function (PDF)</strong> describes the likelihood of a value
+                        occurring.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHAPE ANALYSIS VIZ (NEW TABS FOR SKEW & KURTOSIS) -->
+    <div id="shape-viz" class="viz-card" style="display: none;">
+
+        <!-- SKEWNESS SECTION -->
+        <div class="viz-layout"
+            style="margin-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2rem;">
+            <div class="controls-panel">
+                <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;"><i class="fas fa-balance-scale-left"></i>
+                    1. Skewness: Income Distribution Analogy</h3>
+                <p class="subtitle" style="margin-bottom: 1rem; font-size: 0.85rem;">Watch extreme earners physically
+                    enter the population, dragging the Mean away from the Median.</p>
+
+                <div class="control-group">
+                    <label>Skew Parameter (α): <input type="number" id="true-skew-input" min="-10" max="10" value="0"
+                            step="0.5"
+                            style="width: 90px; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 2px 5px; margin-left: 5px;"
+                            oninput="document.getElementById('true-skew-slider').value = this.value; updateTrueShapeChart()"></label>
+                    <input type="range" id="true-skew-slider" min="-10" max="10" value="0" step="0.5"
+                        oninput="document.getElementById('true-skew-input').value = this.value; updateTrueShapeChart()">
+                </div>
+
+                <div id="true-skew-desc"
+                    style="font-size: 0.9rem; font-weight: 600; color: #fff; margin-top: 5px; text-align: center;">
+                    Symmetric</div>
+
+                <div class="stat-card" style="margin-top: 1.5rem; text-align: left; background: rgba(0,0,0,0.2);">
+                    <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 15px;">
+                        <strong style="color: var(--primary-pink); font-size: 1.1rem;">A Concrete Example
+                            (N=20)</strong><br><br>
+                        Imagine exactly 20 people earning between ₹10,000 and ₹10,500. Their Mean and Median are
+                        virtually identical (around ₹10,250). This builds a <strong
+                            style="color: #fff;">Symmetric</strong> distribution.<br><br>
+
+                        <strong style="color: var(--primary-pink);">Try it yourself:</strong> Use the buttons below to
+                        inject a single extreme outlier into this 20-person population and calculate exactly how the
+                        Mean and Skewness react, while the Median stays stubborn!
+                    </div>
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="btn-generate btn-outline" style="padding: 0.5rem; font-size: 0.8rem; flex: 1;"
+                            onclick="applySkewExample('base')">
+                            <i class="fas fa-users"></i> Base (₹10k - 10.5k)
+                        </button>
+                        <button class="btn-generate"
+                            style="background: #60a5fa; border: none; padding: 0.5rem; font-size: 0.8rem; flex: 1;"
+                            onclick="applySkewExample('left')">
+                            <i class="fas fa-arrow-left"></i> Add ₹100 (Left)
+                        </button>
+                        <button class="btn-generate"
+                            style="background: #f472b6; border: none; padding: 0.5rem; font-size: 0.8rem; flex: 1;"
+                            onclick="applySkewExample('right')">
+                            <i class="fas fa-arrow-right"></i> Add ₹100,000 (Right)
+                        </button>
+                    </div>
+
+                    <div id="example-dataset-display"
+                        style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.75rem; color: #94a3b8; word-break: break-all; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                        Click a button above to generate the example dataset...
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                        <span style="font-size: 0.8rem; color: var(--primary-pink); font-weight: bold;">Formula (3rd
+                            Moment):</span>
+                        <code
+                            style="display: block; font-size: 0.95rem; color: #fff; margin-top: 5px;">Skewness = Σ(X - μ)³ / (N · σ³)</code>
+                    </div>
+                    <div
+                        style="font-family: monospace; font-size: 1.1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                        <span style="color: #00e5ff;">Mean: <span id="skew-stat-mean">0.00</span></span><br>
+                        <span style="color: #00e676;">Med: &nbsp;<span id="skew-stat-median">0.00</span></span><br>
+                        <span style="color: #facc15; margin-top: 5px; display: inline-block;">Skewness: <span
+                                id="skew-stat-skew">0.00</span> <span id="skew-class"
+                                style="font-size: 0.85rem;"></span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="skewnessChart"></canvas>
+            </div>
+        </div>
+
+        <!-- KURTOSIS SECTION -->
+        <div class="viz-layout">
+            <div class="controls-panel">
+                <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;"><i class="fas fa-mountain"></i> 2.
+                    Kurtosis: Physical Mass Transfer</h3>
+                <p class="subtitle" style="margin-bottom: 1rem; font-size: 0.85rem;">Watch the "shoulders" collapse as
+                    mass pushes into the peak and tails (Red Zones).</p>
+
+                <div class="control-group">
+                    <label>Extreme Tail Volatility (%): <input type="number" id="true-kurt-input" min="0" max="30"
+                            value="5" step="1"
+                            style="width: 70px; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 2px 5px; margin-left: 5px;"
+                            oninput="document.getElementById('true-kurt-slider').value = this.value; updateTrueShapeChart()"></label>
+                    <input type="range" id="true-kurt-slider" min="0" max="30" value="5" step="1"
+                        oninput="document.getElementById('true-kurt-input').value = this.value; updateTrueShapeChart()">
+                </div>
+
+                <div id="true-kurt-desc"
+                    style="font-size: 0.9rem; font-weight: 600; color: #fff; margin-top: 5px; text-align: center;">
+                    Mesokurtic (Normal Tails)</div>
+
+                <div class="stat-card" style="margin-top: 1.5rem; text-align: left; background: rgba(0,0,0,0.2);">
+                    <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 10px;">
+                        <strong style="color: var(--primary-pink); font-size: 1.1rem;">Understanding
+                            Kurtosis</strong><br><br>
+                        Kurtosis measures the "tailedness" of a distribution using the fourth moment. It identifies the
+                        presence of outliers.<br><br>
+                        <strong style="color: #00e5ff;">1. Mesokurtic (Excess Kurtosis ≈ 0):</strong> Similar to a
+                        normal distribution. Baseline predictable risk.<br>
+                        <strong style="color: #facc15;">2. Platykurtic (Excess Kurtosis &lt; 0):</strong> Thinner tails
+                        and a flatter peak. Extremely dispersed points. Fewer major fluctuations, indicating less
+                        risk.<br>
+                        <strong style="color: #f472b6;">3. Leptokurtic (Excess Kurtosis &gt; 0):</strong> Fatter tails
+                        and a sharper, taller peak. Clustered data points with a much higher frequency of extreme
+                        outlier events (high risk).<br>
+                        <br>
+                        <strong style="color: #00e5ff;">Dynamic Visualizer:</strong> Watch how physically increasing the
+                        tail volatility sweeps mass away from the "shoulders" of the curve and violently pumps it into
+                        the peak and the extreme edges (the red danger zones)!
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                        <span style="font-size: 0.8rem; color: var(--primary-pink); font-weight: bold;">Formula (4th
+                            Moment):</span>
+                        <code
+                            style="display: block; font-size: 0.95rem; color: #fff; margin-top: 5px;">Kurtosis = Σ(X - μ)⁴ / (N · σ⁴)</code>
+                        <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 4px;">*Excess
+                            Kurtosis = Kurtosis - 3</span>
+                    </div>
+                    <div
+                        style="font-family: monospace; font-size: 1.1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-top: 15px;">
+                        <span style="color: #00e5ff;">Mean: <span id="kurt-stat-mean">0.00</span></span><br>
+                        <span style="color: #00e676;">SD: &nbsp;&nbsp;<span id="kurt-stat-sd">0.00</span></span><br>
+                        <span style="color: #facc15; margin-top: 5px; display: inline-block;">Excess Kurt: <span
+                                id="kurt-stat-kurt">0.00</span> <span id="kurt-class"
+                                style="font-size: 0.85rem;"></span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="kurtosisChart"></canvas>
+            </div>
+        </div>
+
+        <!-- DATASET UPLOAD SECTION -->
+        <div class="viz-layout"
+            style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+            <div class="controls-panel"
+                style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <h3 style="color: #00e5ff; margin-bottom: 1rem;"><i class="fas fa-file-upload"></i> Calculate from your
+                    Dataset</h3>
+                <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 1.5rem; max-width: 600px;">
+                    Want to see how your own data holds up? Upload a CSV or TXT file containing numerical data (comma or
+                    space separated) to instantly calculate its Skewness and Kurtosis!
+                </p>
+                <input type="file" id="dataset-upload" accept=".csv, .txt" style="display: none;"
+                    onchange="handleDatasetUpload(event)">
+                <button class="btn-generate" onclick="document.getElementById('dataset-upload').click()">
+                    <i class="fas fa-upload"></i> Upload Dataset
+                </button>
+                <div id="dataset-results"
+                    style="margin-top: 1.5rem; display: none; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border); width: 100%; max-width: 600px; text-align: left;">
+                    <div style="font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;">Analysis Results (<span
+                            id="ds-count">0</span> records)</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                            <div
+                                style="font-size: 0.8rem; color: var(--primary-pink); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">
+                                Skewness</div>
+                            <div id="ds-skew"
+                                style="font-size: 1.8rem; font-family: monospace; font-weight: bold; color: #fff; margin: 0.5rem 0;">
+                                0.00</div>
+                            <div id="ds-skew-type" style="font-size: 0.9rem; color: #cbd5e1; font-weight: bold;">-</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                            <div
+                                style="font-size: 0.8rem; color: #e83e8c; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">
+                                Excess Kurtosis</div>
+                            <div id="ds-kurt"
+                                style="font-size: 1.8rem; font-family: monospace; font-weight: bold; color: #fff; margin: 0.5rem 0;">
+                                0.00</div>
+                            <div id="ds-kurt-type" style="font-size: 0.9rem; color: #cbd5e1; font-weight: bold;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="z-viz" class="viz-card" style="display: none;">
+        <!-- Z-Table Section -->
+        <div class="viz-layout">
+            <div class="controls-panel">
+                <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;">2. Standard Normal (Z-Table)</h3>
+                <div class="control-group">
+                    <label>Show Areas</label>
+                    <label
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400; text-transform: none;">
+                        <input type="checkbox" id="show-1sd" onchange="updateZChart()"
+                            style="width: auto; height: auto;">
+                        ±1σ (68.2%)
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400; text-transform: none;">
+                        <input type="checkbox" id="show-2sd" onchange="updateZChart()"
+                            style="width: auto; height: auto;">
+                        ±2σ (95.4%)
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400; text-transform: none;">
+                        <input type="checkbox" id="show-3sd" onchange="updateZChart()"
+                            style="width: auto; height: auto;">
+                        ±3σ (99.7%)
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>Z-Score Value: <span id="z-val">0</span></label>
+                    <input type="range" id="z-slider" min="-4" max="4" value="0" step="0.1" oninput="updateZChart()">
+                </div>
+                <div class="stat-card" style="text-align: left;">
+                    <span class="stat-label">Z-Score Formula</span>
+                    <code style="color: var(--primary-pink); font-size: 1.1rem;">Z = (X - μ) / σ</code>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="zChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="sampling-viz" class="viz-card" style="display: none;">
+        <div class="viz-layout" style="display: block;">
+            <!-- Full width layout for sampling -->
+            <div class="charts-grid-2" style="margin-bottom: 2rem;">
+                <!-- Controls Panel -->
+                <div class="controls-panel"
+                    style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h4
+                            style="color: var(--primary-pink); margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                            1. Define Population
+                        </h4>
+                        <div class="control-group">
+                            <label>Min Value</label>
+                            <input type="number" id="pop-min" value="0" class="input-light">
+                        </div>
+                        <div class="control-group">
+                            <label>Max Value</label>
+                            <input type="number" id="pop-max" value="100" class="input-light">
+                        </div>
+                        <div class="control-group">
+                            <label>Population Size</label>
+                            <input type="number" id="pop-size" value="1000" class="input-light">
+                        </div>
+                    </div>
+                    <button class="btn-generate" onclick="generatePopulation()"
+                        style="margin-top: 1rem; width: 100%;">Generate
+                        Population</button>
+                </div>
+
+                <!-- Sampling Controls Panel -->
+                <div class="controls-panel"
+                    style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h4
+                            style="color: var(--primary-pink); margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                            2. Draw Samples
+                        </h4>
+                        <div class="control-group">
+                            <label>Sample Size (n): <span id="sample-n-val">30</span></label>
+                            <input type="range" id="sample-n-slider" min="5" max="100" value="30" step="1"
+                                oninput="document.getElementById('sample-n-val').innerText = this.value">
+                        </div>
+                        <div class="control-group" style="margin-top: 1.2rem;">
+                            <label>Repeated Samples (k)</label>
+                            <input type="number" id="num-samples" value="1" min="1" max="1000" class="input-light">
+                        </div>
+
+                        <div class="control-group" style="margin-top: 1rem;">
+                            <label style="font-size: 0.8rem; opacity: 0.8;">Confidence Intervals to Show:</label>
+                            <div style="display: flex; gap: 10px; margin-top: 0.5rem;">
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem;">
+                                    <input type="checkbox" id="show-ci-90" class="checkbox-custom"
+                                        onchange="updateCIChart()"> 90%
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem;">
+                                    <input type="checkbox" id="show-ci-95" checked class="checkbox-custom"
+                                        onchange="updateCIChart()"> 95%
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem;">
+                                    <input type="checkbox" id="show-ci-99" class="checkbox-custom"
+                                        onchange="updateCIChart()"> 99%
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                        <button class="btn-generate" onclick="drawRepeatedSamples()"
+                            style="flex: 2; min-width: 120px;">Draw Sample(s)</button>
+                        <button class="btn-generate btn-outline" onclick="resetSampling()"
+                            style="flex: 1; min-width: 80px;">Reset</button>
+                        <button class="btn-generate" onclick="masterReset()"
+                            style="flex: 1; min-width: 120px; background: #ff5252; border-color: #ff5252;">Master
+                            Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel"
+                style="margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="control-group">
+                    <label>Last Sample Values</label>
+                    <textarea id="sample-values-display" readonly class="input-light"
+                        style="height: 100px; font-family: monospace; font-size: 0.8rem; resize: none;"></textarea>
+                </div>
+                <div class="control-group">
+                    <label>Confidence Interval Bounds</label>
+                    <div id="ci-bounds-display" class="input-light"
+                        style="height: 100px; padding: 10px; font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow-y: auto;">
+                        <span style="opacity: 0.5;">No samples drawn yet.</span>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="charts-grid-2">
+                <!-- Population Column -->
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="chart-wrapper" style="height: 320px;">
+                        <div
+                            style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 8px; font-size: 0.8rem; color: #fff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); z-index: 10;">
+                            Population Distribution</div>
+                        <canvas id="popChart"></canvas>
+                    </div>
+                    <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="stat-card">
+                            <span class="stat-label">Pop Mean (μ)</span>
+                            <span class="stat-value" id="pop-mean">-</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Pop SD (σ)</span>
+                            <span class="stat-value" id="pop-sd">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CLT Column -->
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="chart-wrapper" style="height: 320px;">
+                        <div
+                            style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; color: #fff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(255,255,255,0.05); z-index: 10; font-weight: 600;">
+                            Sampling Distribution (Means)</div>
+                        <canvas id="cltChart"></canvas>
+                    </div>
+                    <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="stat-card" style="border-color: var(--primary-pink);">
+                            <span class="stat-label">Sample Mean (x̄)</span>
+                            <span class="stat-value" id="sample-mean">-</span>
+                        </div>
+                        <div class="stat-card" style="border-color: var(--primary-pink);">
+                            <span class="stat-label">Sample SD (s)</span>
+                            <span class="stat-value" id="sample-sd">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SE Stats (Full Width) -->
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="stat-card">
+                    <span class="stat-label">Standard Error (Theoretical) σ/√n</span>
+                    <span class="stat-value" id="se-theo">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Standard Error (Simulated) SD(x̄)</span>
+                    <span class="stat-value" id="se-sim">-</span>
+                </div>
+            </div>
+
+
+
+            <!-- Confidence Interval Chart -->
+            <div class="chart-wrapper" style="height: 250px;">
+                <div
+                    style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; color: #fff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(255,255,255,0.05); z-index: 10; font-weight: 600;">
+                    Visual History: Confidence Intervals</div>
+                <canvas id="ciChart"></canvas>
+            </div>
+
+            <!-- Statistical Glossary Section -->
+            <div style="margin-top: 3rem;">
+                <h4
+                    style="color: var(--primary-pink); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.2rem;">
+                    <i class="fas fa-book-open"></i> Statistical Definitions
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <!-- Tile 1 -->
+                    <div class="stat-tile"
+                        style="margin: 0; background: rgba(96, 165, 250, 0.05); border-top: 4px solid #60a5fa;">
+                        <h5 style="color: #60a5fa; margin-bottom: 0.8rem; font-size: 1rem;"><i class="fas fa-users"></i>
+                            Population Mean (μ)</h5>
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">The true
+                            average value of the entire population.</p>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                            <div style="color: #60a5fa; font-weight: bold; margin-bottom: 4px;">Formula:</div>
+                            <code style="font-size: 1.1rem; color: #fff;">μ = ΣX / N</code>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current Pop):
+                            </div>
+                            <div id="ex-pop-mean" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                                generation...</div>
+                        </div>
+                    </div>
+                    <!-- Tile 2 -->
+                    <div class="stat-tile"
+                        style="margin: 0; background: rgba(96, 165, 250, 0.05); border-top: 4px solid #60a5fa;">
+                        <h5 style="color: #60a5fa; margin-bottom: 0.8rem; font-size: 1rem;"><i
+                                class="fas fa-arrows-alt-h"></i> Population SD (σ)</h5>
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">Average
+                            distance of population points from the mean.</p>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                            <div style="color: #60a5fa; font-weight: bold; margin-bottom: 4px;">Formula:</div>
+                            <code style="font-size: 1.1rem; color: #fff;">σ = √[ Σ(X-μ)² / N ]</code>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current Pop):
+                            </div>
+                            <div id="ex-pop-sd" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                                generation...</div>
+                        </div>
+                    </div>
+                    <!-- Tile 3 -->
+                    <div class="stat-tile"
+                        style="margin: 0; background: rgba(233, 30, 99, 0.05); border-top: 4px solid var(--primary-pink);">
+                        <h5 style="color: var(--primary-pink); margin-bottom: 0.8rem; font-size: 1rem;"><i
+                                class="fas fa-vial"></i> Sample Mean (x̄)</h5>
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">The average
+                            value calculated from a specific sample size (n).</p>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                            <div style="color: var(--primary-pink); font-weight: bold; margin-bottom: 4px;">Formula:
+                            </div>
+                            <code style="font-size: 1.1rem; color: #fff;">x̄ = Σx / n</code>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last Draw):</div>
+                            <div id="ex-sample-mean" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                                draw...</div>
+                        </div>
+                    </div>
+                    <!-- Tile 4 -->
+                    <div class="stat-tile"
+                        style="margin: 0; background: rgba(233, 30, 99, 0.05); border-top: 4px solid var(--primary-pink);">
+                        <h5 style="color: var(--primary-pink); margin-bottom: 0.8rem; font-size: 1rem;"><i
+                                class="fas fa-microscope"></i> Sample SD (s)</h5>
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">Estimated
+                            spread of the population using (n-1) degrees of freedom.</p>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                            <div style="color: var(--primary-pink); font-weight: bold; margin-bottom: 4px;">Formula:
+                            </div>
+                            <code style="font-size: 1.1rem; color: #fff;">s = √[ Σ(x-x̄)² / (n-1) ]</code>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last Draw):</div>
+                            <div id="ex-sample-sd" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for
+                                draw...</div>
+                        </div>
+                    </div>
+                    <!-- Tile 5 -->
+                    <div class="stat-tile"
+                        style="margin: 0; background: rgba(0, 230, 118, 0.05); border-top: 4px solid #00e676;">
+                        <h5 style="color: #00e676; margin-bottom: 0.8rem; font-size: 1rem;"><i
+                                class="fas fa-chart-line"></i> Standard Error (SE)</h5>
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">Quantifies
+                            the precision of the sample mean. <strong>Used for calculating Confidence Intervals and
+                                conducting Hypothesis Testing.</strong></p>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                            <div style="color: #00e676; font-weight: bold; margin-bottom: 4px;">Formula:</div>
+                            <code style="font-size: 1.1rem; color: #fff;">SE = σ / √n</code>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Current):</div>
+                            <div id="ex-se" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for draw...
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tile 6 -->
+                    <div class="stat-tile"
+                        style="margin: 0; background: rgba(244, 114, 182, 0.05); border-top: 4px solid #f472b6;">
+                        <h5 style="color: #f472b6; margin-bottom: 0.8rem; font-size: 1rem;"><i
+                                class="fas fa-bullseye"></i> <span id="ci-tile-title">95% Confidence Interval
+                                (CI)</span></h5>
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">A precision
+                            range that captures the true population mean with a specific level of certainty. <strong>The
+                                interval width is determined by the Standard Error (SE).</strong></p>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                            <div style="color: #f472b6; font-weight: bold; margin-bottom: 4px;">Formula:</div>
+                            <code style="font-size: 1.1rem; color: #fff;"
+                                id="ci-tile-formula">CI = x̄ ± (1.96 * SE)</code>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">Example (Last Draw):</div>
+                            <div id="ex-ci" style="font-size: 0.85rem; color: #fff; opacity: 0.9;">Waiting for draw...
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tile 7 (CLT) -->
+                    <div class="stat-tile"
+                        style="margin: 0; background: rgba(168, 85, 247, 0.05); border-top: 4px solid #a855f7;">
+                        <h5 style="color: #a855f7; margin-bottom: 0.8rem; font-size: 1rem;"><i
+                                class="fas fa-graduation-cap"></i> CLT & Why it Matters?</h5>
+                        <p style="font-size: 0.85rem; opacity: 0.8; line-height: 1.4; margin-bottom: 1rem;">
+                            Sample means follow a <strong>Normal Distribution</strong> regardless of population shape,
+                            if <i>n</i> is large enough.</p>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px; font-family: 'Times New Roman', serif;">
+                            <div style="color: #a855f7; font-weight: bold; margin-bottom: 4px;">Significance:</div>
+                            <p style="font-size: 0.85rem; color: #fff; opacity: 0.9; margin: 0;">Allows making
+                                inferential predictions about a population without knowing its true distribution shape.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Drawing History Section -->
+            <div class="stat-tile" style="margin-top: 3rem; background: rgba(255,255,255,0.02); min-height: 300px;">
+                <h4
+                    style="color: var(--primary-blue); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; font-size: 1.2rem;">
+                    <i class="fas fa-history"></i> Recent Samples History (Last 30)
+                </h4>
+                <div id="sample-history-tiles"
+                    style="display: flex; flex-direction: column; gap: 0.8rem; max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                    <div style="text-align: center; padding: 3rem; opacity: 0.5;">
+                        <i class="fas fa-spinner fa-spin"
+                            style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        Waiting for first sample draw...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+        <div class="footer-content">
+            <div class="dev-label">Developed By</div>
+            <div class="dev-name">Dr. Arkaprabha Sau</div>
+            <div class="dev-creds">
+                MBBS, MD (Gold Medalist), DPH, Dip. Geriatric Medicine, CCEBDM<br>
+                PhD (Computer Science & Engineering)
+            </div>
+            <div class="disclaimer">
+                Researchers are requested to verify the results based on standard procedures. For educational
+                purposes only.
+            </div>
+        </div>
+    </footer>
+    </div>
+
+    <script>
+        let normalChart, zChart, morphChart, cltChart;
+        let skewnessChart, kurtosisChart;
+
+        function handleDatasetUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const text = e.target.result;
+                const numbers = text.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && text.trim() !== '');
+
+                if (numbers.length === 0) {
+                    alert("No valid numerical data found in the file.");
+                    return;
+                }
+
+                calculateDatasetShape(numbers);
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        function calculateDatasetShape(data) {
+            const n = data.length;
+            if (n < 4) {
+                alert("Please provide a dataset with at least 4 values for reliable Skewness and Kurtosis.");
+                return;
+            }
+
+            const mean = data.reduce((a, b) => a + b, 0) / n;
+            let variance = 0, sumCube = 0, sumQuad = 0;
+
+            for (let i = 0; i < n; i++) {
+                const diff = data[i] - mean;
+                variance += diff * diff;
+                sumCube += Math.pow(diff, 3);
+                sumQuad += Math.pow(diff, 4);
+            }
+
+            const m2 = variance / n;
+            const m3 = sumCube / n;
+            const m4 = sumQuad / n;
+
+            const sd = Math.sqrt(m2);
+
+            let skewness = 0;
+            let excessKurtosis = 0;
+
+            if (sd > 0) {
+                skewness = m3 / Math.pow(m2, 1.5);
+                skewness = skewness * Math.sqrt((n * (n - 1))) / (n - 2);
+
+                const kurtosis = m4 / Math.pow(m2, 2);
+                excessKurtosis = kurtosis - 3;
+            }
+
+            let skewStr = "Symmetric";
+            if (skewness > 0.5) skewStr = "Positive (Right Skewed)";
+            if (skewness > 1.5) skewStr = "Highly Positive Skewed";
+            if (skewness < -0.5) skewStr = "Negative (Left Skewed)";
+            if (skewness < -1.5) skewStr = "Highly Negative Skewed";
+            if (Math.abs(skewness) <= 0.5) skewStr = "Symmetric";
+
+            let kurtStr = "Mesokurtic";
+            if (excessKurtosis > 0.5) kurtStr = "Leptokurtic (Fat Tails)";
+            if (excessKurtosis > 2.0) kurtStr = "Highly Leptokurtic (Extreme Risks)";
+            if (excessKurtosis < -0.5) kurtStr = "Platykurtic (Thin Tails)";
+            if (excessKurtosis < -1.0) kurtStr = "Highly Platykurtic";
+            if (Math.abs(excessKurtosis) <= 0.5) kurtStr = "Mesokurtic";
+
+            document.getElementById('ds-count').innerText = n.toLocaleString();
+            document.getElementById('ds-skew').innerText = skewness.toFixed(3);
+            document.getElementById('ds-skew-type').innerText = skewStr;
+            document.getElementById('ds-skew-type').style.color = skewness > 0.5 ? '#f472b6' : (skewness < -0.5 ? '#60a5fa' : '#00e676');
+
+            document.getElementById('ds-kurt').innerText = excessKurtosis.toFixed(3);
+            document.getElementById('ds-kurt-type').innerText = kurtStr;
+            document.getElementById('ds-kurt-type').style.color = excessKurtosis > 0.5 ? '#f472b6' : (excessKurtosis < -0.5 ? '#60a5fa' : '#00e676');
+
+            document.getElementById('dataset-results').style.display = 'block';
+        }
+
+        // Custom Plugin for drawing vertical lines on charts
+        const verticalLinePlugin = {
+            id: 'verticalLine',
+            beforeDraw: (chart, args, options) => {
+                if (!options.lines || options.lines.length === 0) return;
+
+                const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+
+                options.lines.forEach(line => {
+                    if (line.xIndex < 0 || line.xIndex >= x.ticks.length || !x.ticks[line.xIndex]) return;
+
+                    const xCoord = x.getPixelForValue(x.ticks[line.xIndex].value);
+                    if (xCoord < left || xCoord > right) return;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.strokeStyle = line.color || 'red';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(xCoord, top);
+                    ctx.lineTo(xCoord, bottom);
+                    ctx.stroke();
+
+                    if (line.label) {
+                        ctx.fillStyle = line.color || 'red';
+                        ctx.font = 'bold 10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(line.label, xCoord, top - 10);
+                    }
+                    ctx.restore();
+                });
+            }
+        };
+
+        Chart.register(verticalLinePlugin);
+
+
+
+        function normalPDF(x, mean, sd) {
+            return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
+        }
+
+        // Error Function Approximation (for Skew Normal)
+        function erf(x) {
+            var sign = (x >= 0) ? 1 : -1;
+            x = Math.abs(x);
+            var a1 = 0.254829592;
+            var a2 = -0.284496736;
+            var a3 = 1.421413741;
+            var a4 = -1.453152027;
+            var a5 = 1.061405429;
+            var p = 0.3275911;
+            var t = 1.0 / (1.0 + p * x);
+            var y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            return sign * y;
+        }
+
+        // Standard Normal CDF
+        function normalCDF(x) {
+            return 0.5 * (1 + erf(x / Math.sqrt(2)));
+        }
+
+        // Skew Normal PDF: 2 * phi(x) * PHI(alpha * x)
+        // where phi is standard normal pdf, PHI is standard normal cdf
+
+
+        // Generalized Normal (for Kurtosis): f(x) = (beta / (2 * alpha * Gamma(1/beta))) * exp(-(|x - mu| / alpha)^beta)
+        // simplifed: mu=0, alpha=1. 
+        // beta=2 -> Normal. beta < 2 -> Leptokurtic (Peaked). beta > 2 -> Platykurtic (Flat)
+        // Gamma function approximation needed or simple simulation? 
+        // Let's use simplified Generalized Error Distribution (GED) logic or T-distribution for Kurtosis.
+        // Actually, T-distribution is easier for "Heavy Tails" (Leptokurtic). 
+        // But Generalized Normal is better for shape control. Let's implement Gamma approximation.
+
+        function gamma(z) {
+            const g = 7;
+            const p = [
+                0.99999999999980993,
+                676.5203681218851,
+                -1259.1392167224028,
+                771.32342877765313,
+                -176.61502916214059,
+                12.507343278686905,
+                -0.13857109526572012,
+                9.9843695780195716e-6,
+                1.5056327351493116e-7
+            ];
+            if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+            z -= 1;
+            let x = p[0];
+            for (let i = 1; i < 9; i++) x += p[i] / (z + i);
+            let t = z + g + 0.5;
+            return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+        }
+
+
+
+
+
+        // --- Sampling & CLT Logic ---
+        let populationValues = [];
+        let populationDots = []; // Store {x, y, id} for visualization
+        let cltMeans = [];
+        let ciHistory = []; // Stores { mean, lower, upper, hit }
+        let currentPopMean = 0;
+        let currentPopSD = 0;
+        let ciChart;
+
+        function generatePopulation() {
+            const min = parseInt(document.getElementById('pop-min').value);
+            const max = parseInt(document.getElementById('pop-max').value);
+            const size = parseInt(document.getElementById('pop-size').value);
+
+            populationValues = [];
+            populationDots = [];
+
+            // Generate normal-ish distribution
+            const mean = (max + min) / 2;
+            const sd = (max - min) / 6;
+
+            for (let i = 0; i < size; i++) {
+                const u = 1 - Math.random();
+                const v = Math.random();
+                const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+                let val = mean + z * sd;
+                // Add some noise/bumps to make it interesting
+                if (Math.random() > 0.8) val += (Math.random() - 0.5) * sd;
+
+                val = Math.round(val);
+                if (val < min) val = min;
+                if (val > max) val = max;
+                populationValues.push(val);
+
+                // Jitter Y: 0 to 1
+                populationDots.push({ x: val, y: Math.random() });
+            }
+
+            // Stats
+            const sum = populationValues.reduce((a, b) => a + b, 0);
+            currentPopMean = sum / size;
+            const popVar = populationValues.reduce((a, b) => a + Math.pow(b - currentPopMean, 2), 0) / size;
+            currentPopSD = Math.sqrt(popVar);
+
+            document.getElementById('pop-mean').innerText = currentPopMean.toFixed(2);
+            document.getElementById('pop-sd').innerText = currentPopSD.toFixed(2);
+
+            // Update Glossary Examples
+            document.getElementById('ex-pop-mean').innerHTML = `ΣX=${sum.toFixed(0)}, N=${size} → <b>${currentPopMean.toFixed(2)}</b>`;
+            document.getElementById('ex-pop-sd').innerHTML = `Var=${popVar.toFixed(2)} → <b>${currentPopSD.toFixed(2)}</b>`;
+
+            // Clear previous sampling history
+            resetSampling(false);
+
+            // Reset Drawing Examples
+            document.getElementById('ex-sample-mean').innerText = 'Waiting for draw...';
+            document.getElementById('ex-sample-sd').innerText = 'Waiting for draw...';
+            document.getElementById('ex-se').innerText = 'Waiting for draw...';
+            document.getElementById('ex-ci').innerText = 'Waiting for draw...';
+
+            // Plot Population
+            plotPopulation();
+        }
+
+        function plotPopulation() {
+            const ctx = document.getElementById('popChart').getContext('2d');
+            const min = Math.floor(Math.min(...populationValues));
+            const max = Math.ceil(Math.max(...populationValues));
+
+            // Generate Normal Curve for Overlay (Normalized to 0-1 range)
+            const curveData = [];
+            // Max Density for scaling
+            const maxDensity = 1 / (currentPopSD * Math.sqrt(2 * Math.PI));
+            const scaleFactor = 0.9 / maxDensity; // Scale peak to 0.9
+
+            // Generate curve points
+            for (let x = min; x <= max; x += (max - min) / 100) {
+                const pdf = normalPDF(x, currentPopMean, currentPopSD);
+                curveData.push({ x: x, y: pdf * scaleFactor });
+            }
+
+            if (popChart) popChart.destroy();
+            popChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Distribution Curve',
+                            data: curveData,
+                            borderColor: '#00e5ff',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointStyle: 'dash', // Dash for curve
+                            tension: 0.4,
+                            fill: false,
+                            order: 0,
+                            yAxisID: 'y' // Use the same axis
+                        },
+                        {
+                            type: 'scatter',
+                            label: 'Population',
+                            data: populationDots,
+                            backgroundColor: 'rgba(96, 165, 250, 0.3)', // Translucent blue
+                            borderColor: 'transparent',
+                            pointRadius: 2,
+                            pointStyle: 'circle',
+                            order: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'scatter',
+                            label: 'Sample Highlight',
+                            data: [], // Filled during sampling
+                            backgroundColor: '#ff1744', // Red
+                            pointRadius: 5,
+                            pointStyle: 'circle',
+                            order: 1,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { usePointStyle: true, color: '#94a3b8' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${Math.round(context.raw.x)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            min: min,
+                            max: max,
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', precision: 0 }
+                        },
+                        y: {
+                            display: false,
+                            min: 0,
+                            max: 1 // Normalize both to 0-1
+                        }
+                    },
+                    animation: { duration: 500 }
+                }
+            });
+        }
+
+        function resetSampling(redraw = true) {
+            cltMeans = [];
+            ciHistory = [];
+            document.getElementById('sample-mean').innerText = '-';
+            document.getElementById('sample-sd').innerText = '-';
+            document.getElementById('se-theo').innerText = '-';
+            document.getElementById('se-sim').innerText = '-';
+            document.getElementById('sample-values-display').value = '';
+            document.getElementById('ci-bounds-display').innerHTML = '<span style="opacity: 0.5;">No samples drawn yet.</span>';
+
+            const historyContainer = document.getElementById('sample-history-tiles');
+            if (historyContainer) {
+                historyContainer.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; opacity: 0.5;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        Waiting for first sample draw...
+                    </div>`;
+            }
+
+            if (redraw) {
+                if (cltChart) {
+                    cltChart.data.labels = [];
+                    cltChart.data.datasets.forEach(dst => dst.data = []);
+                    cltChart.update();
+                }
+                if (ciChart) {
+                    ciChart.destroy();
+                    ciChart = null;
+                    initCIChart();
+                }
+            }
+        }
+
+        function masterReset() {
+            populationValues = [];
+            populationDots = [];
+            currentPopMean = 0;
+            currentPopSD = 0;
+
+            document.getElementById('pop-mean').innerText = '-';
+            document.getElementById('pop-sd').innerText = '-';
+
+            if (popChart) {
+                popChart.destroy();
+                popChart = null;
+                const canvas = document.getElementById('popChart');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            resetSampling(true);
+        }
+
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        async function drawRepeatedSamples() {
+            if (populationValues.length === 0) generatePopulation();
+
+            const button = document.querySelector('button[onclick="drawRepeatedSamples()"]');
+            if (button) button.disabled = true;
+
+            const n = parseInt(document.getElementById('sample-n-slider').value);
+            const k = parseInt(document.getElementById('num-samples').value);
+
+            if (k === 1) {
+                await animateSingleSample(n);
+                if (button) button.disabled = false;
+                return;
+            }
+
+            // Batch Mode (Fast)
+            let lastSample = [];
+            let lastMean = 0;
+            let lastSD = 0;
+            let lastIndices = [];
+
+            for (let i = 0; i < k; i++) {
+                // Draw Sample
+                const sample = [];
+                const indices = [];
+                for (let j = 0; j < n; j++) {
+                    const idx = Math.floor(Math.random() * populationValues.length);
+                    sample.push(populationValues[idx]);
+                    indices.push(idx);
+                }
+
+                // Stats
+                const stats = calculateSampleStats(sample, n);
+                lastMean = stats.mean;
+                lastSD = stats.sd;
+                lastSample = sample;
+                lastIndices = indices;
+            }
+
+            // Highlight Last Sample
+            highlightSample(lastIndices);
+            updateUI(lastSample, lastMean, lastSD, n, k);
+            if (button) button.disabled = false;
+        }
+
+        async function animateSingleSample(n) {
+            const sample = [];
+            const indices = [];
+            for (let j = 0; j < n; j++) {
+                const idx = Math.floor(Math.random() * populationValues.length);
+                sample.push(populationValues[idx]);
+                indices.push(idx);
+            }
+
+            // 1. Highlight
+            highlightSample(indices);
+
+            // 2. Wait
+            await sleep(400);
+
+            // 3. Stats & Update
+            const stats = calculateSampleStats(sample, n);
+            updateUI(sample, stats.mean, stats.sd, n, 1);
+        }
+
+        function highlightSample(indices) {
+            if (!popChart) return;
+            const highlightData = indices.map(i => populationDots[i]);
+            popChart.data.datasets[2].data = highlightData;
+            popChart.update('none'); // 'none' for performance? No, we want animation maybe?
+            popChart.update();
+        }
+
+        function calculateSampleStats(sample, n) {
+            const sum = sample.reduce((a, b) => a + b, 0);
+            const mean = sum / n;
+            const variance = sample.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n - 1);
+            const sd = Math.sqrt(variance);
+
+            cltMeans.push(mean);
+
+            // CI Calculation for 90%, 95%, 99%
+            const se = sd / Math.sqrt(n);
+
+            // Critical values (Approx Z-distribution)
+            const z90 = 1.645;
+            const z95 = 1.96;
+            const z99 = 2.576;
+
+            const ci90 = { lower: mean - z90 * se, upper: mean + z90 * se };
+            const ci95 = { lower: mean - z95 * se, upper: mean + z95 * se };
+            const ci99 = { lower: mean - z99 * se, upper: mean + z99 * se };
+
+            const hit95 = (currentPopMean >= ci95.lower && currentPopMean <= ci95.upper);
+
+            ciHistory.push({
+                mean,
+                sd,
+                ci90, ci95, ci99,
+                hit: hit95,
+                id: ciHistory.length + 1,
+                sampleValues: [...sample] // Store raw values
+            });
+
+            return { mean, sd, ci90, ci95, ci99 };
+        }
+
+        function updateUI(lastSample, lastMean, lastSD, n, k) {
+            document.getElementById('sample-mean').innerText = lastMean.toFixed(2);
+            document.getElementById('sample-sd').innerText = lastSD.toFixed(2);
+
+            const lastEntry = ciHistory[ciHistory.length - 1];
+            const sampleId = lastEntry ? lastEntry.id : '-';
+
+            // Update Text History (Optional, keeping as fallback/reference if still in DOM)
+            const displayBox = document.getElementById('sample-values-display');
+
+            // Show history of last 30 samples in premium tiles
+            const historyCount = 30;
+            const history = ciHistory.slice(-historyCount).reverse();
+
+            if (displayBox && lastEntry) {
+                const vals = lastEntry.sampleValues.map(v => Math.round(v)).join(', ');
+                displayBox.value = `Sample S${lastEntry.id} (n=${n}, mean=${lastEntry.mean.toFixed(2)}):\n[${vals}]`;
+            }
+
+            const historyContainer = document.getElementById('sample-history-tiles');
+            if (historyContainer) {
+                historyContainer.innerHTML = history.map(h => {
+                    const vals = h.sampleValues.map(v => Math.round(v)).join(', ');
+                    const hit = h.hit ? '<span style="color: #00e676;"><i class="fas fa-check-circle"></i> Hit</span>' : '<span style="color: #ff5252;"><i class="fas fa-times-circle"></i> Miss</span>';
+                    return `
+                        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border-left: 4px solid ${h.hit ? '#00e676' : '#ff5252'}; display: flex; flex-direction: column; gap: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong style="color: var(--primary-blue);">Sample S${h.id}</strong>
+                                <span style="font-size: 0.8rem; opacity: 0.7;">Mean: ${h.mean.toFixed(2)} | n: ${n}</span>
+                                ${hit}
+                            </div>
+                            <div style="font-family: monospace; font-size: 0.75rem; opacity: 0.8; word-break: break-all;">
+                                [${vals}]
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Display CI Bounds
+            const boundsBox = document.getElementById('ci-bounds-display');
+            if (boundsBox && lastEntry) {
+                boundsBox.innerHTML = `
+                    <div style="font-weight: bold; color: var(--primary-pink); margin-bottom: 5px;">Sample S${sampleId} Bounds:</div>
+                    <div style="color: #60a5fa;">90% CI: [${lastEntry.ci90.lower.toFixed(2)}, ${lastEntry.ci90.upper.toFixed(2)}]</div>
+                    <div style="color: #00e676;">95% CI: [${lastEntry.ci95.lower.toFixed(2)}, ${lastEntry.ci95.upper.toFixed(2)}]</div>
+                    <div style="color: #f472b6;">99% CI: [${lastEntry.ci99.lower.toFixed(2)}, ${lastEntry.ci99.upper.toFixed(2)}]</div>
+                `;
+            }
+
+            // Calculate SEs
+            const theoreticalSE = currentPopSD / Math.sqrt(n);
+            document.getElementById('se-theo').innerText = theoreticalSE.toFixed(2);
+
+            if (cltMeans.length > 1) {
+                const meanOfMeans = cltMeans.reduce((a, b) => a + b, 0) / cltMeans.length;
+                const varOfMeans = cltMeans.reduce((a, b) => a + Math.pow(b - meanOfMeans, 2), 0) / (cltMeans.length - 1);
+                const simSE = Math.sqrt(varOfMeans);
+                document.getElementById('se-sim').innerText = simSE.toFixed(2);
+
+                // Update Glossary Examples (Dynamic)
+                if (lastEntry) {
+                    const seVal = lastSD / Math.sqrt(n);
+                    document.getElementById('ex-sample-mean').innerHTML = `Σx=${lastSample.reduce((a, b) => a + b, 0).toFixed(0)}, n=${n} → <b>${lastMean.toFixed(2)}</b>`;
+                    document.getElementById('ex-sample-sd').innerHTML = `df=${n - 1} → <b>${lastSD.toFixed(2)}</b>`;
+                    document.getElementById('ex-se').innerHTML = `σ=${currentPopSD.toFixed(2)}, √n=${Math.sqrt(n).toFixed(2)} → <b>${theoreticalSE.toFixed(2)}</b>`;
+                    syncCITile();
+                }
+            }
+
+            updateCLTChart();
+            updateCIChart();
+        }
+
+        function syncCITile() {
+            const is90 = document.getElementById('show-ci-90').checked;
+            const is95 = document.getElementById('show-ci-95').checked;
+            const is99 = document.getElementById('show-ci-99').checked;
+
+            const titleEl = document.getElementById('ci-tile-title');
+            const formulaEl = document.getElementById('ci-tile-formula');
+            const exCiEl = document.getElementById('ex-ci');
+
+            if (!titleEl || !formulaEl) return;
+
+            let level = "95%";
+            let z = 1.96;
+            let color = "#00e676"; // Green for 95%
+
+            // Priority: 99 > 95 > 90
+            if (is99) { level = "99%"; z = 2.576; color = "#f472b6"; }
+            else if (is95) { level = "95%"; z = 1.96; color = "#00e676"; }
+            else if (is90) { level = "90%"; z = 1.645; color = "#60a5fa"; }
+            else {
+                titleEl.innerText = "Confidence Interval (Select Level)";
+                formulaEl.innerText = "CI = x̄ ± (Z * SE)";
+                return;
+            }
+
+            titleEl.innerText = `${level} Confidence Interval (CI)`;
+            titleEl.style.color = color;
+            formulaEl.innerText = `CI = x̄ ± (${z} * SE)`;
+
+            // Update example if we have data
+            if (ciHistory.length > 0) {
+                const lastEntry = ciHistory[ciHistory.length - 1];
+                const n = parseInt(document.getElementById('sample-n-slider').value);
+                const se = lastEntry.sd / Math.sqrt(n);
+                let lower, upper;
+                if (level === "99%") { lower = lastEntry.ci99.lower; upper = lastEntry.ci99.upper; }
+                else if (level === "95%") { lower = lastEntry.ci95.lower; upper = lastEntry.ci95.upper; }
+                else { lower = lastEntry.ci90.lower; upper = lastEntry.ci90.upper; }
+
+                exCiEl.innerHTML = `${lastEntry.mean.toFixed(2)} ± (${z} * ${se.toFixed(2)}) → <b>[${lower.toFixed(2)}, ${upper.toFixed(2)}]</b>`;
+            }
+        }
+
+        function updateCLTChart() {
+            const ctx = document.getElementById('cltChart').getContext('2d');
+            const n = parseInt(document.getElementById('sample-n-slider').value);
+
+            const min = Math.floor(Math.min(...populationValues));
+            const max = Math.ceil(Math.max(...populationValues));
+
+            // For a Dot Plot, we can use a scatter chart where Y is the stack height.
+            // We'll bin the means slightly so they stack even if not identical.
+            const binSize = (max - min) / 50;
+            const stacks = {};
+            const dotData = cltMeans.map((m, i) => {
+                const bin = Math.round(m / binSize) * binSize;
+                stacks[bin] = (stacks[bin] || 0) + 1;
+                return { x: m, y: stacks[bin], id: i + 1 };
+            });
+
+            // Theoretical Normal Curve for Sampling Distribution
+            const se = currentPopSD / Math.sqrt(n);
+            const curveData = [];
+
+            // Normalize curve to fit the dot stack heights
+            const maxPointsInBin = Math.max(...Object.values(stacks), 0);
+            const maxPDF = normalPDF(currentPopMean, currentPopMean, se);
+            const curveScale = maxPointsInBin > 0 ? (maxPointsInBin / maxPDF) * 0.8 : 1;
+
+            for (let x = min; x <= max; x += (max - min) / 100) {
+                const y = normalPDF(x, currentPopMean, se);
+                curveData.push({ x: x, y: y * curveScale });
+            }
+
+            if (cltChart) cltChart.destroy();
+
+            cltChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Sampling Distribution Curve',
+                            data: curveData,
+                            borderColor: '#00e676',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointStyle: 'dash',
+                            tension: 0.4,
+                            fill: false,
+                            order: 0
+                        },
+                        {
+                            type: 'scatter',
+                            label: 'Sample Means (Dots)',
+                            data: dotData,
+                            backgroundColor: 'rgba(232, 62, 140, 0.7)',
+                            borderColor: '#e83e8c',
+                            borderWidth: 1,
+                            pointRadius: 6,
+                            pointStyle: 'circle',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { usePointStyle: true, color: '#94a3b8' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const d = context.raw;
+                                    if (d.id) return `Sample S${d.id}: Mean ${d.x.toFixed(2)}`;
+                                    return `Mean: ${d.x.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear', min: min, max: max,
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8', stepSize: 1, precision: 0 },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: { display: true, text: 'Frequency (Stacked Samples)', color: '#94a3b8' }
+                        }
+                    },
+                    animation: false
+                }
+            });
+        }
+
+        function initCIChart() {
+            const ctx = document.getElementById('ciChart').getContext('2d');
+            ciChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '99% CI',
+                            data: [],
+                            backgroundColor: 'rgba(244, 114, 182, 0.2)', // Pink (Generalized Normal color range)
+                            borderColor: 'rgba(244, 114, 182, 0.4)',
+                            borderWidth: 1,
+                            barThickness: 15,
+                            hidden: !document.getElementById('show-ci-99').checked
+                        },
+                        {
+                            label: '95% CI',
+                            data: [],
+                            backgroundColor: 'rgba(0, 230, 118, 0.4)', // Green
+                            borderColor: 'rgba(0, 230, 118, 0.6)',
+                            borderWidth: 1,
+                            barThickness: 10,
+                            hidden: !document.getElementById('show-ci-95').checked
+                        },
+                        {
+                            label: '90% CI',
+                            data: [],
+                            backgroundColor: 'rgba(96, 165, 250, 0.6)', // Blue
+                            borderColor: 'rgba(96, 165, 250, 0.8)',
+                            borderWidth: 1,
+                            barThickness: 5,
+                            hidden: !document.getElementById('show-ci-90').checked
+                        },
+                        {
+                            type: 'line',
+                            label: 'True Mean',
+                            data: [],
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            z: 10 // Ensure it's on top
+                        },
+                        {
+                            type: 'scatter',
+                            label: 'Sample Means',
+                            data: [],
+                            backgroundColor: '#fff',
+                            borderColor: '#000',
+                            borderWidth: 1,
+                            pointRadius: 4,
+                            pointStyle: 'circle',
+                            z: 20
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { usePointStyle: true, color: '#94a3b8' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const val = context.raw;
+                                    if (Array.isArray(val)) return `${context.dataset.label}: [${val[0].toFixed(2)}, ${val[1].toFixed(2)}]`;
+                                    return `${context.dataset.label}: ${val.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8', precision: 0 },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCIChart() {
+            if (!ciChart) initCIChart();
+
+            const showCount = 30; // History increased per user request
+            const recentCI = ciHistory.slice(-showCount);
+
+            const labels = recentCI.map(d => 'S' + d.id);
+
+            // Check visibility
+            ciChart.data.datasets[0].hidden = !document.getElementById('show-ci-99').checked;
+            ciChart.data.datasets[1].hidden = !document.getElementById('show-ci-95').checked;
+            ciChart.data.datasets[2].hidden = !document.getElementById('show-ci-90').checked;
+
+            // Fill data
+            ciChart.data.labels = labels;
+            ciChart.data.datasets[0].data = recentCI.map(d => [d.ci99.lower, d.ci99.upper]);
+            ciChart.data.datasets[1].data = recentCI.map(d => [d.ci95.lower, d.ci95.upper]);
+            ciChart.data.datasets[2].data = recentCI.map(d => [d.ci90.lower, d.ci90.upper]);
+
+            // True Mean line
+            const meanLineData = recentCI.map((_, i) => currentPopMean);
+            ciChart.data.datasets[3].data = meanLineData;
+
+            // Sample Mean dots
+            ciChart.data.datasets[4].data = recentCI.map((d, i) => ({ x: d.mean, y: i }));
+
+            // Update color based on hit/miss for 95% (as primary)
+            ciChart.data.datasets[1].backgroundColor = recentCI.map(d => d.hit ? 'rgba(0, 230, 118, 0.6)' : 'rgba(255, 23, 68, 0.6)');
+
+            // Adjust X axis to current population range
+            const minVal = Math.floor(Math.min(...populationValues));
+            const maxVal = Math.ceil(Math.max(...populationValues));
+            ciChart.options.scales.x.min = minVal;
+            ciChart.options.scales.x.max = maxVal;
+
+            ciChart.update();
+            syncCITile();
+        }
+
+        function initZChart() {
+            const ctx = document.getElementById('zChart').getContext('2d');
+            const labels = [];
+            const dataPDF = [];
+
+            // Generate data from -4 to 4 (Standard Normal)
+            for (let i = -40; i <= 40; i++) {
+                const x = i / 10; // -4.0, -3.9 ...
+                labels.push(x);
+                dataPDF.push(normalPDF(x, 0, 1)); // Mean 0, SD 1
+            }
+
+            zChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { // Base Curve
+                            label: 'Standard Normal Distribution',
+                            data: dataPDF,
+                            borderColor: '#60a5fa',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        },
+                        { // 1 SD Area
+                            label: '±1σ',
+                            data: [],
+                            backgroundColor: 'rgba(232, 62, 140, 0.4)', // Pinker
+                            pointRadius: 0,
+                            fill: true,
+                            borderWidth: 0,
+                            order: 2
+                        },
+                        { // 2 SD Area
+                            label: '±2σ',
+                            data: [],
+                            backgroundColor: 'rgba(232, 62, 140, 0.25)',
+                            pointRadius: 0,
+                            fill: true,
+                            borderWidth: 0,
+                            order: 3
+                        },
+                        { // 3 SD Area
+                            label: '±3σ',
+                            data: [],
+                            backgroundColor: 'rgba(232, 62, 140, 0.1)',
+                            pointRadius: 0,
+                            fill: true,
+                            borderWidth: 0,
+                            order: 4
+                        },
+                        { // Z-Score Line
+                            label: 'Z-Score',
+                            data: [],
+                            borderColor: '#ff0000',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Z-Score (Standard Deviations)', color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: {
+                                color: '#94a3b8', callback: function (val, index) {
+                                    // Show integer ticks from label array
+                                    const v = this.getLabelForValue(val);
+                                    return (v % 1 === 0) ? v : '';
+                                }
+                            }
+                        },
+                        y: { display: false }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            updateZChart();
+        }
+
+        function updateZChart() {
+            const zVal = parseFloat(document.getElementById('z-slider').value);
+            document.getElementById('z-val').innerText = zVal;
+
+            const show1 = document.getElementById('show-1sd').checked;
+            const show2 = document.getElementById('show-2sd').checked;
+            const show3 = document.getElementById('show-3sd').checked;
+
+            const data1 = [];
+            const data2 = [];
+            const data3 = [];
+
+            // Re-generate shading data
+            for (let i = -40; i <= 40; i++) {
+                const x = i / 10;
+                const y = normalPDF(x, 0, 1);
+
+                // 1SD: -1 to 1
+                if (show1 && x >= -1 && x <= 1) data1.push(y); else data1.push(null);
+
+                // 2SD: -2 to 2
+                if (show2 && x >= -2 && x <= 2) data2.push(y); else data2.push(null);
+
+                // 3SD: -3 to 3
+                if (show3 && x >= -3 && x <= 3) data3.push(y); else data3.push(null);
+            }
+            const datasets = zChart.data.datasets;
+            datasets[1].data = data1;
+            datasets[2].data = data2;
+            datasets[3].data = data3;
+
+            // Clear Z-line dataset
+            const emptyZ = new Array(81).fill(null); // -40 to 40 is 81 points
+            // Find index
+            const zIndex = Math.round((zVal + 4) * 10);
+            if (zIndex >= 0 && zIndex <= 80) {
+                emptyZ[zIndex] = normalPDF(zVal, 0, 1);
+            }
+            datasets[4].data = emptyZ;
+            datasets[4].pointRadius = 5; // Make the Z-point visible
+            datasets[4].pointHoverRadius = 7;
+            datasets[4].borderWidth = 0; // It's just a point now
+            datasets[4].backgroundColor = '#ff0000';
+
+            zChart.update();
+        }
+
+        function initShapeChart() {
+            const ctx = document.getElementById('shapeChart').getContext('2d');
+            const labels = [];
+            const normalData = [];
+
+            for (let i = -50; i <= 50; i++) {
+                const x = i / 10;
+                labels.push(x.toFixed(1));
+                normalData.push(normalPDF(x, 0, 1));
+            }
+
+            shapeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Standard Normal (Baseline)',
+                            data: normalData,
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.4,
+                            order: 1
+                        },
+                        {
+                            label: 'Dynamic Distribution',
+                            data: [],
+                            borderColor: '#a855f7', // Purple
+                            backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.4,
+                            order: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, labels: { color: '#cbd5e1' } }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Values', color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function (val, index) {
+                                    return (index % 10 === 0) ? this.getLabelForValue(val) : '';
+                                }
+                            }
+                        },
+                        y: { display: false }
+                    },
+                    animation: { duration: 300 }
+                }
+            });
+            updateShapeChart();
+        }
+
+        function updateShapeChart() {
+            const skewAlpha = parseFloat(document.getElementById('skew-slider').value);
+            const kurtBeta = parseFloat(document.getElementById('kurt-slider').value);
+
+            document.getElementById('skew-val').innerText = skewAlpha.toFixed(1);
+            document.getElementById('kurt-val').innerText = kurtBeta.toFixed(1);
+
+            let skewDesc = "Symmetric";
+            let skewColor = "#fff";
+            if (skewAlpha < -0.5) { skewDesc = "Left Skewed (Negative)"; skewColor = "#60a5fa"; }
+            else if (skewAlpha > 0.5) { skewDesc = "Right Skewed (Positive)"; skewColor = "#f472b6"; }
+
+            let kurtDesc = "Mesokurtic (Normal)";
+            let kurtColor = "#fff";
+            if (kurtBeta < 1.9) { kurtDesc = "Leptokurtic (Peaked, Heavy Tails)"; kurtColor = "#f472b6"; }
+            else if (kurtBeta > 2.1) { kurtDesc = "Platykurtic (Flat, Light Tails)"; kurtColor = "#60a5fa"; }
+
+            document.getElementById('skew-desc').innerText = skewDesc;
+            document.getElementById('skew-desc').style.color = skewColor;
+
+            document.getElementById('kurt-desc').innerText = kurtDesc;
+            document.getElementById('kurt-desc').style.color = kurtColor;
+
+            const dynamicData = [];
+
+            // X Range
+            for (let i = -50; i <= 50; i++) {
+                const x = i / 10;
+
+                // Combine effects for the visualizer. 
+                // Skew is applied via normalCDF modifier.
+                // Kurtosis is simulated using generalized normal base instead of standard normal base.
+                // Formula: 2 * generalizedNormalPDF(x, beta) * normalCDF(alpha * x, 0, 1)
+
+                // standard gen normal with alpha=1 scale handling:
+                const coeff = kurtBeta / (2 * gamma(1 / kurtBeta));
+                const exponent = -Math.pow(Math.abs(x), kurtBeta);
+                const gPdf = coeff * Math.exp(exponent);
+
+                // Skew modifier
+                const modifier = normalCDF(skewAlpha * x);
+                const combined = 2 * gPdf * modifier;
+
+                dynamicData.push(combined);
+            }
+
+            if (shapeChart) {
+                shapeChart.data.datasets[1].data = dynamicData;
+
+                // Adjust colors based on dominant shape properties for flair
+                let mainColor = '#a855f7'; // purple base
+                if (Math.abs(skewAlpha) > 3) mainColor = (skewAlpha > 0) ? '#f472b6' : '#60a5fa'; // more pink/blue if heavily skewed
+                else if (Math.abs(kurtBeta - 2) > 1) mainColor = (kurtBeta < 2) ? '#ff5252' : '#00e676'; // red/green if heavy kurtosis
+
+                shapeChart.data.datasets[1].borderColor = mainColor;
+                shapeChart.data.datasets[1].backgroundColor = mainColor + '33'; // 20% opacity hex
+
+                shapeChart.update();
+            }
+        }
+
+        function initMorphChart() {
+            const ctx = document.getElementById('morphChart').getContext('2d');
+            morphChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Distribution',
+                        data: [],
+                        borderColor: '#f472b6', // Pink
+                        backgroundColor: 'rgba(244, 114, 182, 0.2)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: { type: 'linear', min: -10, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { display: false, min: 0 }
+                    },
+                    animation: { duration: 0 }
+                }
+            });
+            updateMorphChart();
+        }
+
+        function updateMorphChart() {
+            const initMean = parseFloat(document.getElementById('morph-mean-slider').value);
+            const initSD = parseFloat(document.getElementById('morph-sd-slider').value);
+            const progress = parseFloat(document.getElementById('morph-slider').value) / 100;
+
+            document.getElementById('morph-mean-val').innerText = initMean;
+            document.getElementById('morph-sd-val').innerText = initSD;
+
+            // Interpolate
+            const currMean = initMean + (0 - initMean) * progress;
+            const currSD = initSD + (1 - initSD) * progress;
+
+            document.getElementById('curr-mean').innerText = currMean.toFixed(2);
+            document.getElementById('curr-mean').style.color = (Math.abs(currMean) < 0.1) ? '#00e676' : '#fff'; // Green when close to 0
+
+            document.getElementById('curr-sd').innerText = currSD.toFixed(2);
+            document.getElementById('curr-sd').style.color = (Math.abs(currSD - 1) < 0.1) ? '#00e676' : '#fff'; // Green when close to 1
+
+            const data = [];
+
+            // We use scatter data format {x, y} since X axis is linear/continuous
+            // Range -20 to 120
+            for (let x = -20; x <= 120; x += 0.5) {
+                const y = normalPDF(x, currMean, currSD);
+                data.push({ x: x, y: y });
+            }
+
+            if (morphChart) {
+                morphChart.data.datasets[0].data = data;
+                morphChart.update();
+            }
+        }
+
+        // --- Distribution Logic (Normal, T, Chi-Square, Skew, Gen) ---
+
+        // --- Math Models for Common Distributions ---
+
+        function logBinomialCoef(n, k) {
+            let res = 0;
+            for (let i = 1; i <= k; i++) res += Math.log(n - i + 1) - Math.log(i);
+            return res;
+        }
+
+        function binomialPMF(k, n, p) {
+            if (p === 0) return k === 0 ? 1 : 0;
+            if (p === 1) return k === n ? 1 : 0;
+            if (k < 0 || k > n) return 0;
+            const logComb = logBinomialCoef(n, k);
+            return Math.exp(logComb + k * Math.log(p) + (n - k) * Math.log(1 - p));
+        }
+
+        function poissonPMF(k, lambda) {
+            if (k < 0) return 0;
+            let logFact = 0;
+            for (let i = 1; i <= k; i++) logFact += Math.log(i);
+            return Math.exp(k * Math.log(lambda) - lambda - logFact);
+        }
+
+        function lognormalPDF(x, mu, sigma) {
+            if (x <= 0) return 0;
+            const exponent = -Math.pow(Math.log(x) - mu, 2) / (2 * sigma * sigma);
+            return (1 / (x * sigma * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+        }
+
+        function exponentialPDF(x, lambda) {
+            if (x < 0) return 0;
+            return lambda * Math.exp(-lambda * x);
+        }
+
+        function initNormalChart() {
+            const ctx = document.getElementById('normalChart').getContext('2d');
+
+            normalChart = new Chart(ctx, {
+                data: {
+                    labels: [],
+                    datasets: [{
+                        type: 'line',
+                        label: 'Probability / Density',
+                        data: [],
+                        borderColor: '#00e5ff',
+                        backgroundColor: 'rgba(0, 229, 255, 0.2)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: true, labels: { color: '#cbd5e1' } },
+                        tooltip: { enabled: true }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            display: true,
+                            min: 0,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' },
+                            title: { display: true, text: 'Probability / Density', color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+            updateDistChart();
+        }
+
+        function updateDistChart() {
+            const distType = document.getElementById('dist-selector').value;
+
+            // Manage UI visibility
+            document.querySelectorAll('.dist-params').forEach(el => el.style.display = 'none');
+            const activeParamPanel = document.getElementById(`params-dist-${distType}`);
+            if (activeParamPanel) activeParamPanel.style.display = 'block';
+
+            let labels = [];
+            let data = [];
+            let chartType = 'line';
+            let contextText = "";
+            let color = "";
+            let formulaHTML = "";
+
+            if (distType === 'normal') {
+                const mean = parseFloat(document.getElementById('norm-mean-slider').value);
+                const sd = parseFloat(document.getElementById('norm-sd-slider').value);
+                document.getElementById('norm-mean-val').innerText = mean;
+                document.getElementById('norm-sd-val').innerText = sd;
+
+                contextText = "Used for continuous, naturally symmetric traits like blood pressure, height, or normally distributed measurement errors.";
+                color = "#00e5ff"; // Cyan
+                chartType = 'line';
+                formulaHTML = "f(x) = (1 / (σ√(2π))) · e<sup>-½((x-μ)/σ)²</sup>";
+
+                for (let x = -20; x <= 20; x += 0.5) {
+                    labels.push(x.toFixed(1));
+                    data.push(normalPDF(x, mean, sd));
+                }
+            } else if (distType === 'binomial') {
+                const n = parseInt(document.getElementById('binom-n-slider').value);
+                const p = parseFloat(document.getElementById('binom-p-slider').value);
+                document.getElementById('binom-n-val').innerText = n;
+                document.getElementById('binom-p-val').innerText = p.toFixed(2);
+
+                contextText = `Used for discrete, binary outcomes over N trials. E.g., modeling how many patients out of ${n} will experience a side effect given a ${(p * 100).toFixed(0)}% risk.`;
+                color = "#f472b6"; // Pink
+                chartType = 'bar';
+                formulaHTML = "P(X = k) = C(n, k) · p<sup>k</sup>(1-p)<sup>n-k</sup>";
+
+                for (let k = 0; k <= n; k++) {
+                    labels.push(k);
+                    data.push(binomialPMF(k, n, p));
+                }
+            } else if (distType === 'poisson') {
+                const l = parseInt(document.getElementById('pois-l-slider').value);
+                document.getElementById('pois-l-val').innerText = l;
+
+                contextText = `Used for counting rare discrete events over time/space. E.g., modeling if an average of ${l} patients arrive per hour, what is the probability of exactly k arriving.`;
+                color = "#ffeb3b"; // Yellow
+                chartType = 'bar';
+                formulaHTML = "P(X = k) = (λ<sup>k</sup>e<sup>-λ</sup>) / k!";
+
+                const maxK = Math.max(l * 3, 15);
+                for (let k = 0; k <= maxK; k++) {
+                    labels.push(k);
+                    data.push(poissonPMF(k, l));
+                }
+            } else if (distType === 'lognormal') {
+                const mu = parseFloat(document.getElementById('log-mu-slider').value);
+                const sigma = parseFloat(document.getElementById('log-sigma-slider').value);
+                document.getElementById('log-mu-val').innerText = mu.toFixed(1);
+                document.getElementById('log-sigma-val').innerText = sigma.toFixed(2);
+
+                contextText = "Used for positively skewed continuous biological data that cannot be negative, such as viral incubation periods or serum biomarker concentrations.";
+                color = "#a855f7"; // Purple
+                chartType = 'line';
+                formulaHTML = "f(x) = (1 / (xσ√(2π))) · e<sup>-(ln(x)-μ)² / 2σ²</sup>";
+
+                for (let x = 0.1; x <= 15; x += 0.1) {
+                    labels.push(x.toFixed(1));
+                    data.push(lognormalPDF(x, mu, sigma));
+                }
+            } else if (distType === 'exponential') {
+                const l = parseFloat(document.getElementById('exp-l-slider').value);
+                document.getElementById('exp-l-val').innerText = l.toFixed(1);
+
+                contextText = "Used in survival analysis to model the continuous time until a specific event occurs (e.g., time to recovery or infection) given a constant hazard rate λ.";
+                color = "#00e676"; // Green
+                chartType = 'line';
+                formulaHTML = "f(x) = λe<sup>-λx</sup>";
+
+                for (let x = 0; x <= 10; x += 0.1) {
+                    labels.push(x.toFixed(1));
+                    data.push(exponentialPDF(x, l));
+                }
+            } else if (distType === 't') {
+                const v = parseInt(document.getElementById('t-df-slider').value);
+                document.getElementById('t-df-val').innerText = v;
+
+                contextText = "Used to model continuous data when the sample size is small and the population standard deviation is unknown.";
+                color = "#fb923c"; // Orange
+                chartType = 'line';
+                formulaHTML = "f(t) = Γ((ν+1)/2) / [√(νπ)Γ(ν/2)] (1+t²/ν)<sup>-(ν+1)/2</sup>";
+
+                // Function definitions inside update for simplicity if not global
+                const gamma = (z) => {
+                    return Math.sqrt(2 * Math.PI / z) * Math.pow((1 / Math.E) * (z + 1 / (12 * z - 1 / (10 * z))), z);
+                };
+                for (let x = -5; x <= 5; x += 0.1) {
+                    labels.push(x.toFixed(1));
+                    const num = gamma((v + 1) / 2);
+                    const den = Math.sqrt(v * Math.PI) * gamma(v / 2);
+                    const poly = Math.pow(1 + (x * x) / v, -(v + 1) / 2);
+                    data.push((num / den) * poly);
+                }
+            } else if (distType === 'chi') {
+                const k = parseInt(document.getElementById('chi-df-slider').value);
+                document.getElementById('chi-df-val').innerText = k;
+
+                contextText = "Used primarily in hypothesis testing, such as the Chi-square test for independence or goodness of fit.";
+                color = "#facc15"; // Gold
+                chartType = 'line';
+                formulaHTML = "f(x) = (1/(2<sup>k/2</sup>Γ(k/2))) x<sup>k/2 - 1</sup> e<sup>-x/2</sup>";
+
+                const gamma = (z) => {
+                    return Math.sqrt(2 * Math.PI / z) * Math.pow((1 / Math.E) * (z + 1 / (12 * z - 1 / (10 * z))), z);
+                };
+                for (let x = 0; x <= 30; x += 0.2) {
+                    labels.push(x.toFixed(1));
+                    if (x === 0 && k < 2) { data.push(0); continue; }
+                    if (x === 0 && k === 2) { data.push(0.5); continue; }
+                    if (x === 0 && k > 2) { data.push(0); continue; }
+                    const num = Math.pow(x, k / 2 - 1) * Math.exp(-x / 2);
+                    const den = Math.pow(2, k / 2) * gamma(k / 2);
+                    data.push(num / den);
+                }
+            }
+
+            // Update UI text
+            document.getElementById('dist-context-text').innerText = contextText;
+            document.getElementById('dist-context-box').style.borderLeftColor = color;
+            document.getElementById('formula-display').innerHTML = `<div style="color: ${color}; font-weight: bold; font-family: monospace; font-size: 1.5rem;">${formulaHTML}</div>`;
+
+            // Update Chart
+            if (normalChart) {
+                normalChart.data.labels = labels;
+
+                const dataset = normalChart.data.datasets[0];
+                dataset.type = chartType;
+                dataset.data = data;
+                dataset.borderColor = color;
+                dataset.backgroundColor = color + '44'; // Add transparency
+                dataset.borderWidth = (chartType === 'line') ? 3 : 1;
+                dataset.tension = (chartType === 'line') ? 0.4 : 0;
+
+                normalChart.update();
+            }
+        }
+
+        // --- NEW SHAPE ANALYSIS (SKEWNESS & KURTOSIS) LOGIC ---
+
+        // Probability Density Function for Skew-Normal Distribution
+        function skewNormalPDF(x, alpha) {
+            // Standard Normal PDF
+            const phi = (t) => Math.exp(-0.5 * t * t) / Math.sqrt(2 * Math.PI);
+
+            // Standard Normal CDF approximation
+            const Phi = (t) => {
+                const z = t / Math.sqrt(2);
+                const t_approx = 1 / (1 + 0.3275911 * Math.abs(z));
+                const a1 = 0.254829592;
+                const a2 = -0.284496736;
+                const a3 = 1.421413741;
+                const a4 = -1.453152027;
+                const a5 = 1.061405429;
+                const erf = 1 - ((((a5 * t_approx + a4) * t_approx + a3) * t_approx + a2) * t_approx + a1) * t_approx * Math.exp(-z * z);
+                return 0.5 * (1 + (z >= 0 ? erf : -erf));
+            };
+
+            return 2 * phi(x) * Phi(alpha * x);
+        }
+
+        // Generalized Normal Distribution PDF (for kurtosis)
+        function genNormalPDF(x, beta) {
+            const alpha = Math.sqrt(Math.max(0.0001, (Date.now() % 1) + 1)); // Dummy scalar, we'll parameterize purely via beta
+            // To isolate kurtosis visually without scaling issues, beta (shape) is the main driver.
+            // beta = 2 is standard normal. beta > 2 is platykurtic (thin tails). beta < 2 is leptokurtic (fat tails).
+            // Formula: beta / (2 * alpha * Gamma(1/beta)) * exp(-(|x|/alpha)^beta)
+            // Simplified for visual scaling
+
+            // Gamma function approximation
+            const gamma = (z) => {
+                return Math.sqrt(2 * Math.PI / z) * Math.pow((1 / Math.E) * (z + 1 / (12 * z - 1 / (10 * z))), z);
+            };
+
+            const g1_beta = gamma(1 / beta);
+            const scale = Math.sqrt(gamma(3 / beta) / g1_beta); // To maintain variance ~1
+
+            const coeff = beta / (2 * scale * g1_beta);
+            const exponent = -Math.pow(Math.abs(x / scale), beta);
+
+            return coeff * Math.exp(exponent);
+        }
+
+        function calculateMoments(labels, data) {
+            let sumProb = 0;
+            for (let i = 0; i < data.length; i++) sumProb += data[i];
+
+            let sumVal = 0;
+            for (let i = 0; i < labels.length; i++) {
+                sumVal += parseFloat(labels[i]) * (data[i] / sumProb);
+            }
+            const mean = sumVal;
+
+            let variance = 0;
+            let sumCube = 0;
+            let sumQuad = 0;
+
+            for (let i = 0; i < labels.length; i++) {
+                let x = parseFloat(labels[i]);
+                let p = data[i] / sumProb;
+                let diff = x - mean;
+
+                variance += (diff * diff) * p;
+                sumCube += Math.pow(diff, 3) * p;
+                sumQuad += Math.pow(diff, 4) * p;
+            }
+
+            const sd = Math.sqrt(variance);
+            let skewness = 0;
+            let excessKurtosis = 0;
+
+            if (sd > 0) {
+                skewness = sumCube / Math.pow(sd, 3);
+                const kurtosis = sumQuad / Math.pow(sd, 4);
+                excessKurtosis = kurtosis - 3;
+            }
+
+            let median = mean; // Fallback
+            let cumProb = 0;
+            const halfProb = 0.5;
+            for (let i = 0; i < labels.length; i++) {
+                cumProb += data[i] / sumProb;
+                if (cumProb >= halfProb) {
+                    median = parseFloat(labels[i]);
+                    break;
+                }
+            }
+
+            return { mean, median, sd, skewness, excessKurtosis };
+        }
+
+        function initSkewnessChart() {
+            const ctx = document.getElementById('skewnessChart').getContext('2d');
+
+            skewnessChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Density',
+                        data: [],
+                        borderColor: '#00e5ff',
+                        backgroundColor: 'rgba(0, 229, 255, 0.2)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                        verticalLine: {
+                            lines: [] // Managed by plugin
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: { display: true, text: 'Value', color: '#94a3b8' },
+                            ticks: {
+                                callback: function (val, index) {
+                                    return index % 10 === 0 ? this.getLabelForValue(val) : '';
+                                }
+                            }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: { display: true, text: 'Density', color: '#94a3b8' },
+                            suggestedMax: 0.6
+                        }
+                    }
+                },
+                plugins: [verticalLinePlugin]
+            });
+
+            updateTrueShapeChart(); // Populate initial data
+        }
+
+        function initKurtosisChart() {
+            const ctx = document.getElementById('kurtosisChart').getContext('2d');
+
+            // Baseline Standard Normal
+            const baselineData = [];
+            for (let x = -5; x <= 5; x += 0.1) {
+                baselineData.push(Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI));
+            }
+
+            kurtosisChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // Populated in update
+                    datasets: [
+                        {
+                            label: 'Dynamic Kurtosis',
+                            data: [],
+                            borderColor: '#e83e8c',
+                            backgroundColor: 'rgba(232, 62, 140, 0.2)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Standard Normal Baseline',
+                            data: baselineData,
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#cbd5e1' }
+                        },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: { display: true, text: 'Value', color: '#94a3b8' },
+                            ticks: {
+                                callback: function (val, index) {
+                                    return index % 10 === 0 ? this.getLabelForValue(val) : '';
+                                }
+                            }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            title: { display: true, text: 'Density', color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            updateTrueShapeChart();
+        }
+
+        function updateTrueShapeChart() {
+            // --- Update Skewness Chart ---
+            const skewSlider = document.getElementById('true-skew-slider');
+            const skewVal = parseFloat(skewSlider.value); // Range [-3.0, 3.0]
+
+            const skewInput = document.getElementById('true-skew-input');
+            if (skewInput && parseFloat(skewInput.value) !== skewVal) {
+                skewInput.value = skewVal;
+            }
+
+            let skewDesc = "Vertical Symmetry";
+            if (skewVal > 1) skewDesc = "Positive Skew (Right Tail Stretching)";
+            if (skewVal > 5) skewDesc = "Highly Positive Skew (Extreme Right Tail)";
+            if (skewVal < -1) skewDesc = "Negative Skew (Left Tail Stretching)";
+            if (skewVal < -5) skewDesc = "Highly Negative Skew (Extreme Left Tail)";
+            if (Math.abs(skewVal) <= 1) skewDesc = "Vertical Symmetry";
+
+            document.getElementById('true-skew-desc').innerText = skewDesc;
+
+            let sLabels = [];
+            let sData = [];
+            let sBaseData = [];
+
+            // For realistic visualization that matches statistical skew logic:
+            // Positive Skew: Mass shifts LEFT, Tail stretches RIGHT.
+            // Negative Skew: Mass shifts RIGHT, Tail stretches LEFT.
+
+            // To do this simply without complex math packages, we apply an inverse scaling factor to a standard normal curve based on the x position.
+
+            // skewVal is [-10, 10].
+            // If skewVal > 0 (Positive Skew), we want a long RIGHT tail. 
+            // In Skew-Normal, alpha > 0 creates a right tail.
+            const alpha = skewVal;
+
+            // The Skew-Normal distribution shifts the mean AWAY from the location parameter.
+            // For a visual that feels grounded, we want the "Median/Peak" area to stay somewhat anchored near our 100k "base",
+            // while the tail stretches out. The Skew-Normal naturally shifts the mean, so we don't need to manually center it as aggressively, 
+            // but we will apply a slight offset so the bulk of the data doesn't walk completely off the left side of the screen when skew is high.
+
+            let locationOffset = 100 - (alpha * 5); // Shift base location left when alpha is positive to keep the bulk centered
+            const sMean = locationOffset;
+            const baseSd = 50; // Widen base SD so the curve isn't a tiny spike
+
+            // Scale and shift so that we can center it nicely
+            for (let x = -50; x <= 450; x += 2) {
+                sLabels.push(x.toString());
+
+                // Normal Benchmark (Centered purely at 100)
+                let zBase = (x - 100) / baseSd;
+                let probBase = Math.exp(-0.5 * zBase * zBase) / (baseSd * Math.sqrt(2 * Math.PI));
+                sBaseData.push(probBase);
+
+                // Skew Normal f(x) = 2 / w * phi((x-xi)/w) * Phi(alpha * (x-xi)/w)
+                let z = (x - sMean) / baseSd;
+                let phi = Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
+
+                // CDF Approximation for Phi(alpha * z)
+                let t = alpha * z;
+                let Phi = 0.5 * (1 + Math.sign(t) * Math.sqrt(1 - Math.exp(-2 * t * t / Math.PI)));
+
+                // Scale factor to keep probability visually significant
+                let probSkew = (2 / baseSd) * phi * Phi;
+                sData.push(probSkew);
+            }
+
+            // Numerical Integration
+            let wideLabels = [];
+            let wideData = [];
+            for (let x = -200; x <= 800; x += 1) {
+                wideLabels.push(x);
+                let z = (x - sMean) / baseSd;
+                let phi = Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
+                let t = alpha * z;
+                let Phi = 0.5 * (1 + Math.sign(t) * Math.sqrt(1 - Math.exp(-2 * t * t / Math.PI)));
+                let probSkew = (2 / baseSd) * phi * Phi;
+                wideData.push(probSkew);
+            }
+            const stats = calculateMoments(wideLabels, wideData);
+
+            // Determine UI Classification
+            let computedSkewStr = "Symmetric";
+            if (stats.skewness > 0.5) computedSkewStr = "Positive (Right Skewed)";
+            if (stats.skewness > 1.2) computedSkewStr = "Highly Positive Skewed";
+            if (stats.skewness < -0.5) computedSkewStr = "Negative (Left Skewed)";
+            if (stats.skewness < -1.2) computedSkewStr = "Highly Negative Skewed";
+            if (Math.abs(stats.skewness) <= 0.5) computedSkewStr = "Symmetric";
+
+            // ONLY update these UI stats if we ARE NOT currently viewing the interactive 20-number example.
+            // (We handle the 20-number specific calculations in applySkewExample).
+            if (!document.getElementById('example-dataset-display').innerText.includes('[')) {
+                document.getElementById('skew-stat-skew').innerText = (stats.skewness > 0 ? "+" : "") + stats.skewness.toFixed(2);
+                document.getElementById('skew-class').innerText = `(${computedSkewStr})`;
+
+                const meanWage = "₹" + (stats.mean * 1000).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                const medianWage = "₹" + (stats.median * 1000).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+                document.getElementById('skew-stat-mean').innerText = meanWage;
+                document.getElementById('skew-stat-median').innerText = medianWage;
+            }
+
+            if (skewnessChart) {
+                skewnessChart.data.labels = sLabels;
+
+                const findIndexForX = (val) => {
+                    let minDiff = Infinity;
+                    let bestIdx = 0;
+                    sLabels.forEach((l, idx) => {
+                        const diff = Math.abs(parseFloat(l) - val);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            bestIdx = idx;
+                        }
+                    });
+                    return bestIdx;
+                };
+
+                let meanData = Array(sLabels.length).fill(null);
+                let medianData = Array(sLabels.length).fill(null);
+
+                const meanIdx = findIndexForX(stats.mean);
+                const medianIdx = findIndexForX(stats.median);
+
+                // For chart scaling, find the max density
+                const maxY = Math.max(...sData, ...sBaseData);
+
+                meanData[meanIdx] = maxY;
+                medianData[medianIdx] = maxY;
+
+                skewnessChart.data.datasets = [
+                    {
+                        label: 'Dynamic Skewed Distribution',
+                        type: 'line',
+                        data: sData,
+                        borderColor: '#00e5ff',
+                        backgroundColor: 'rgba(0, 229, 255, 0.2)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Normal Baseline (Symmetric)',
+                        type: 'line',
+                        data: sBaseData,
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Mean (Average)',
+                        type: 'bar',
+                        data: meanData,
+                        backgroundColor: '#ff1744',
+                        barThickness: 3
+                    },
+                    {
+                        label: 'Median (Middle)',
+                        type: 'bar',
+                        data: medianData,
+                        backgroundColor: '#00e676',
+                        barThickness: 3
+                    }
+                ];
+
+                skewnessChart.options.plugins.verticalLine.lines = [];
+                skewnessChart.options.plugins.legend.display = true;
+                skewnessChart.options.scales.x.title.text = "Income (in Thousands ₹)";
+                skewnessChart.options.scales.y.title.text = "Probability Mass";
+                skewnessChart.options.scales.x.ticks = { callback: function (val, index) { return index % 20 === 0 ? "₹" + this.getLabelForValue(val) + "k" : ''; } };
+
+                // Dynamically fit the Y-axis to prevent "flatness"
+                skewnessChart.options.scales.y.suggestedMax = maxY * 1.15;
+                skewnessChart.options.scales.y.max = maxY * 1.15;
+
+                skewnessChart.update();
+            }
+
+            // --- Update Kurtosis Chart ---
+            const kurtSlider = document.getElementById('true-kurt-slider');
+            const kurtVal = parseFloat(kurtSlider.value); // Extreme Tail Probability
+
+            const kurtInput = document.getElementById('true-kurt-input');
+            if (kurtInput && parseFloat(kurtInput.value) !== kurtVal) {
+                kurtInput.value = kurtVal;
+            }
+
+            let kLabels = [];
+            let kData = [];
+            let kBaseData = [];
+
+            const kMean = 0;
+            const kSd = 1;
+
+            const normPDF = (x, m, s) => {
+                return (1 / (s * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - m) / s, 2));
+            };
+
+            // kurtVal goes from 0 to 30. 
+            // 5 represents Mesokurtic.
+            // < 5 is Platykurtic (thinner tails, flatter peak).
+            // > 5 is Leptokurtic (fatter tails, sharper peak).
+
+            // To make it geometrically accurate, we'll use a mixture of normals with the same mean but vastly different variances.
+            // This easily creates extreme leptokurtic behavior.
+
+            // Base variance is 1. We want total variance to remain roughly 1.
+            let v1 = 1.0;
+            let v2 = 1.0;
+            let w1 = 1.0;
+            let w2 = 0.0;
+
+            if (kurtVal > 5) {
+                // Leptokurtic: Mix a huge variance with a tiny variance.
+                // As kurtVal (6 to 30) increases, the extreme tails get fatter and peak gets sharper.
+                const intensity = (kurtVal - 5) / 25.0; // 0 to 1
+                w2 = 0.1 + (intensity * 0.3); // Up to 40% in the fat tails
+                w1 = 1.0 - w2;
+
+                v2 = 2.0 + (intensity * 8.0); // Extreme tail variance
+                v1 = (1.0 - (w2 * v2)) / w1; // Solve for v1 to keep total variance = 1
+                if (v1 <= 0.05) v1 = 0.05; // Prevent negative/zero variance
+            } else if (kurtVal < 5) {
+                // Platykurtic: We can approximate a flat uniform-like distribution 
+                // by convolving or mixing closely spaced means, or just manually broadening the peak.
+                // We'll use a direct geometric modifier for simplicity since platykurtic is tricky with simple mixtures.
+            }
+
+            for (let x = -5; x <= 5; x += 0.1) {
+                kLabels.push(x.toFixed(1));
+
+                let yBase = normPDF(x, kMean, kSd);
+                kBaseData.push(yBase);
+
+                let finalY = yBase;
+                if (kurtVal > 5) {
+                    // Leptokurtic Mixture
+                    finalY = (w1 * normPDF(x, kMean, Math.sqrt(v1))) + (w2 * normPDF(x, kMean, Math.sqrt(v2)));
+                } else if (kurtVal < 5) {
+                    // Platykurtic Modifier
+                    const intensity = (5 - kurtVal) / 5.0; // 0 to 1
+                    // Flatten peak, raise shoulders without dropping below 0
+                    let dist = Math.abs(x);
+                    let mod = 0;
+                    if (dist < 1.0) {
+                        mod = -intensity * 0.12 * Math.cos(dist * Math.PI / 2.0);
+                    } else if (dist >= 1.0 && dist < 2.5) {
+                        mod = intensity * 0.06 * Math.sin((dist - 1.0) * Math.PI / 1.5);
+                    }
+                    finalY = Math.max(0, yBase + mod);
+                }
+
+                kData.push(finalY);
+            }
+
+            // Numerical integration for moments
+            let kWideLabels = [];
+            let kWideData = [];
+            for (let x = -15; x <= 15; x += 0.05) {
+                kWideLabels.push(x);
+                let yBase = normPDF(x, kMean, kSd);
+                let finalY = yBase;
+
+                if (kurtVal > 5) {
+                    finalY = (w1 * normPDF(x, kMean, Math.sqrt(v1))) + (w2 * normPDF(x, kMean, Math.sqrt(v2)));
+                } else if (kurtVal < 5) {
+                    const intensity = (5 - kurtVal) / 5.0;
+                    let dist = Math.abs(x);
+                    let mod = 0;
+                    if (dist < 1.0) {
+                        mod = -intensity * 0.12 * Math.cos(dist * Math.PI / 2.0);
+                    } else if (dist >= 1.0 && dist < 2.5) {
+                        mod = intensity * 0.06 * Math.sin((dist - 1.0) * Math.PI / 1.5);
+                    }
+                    finalY = Math.max(0, yBase + mod);
+                }
+                kWideData.push(finalY);
+            }
+
+
+            const kStats = calculateMoments(kWideLabels, kWideData);
+
+            let kStr = "Mesokurtic (Normal Tails)";
+            if (kStats.excessKurtosis > 0.5) kStr = "Leptokurtic (Fat Tails)";
+            if (kStats.excessKurtosis > 2.0) kStr = "Highly Leptokurtic (Extreme Risk)";
+            if (kStats.excessKurtosis < -0.5) kStr = "Platykurtic (Thin Tails)";
+            if (kStats.excessKurtosis < -1.0) kStr = "Highly Platykurtic (Low Risk)";
+            if (Math.abs(kStats.excessKurtosis) <= 0.5) kStr = "Mesokurtic (Normal Tails)";
+
+            document.getElementById('true-kurt-desc').innerText = kStr;
+
+            // Link verified stats to UI Components
+            document.getElementById('kurt-stat-mean').innerText = kStats.mean.toFixed(2);
+            document.getElementById('kurt-stat-sd').innerText = kStats.sd.toFixed(2);
+            document.getElementById('kurt-stat-kurt').innerText = (kStats.excessKurtosis > 0 ? "+" : "") + kStats.excessKurtosis.toFixed(2);
+            document.getElementById('kurt-class').innerText = `(${kStr})`;
+
+            if (kurtosisChart) {
+                kurtosisChart.data.labels = kLabels;
+
+                kurtosisChart.data.datasets = [
+                    {
+                        label: 'Dynamic Kurtosis',
+                        data: kData,
+                        borderColor: function (context) {
+                            const chart = context.chart;
+                            const { ctx, chartArea } = chart;
+                            if (!chartArea) return '#e83e8c';
+
+                            let gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+
+                            if (kurtVal > 0.1) {
+                                gradient.addColorStop(0, '#ff1744');
+                                gradient.addColorStop(0.25, '#a855f7');
+                                gradient.addColorStop(0.5, '#00e5ff');
+                                gradient.addColorStop(0.75, '#a855f7');
+                                gradient.addColorStop(1, '#ff1744');
+                            } else {
+                                gradient.addColorStop(0, '#e83e8c');
+                                gradient.addColorStop(1, '#e83e8c');
+                            }
+                            return gradient;
+                        },
+                        backgroundColor: 'rgba(232, 62, 140, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Normal Baseline (Mesokurtic)',
+                        data: kBaseData,
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }
+                ];
+
+                kurtosisChart.update();
+            }
+        }
+
+        function switchTab(tab) {
+            // Update Tab UI
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const tabs = document.querySelectorAll('.tab');
+
+            // Tab indices: 0: Sampling, 1: Normal, 2: Shape, 3: Z
+            if (tab === 'sampling') tabs[0].classList.add('active');
+            if (tab === 'normal') tabs[1].classList.add('active');
+            if (tab === 'shape') tabs[2].classList.add('active');
+            if (tab === 'z') tabs[3].classList.add('active');
+
+            // Hide all viz cards
+            document.querySelectorAll('.viz-card').forEach(c => c.style.display = 'none');
+
+            // Stop Galton Animation if defined (unless we are on normal tab)
+            if (tab !== 'normal' && tab !== 'shape') {
+                if (typeof isRunning !== 'undefined') isRunning = false;
+            }
+
+            // Show selected
+            if (tab === 'normal') {
+                document.getElementById('normal-viz').style.display = 'block';
+                if (!normalChart) initNormalChart();
+            } else if (tab === 'shape') {
+                document.getElementById('shape-viz').style.display = 'block';
+                if (!skewnessChart) initSkewnessChart();
+                if (!kurtosisChart) initKurtosisChart();
+            } else if (tab === 'z') {
+                document.getElementById('z-viz').style.display = 'block';
+                if (!zChart) initZChart();
+                if (!morphChart) initMorphChart();
+            } else if (tab === 'sampling') {
+                document.getElementById('sampling-viz').style.display = 'block';
+                if (!cltChart) {
+                    plotPopulation();
+                    updateCLTChart();
+                }
+            } else if (tab === 'clt') {
+                switchTab('sampling');
+            }
+        }
+
+        // --- Concrete 20-Number Example Dataset Flow ---
+        let base20Dataset = [];
+
+        function applySkewExample(type) {
+            // Generate base dataset if it doesn't exist
+            if (base20Dataset.length === 0 || type === 'base') {
+                base20Dataset = [];
+                for (let i = 0; i < 20; i++) {
+                    // Random normal-ish spread between 10000 and 10500
+                    let val = 10000 + (Math.random() * 500);
+                    base20Dataset.push(val);
+                }
+            }
+
+            let currentDataset = [...base20Dataset];
+
+            // If we are injecting an outlier, replace the first element to keep N=20
+            if (type === 'left') {
+                currentDataset[0] = 100; // Extreme low
+            } else if (type === 'right') {
+                currentDataset[0] = 100000; // Extreme high
+            }
+
+            // Sort for accurate median
+            currentDataset.sort((a, b) => a - b);
+
+            // Compute Stats
+            const n = 20;
+            const mean = currentDataset.reduce((a, b) => a + b, 0) / n;
+            const median = (currentDataset[9] + currentDataset[10]) / 2.0;
+
+            let variance = 0, sumCube = 0;
+            for (let i = 0; i < n; i++) {
+                const diff = currentDataset[i] - mean;
+                variance += diff * diff;
+                sumCube += Math.pow(diff, 3);
+            }
+            const m2 = variance / n;
+            const m3 = sumCube / n;
+            const sd = Math.sqrt(m2);
+
+            let skewness = 0;
+            if (sd > 0) {
+                skewness = m3 / Math.pow(m2, 1.5);
+                // Sample skewness correction:
+                skewness = skewness * Math.sqrt((n * (n - 1))) / (n - 2);
+            }
+
+            // Update UI exact components
+            let skewStr = "Symmetric";
+            let color = "#fff";
+            if (skewness > 0.5) { skewStr = "Positive (Right Skewed)"; color = "#f472b6"; }
+            if (skewness < -0.5) { skewStr = "Negative (Left Skewed)"; color = "#60a5fa"; }
+
+            document.getElementById('skew-stat-mean').innerText = "₹" + mean.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('skew-stat-median').innerText = "₹" + median.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+            const skewSpan = document.getElementById('skew-stat-skew');
+            skewSpan.innerText = (skewness > 0 ? "+" : "") + skewness.toFixed(3);
+            skewSpan.style.color = color;
+
+            const classSpan = document.getElementById('skew-class');
+            classSpan.innerText = `(${skewStr})`;
+            classSpan.style.color = color;
+
+            // Show array 
+            const formattedArray = currentDataset.map(v => Math.round(v)).join(", ");
+            let labelText = type === 'base' ? "Base N=20 [Symmetric]" : (type === 'left' ? "Replaced 1 value with ₹100 [Negative Skew]" : "Replaced 1 value with ₹100,000 [Positive Skew]");
+
+            document.getElementById('example-dataset-display').innerHTML = `
+                <strong style="color: #fff;">${labelText}</strong><br><br>
+                [${formattedArray}]
+            `;
+        }
+
+        window.onload = () => {
+            // First Module: Sampling & CLT
+            switchTab('sampling');
+        };
+    </script>
+</body>
+
+</html>

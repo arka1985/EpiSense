@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculation of Positive and Negative Predictive Values</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Plotly.js for charts -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <a href="../index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header>
+            <h1>Calculation of Positive and Negative Predictive Values of a Screening Test in Medical Science</h1>
+            <div class="subtitle">Monte Carlo Simulation Approach</div>
+        </header>
+
+        <div class="card">
+            <h2 style="margin-bottom: 2rem;">Simulation Parameters</h2>
+            <p style="margin-bottom: 2rem; color: #aaa;">Please specify the range of Sensitivity, Specificity,
+                Prevalence, and Number of Simulations.</p>
+
+            <!-- Number of Simulations -->
+            <div class="input-group">
+                <label for="num-sims" class="input-label">Number of Simulations</label>
+                <input type="number" id="num-sims" value="1000" min="10" max="10000">
+            </div>
+
+            <!-- Sensitivity -->
+            <div class="slider-group section-sensitivity">
+                <div class="slider-label">
+                    <span>Sensitivity (%)</span>
+                    <span class="slider-values" id="sen-val">(25, 75)</span>
+                </div>
+                <div class="dual-slider-container">
+                    <div class="slider-track"></div>
+                    <div class="slider-range-highlight" id="sen-track"></div>
+                    <input type="range" id="sen-min" min="0" max="100" value="25">
+                    <input type="range" id="sen-max" min="0" max="100" value="75">
+                </div>
+            </div>
+
+            <!-- Specificity -->
+            <div class="slider-group section-specificity">
+                <div class="slider-label">
+                    <span>Specificity (%)</span>
+                    <span class="slider-values" id="sp-val">(25, 75)</span>
+                </div>
+                <div class="dual-slider-container">
+                    <div class="slider-track"></div>
+                    <div class="slider-range-highlight" id="sp-track"></div>
+                    <input type="range" id="sp-min" min="0" max="100" value="25">
+                    <input type="range" id="sp-max" min="0" max="100" value="75">
+                </div>
+            </div>
+
+            <!-- Prevalence -->
+            <div class="slider-group section-prevalence">
+                <div class="slider-label">
+                    <span>Prevalence (%)</span>
+                    <span class="slider-values" id="prev-val">(25, 75)</span>
+                </div>
+                <div class="dual-slider-container">
+                    <div class="slider-track"></div>
+                    <div class="slider-range-highlight" id="prev-track"></div>
+                    <input type="range" id="prev-min" min="0" max="100" value="25">
+                    <input type="range" id="prev-max" min="0" max="100" value="75">
+                </div>
+            </div>
+
+            <div class="btn-container">
+                <button id="run-btn" class="btn-neon btn-pulse">Run Simulation</button>
+            </div>
+        </div>
+
+        <div id="results-section">
+            <h2 style="text-align: center; border: none; width: 100%;">Results based on Simulation</h2>
+
+            <div class="stats-grid">
+                <!-- PPV Stats -->
+                <div class="stat-box">
+                    <h3>PPV Mean (SD)</h3>
+                    <div class="stat-value" id="ppv-result">--</div>
+                </div>
+
+                <!-- NPV Stats -->
+                <div class="stat-box negative">
+                    <h3>NPV Mean (SD)</h3>
+                    <div class="stat-value" id="npv-result">--</div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div id="chart-ppv" class="chart-wrapper"></div>
+                <div id="chart-npv" class="chart-wrapper"></div>
+            </div>
+
+            <!-- Interpretation Section -->
+            <div class="card" style="margin-top: 2rem; border-color: var(--secondary-neon);">
+                <h2>Interpretation of the Result</h2>
+                <div id="interpretation-content" style="line-height: 1.6; color: #ddd;">
+                    <p style="color: #888; font-style: italic;">Run the simulation to generate an interpretation...</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-line" style="color:var(--primary-neon)">Developed By</div>
+            <div class="footer-line" style="color:var(--secondary-neon)">Dr. Arkaprabha Sau, MBBS, MD (Gold Medalist),
+                DPH, Dip. Geriatric Medicine, CCEBDM</div>
+            <div class="footer-line" style="color:var(--secondary-neon)">PhD (Computer Science & Engineering)</div>
+
+            <div class="disclaimer" style="margin-top:1rem; font-size:0.8rem; color:#888;">
+                This is for educational purposes only. Researchers are requested to verify the results based on standard
+                procedures as per standard epidemiological textbooks. For any errors, bugs, or suggestions, please email
+                me at
+                <a href="mailto:arka.doctor@gmail.com" style="color:var(--primary-neon)">arka.doctor@gmail.com</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

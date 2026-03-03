@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematical Modeling - EpiSense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .module-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        .viz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .model-tabs {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            border-radius: 50px;
+            display: inline-flex;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 0.6rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-white);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #60a5fa, #f472b6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem;">
+            <h1
+                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Mathematical Modeling</h1>
+            <p class="subtitle" id="model-subtitle" style="margin: 0;">Infectious Disease Epidemiology (SIR Model)</p>
+        </header>
+
+        <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
+            <div class="model-tabs">
+                <button class="tab-btn active" id="btn-sir" onclick="selectModel('SIR')">SIR Model</button>
+                <button class="tab-btn" id="btn-seir" onclick="selectModel('SEIR')">SEIR Model</button>
+                <button class="tab-btn" id="btn-sis" onclick="selectModel('SIS')">SIS Model</button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <!-- Explanations Column -->
+            <div id="info-sir"
+                style="display: block; background: rgba(96, 165, 250, 0.05); border-left: 4px solid #60a5fa; padding: 1.5rem; border-radius: 12px; color: var(--text-dim);">
+                <h3 style="color: #60a5fa; margin-bottom: 0.5rem; font-size: 1.2rem;">SIR Model</h3>
+                <p style="margin-bottom: 0.8rem;">The foundational epidemiological model (Susceptible, Infectious,
+                    Recovered). It assumes that individuals who recover from the disease develop lifelong immunity.</p>
+                <p><strong>Example:</strong> Widely used for modeling fast-spreading diseases like
+                    <strong>Measles</strong> or <strong>Rubella</strong>, where recovery confers long-term immunity.
+                </p>
+            </div>
+
+            <div id="info-seir"
+                style="display: none; background: rgba(245, 158, 11, 0.05); border-left: 4px solid #f59e0b; padding: 1.5rem; border-radius: 12px; color: var(--text-dim);">
+                <h3 style="color: #f59e0b; margin-bottom: 0.5rem; font-size: 1.2rem;">SEIR Model</h3>
+                <p style="margin-bottom: 0.8rem;">Adds an "Exposed" state to account for the incubation period during
+                    which individuals have been infected but are not yet infectious themselves.</p>
+                <p><strong>Example:</strong> Suitable for diseases with significant incubation periods like
+                    <strong>COVID-19</strong> or <strong>Ebola</strong>.
+                </p>
+            </div>
+
+            <div id="info-sis"
+                style="display: none; background: rgba(52, 211, 153, 0.05); border-left: 4px solid #34d399; padding: 1.5rem; border-radius: 12px; color: var(--text-dim);">
+                <h3 style="color: #34d399; margin-bottom: 0.5rem; font-size: 1.2rem;">SIS Model</h3>
+                <p style="margin-bottom: 0.8rem;">Assumes that infection does not confer long-lasting immunity. Upon
+                    recovery, individuals immediately become susceptible to the disease again.</p>
+                <p><strong>Example:</strong> Often used for modeling bacterial infections like
+                    <strong>Gonorrhea</strong> or common colds caused by rhinoviruses.
+                </p>
+            </div>
+
+            <!-- Equations Column -->
+            <div class="viz-card"
+                style="margin-bottom: 0; padding: 1.5rem; text-align: center; color: var(--text-dim); background: rgba(0,0,0,0.2);">
+                <h3 style="color: var(--text-white); margin-bottom: 1rem; font-size: 1.2rem;">Differential Equations
+                </h3>
+                <div id="equations-sir" style="display: block;">
+                    <p>$\frac{dS}{dt} = -\frac{\beta S I}{N}$</p>
+                    <p>$\frac{dI}{dt} = \frac{\beta S I}{N} - \gamma I$</p>
+                    <p>$\frac{dR}{dt} = \gamma I$</p>
+                </div>
+                <div id="equations-seir" style="display: none;">
+                    <p>$\frac{dS}{dt} = -\frac{\beta S I}{N}$</p>
+                    <p>$\frac{dE}{dt} = \frac{\beta S I}{N} - \sigma E$</p>
+                    <p>$\frac{dI}{dt} = \sigma E - \gamma I$</p>
+                    <p>$\frac{dR}{dt} = \gamma I$</p>
+                </div>
+                <div id="equations-sis" style="display: none;">
+                    <p>$\frac{dS}{dt} = -\frac{\beta S I}{N} + \gamma I$</p>
+                    <p>$\frac{dI}{dt} = \frac{\beta S I}{N} - \gamma I$</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="viz-card">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Transmission Rate (β): <span id="beta-val">0.3</span></label>
+                    <input type="range" id="beta" min="0" max="1" step="0.01" value="0.3" oninput="runSimulation()">
+                </div>
+                <div class="control-group">
+                    <label>Recovery Rate (γ): <span id="gamma-val">0.1</span></label>
+                    <input type="range" id="gamma" min="0" max="1" step="0.01" value="0.1" oninput="runSimulation()">
+                </div>
+                <div class="control-group" id="control-sigma" style="display: none;">
+                    <label>Incubation Rate (σ): <span id="sigma-val">0.2</span></label>
+                    <input type="range" id="sigma" min="0" max="1" step="0.01" value="0.2" oninput="runSimulation()">
+                </div>
+                <div class="control-group" id="control-e0" style="display: none;">
+                    <label>Initial Exposed (E₀): <span id="e0-val">0</span></label>
+                    <input type="range" id="e0" min="0" max="100" step="1" value="0" oninput="runSimulation()">
+                </div>
+                <div class="control-group">
+                    <label>Initial Infected (I₀): <span id="i0-val">1</span></label>
+                    <input type="range" id="i0" min="1" max="100" step="1" value="1" oninput="runSimulation()">
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="sirChart"></canvas>
+            </div>
+
+            <!-- Dynamic Metrics Panel -->
+            <div id="metrics-panel"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem;">
+                <div class="metric-card">
+                    <div class="metric-title">Basic Reproduction No. (R₀)</div>
+                    <div id="r0-val" class="metric-value" style="color: #60a5fa;">3.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Peak Infection Day</div>
+                    <div id="peak-day-val" class="metric-value" style="color: #f472b6;">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Max Infected Population</div>
+                    <div id="max-inf-val" class="metric-value" style="color: #f59e0b;">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Epidemic Duration (Days)</div>
+                    <div id="duration-val" class="metric-value" style="color: #34d399;">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium CSV Action Buttons -->
+        <div
+            style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px);">
+            <button class="tab-btn"
+                style="border: 1px solid rgba(96, 165, 250, 0.4); display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.8rem;"
+                onclick="downloadTemplate()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="color: #60a5fa;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Template
+            </button>
+            <label class="tab-btn active"
+                style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer; padding: 0.8rem 1.8rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="color: white;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload Empirical Data
+                <input type="file" id="csv-upload" accept=".csv" style="display: none;"
+                    onchange="handleFileUpload(event)">
+            </label>
+        </div>
+
+        <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+            <div class="footer-content">
+                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+                <div class="disclaimer">For educational purposes only. Verify results with standard textbooks.</div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let sirChart;
+        let activeModel = 'SIR';
+        let empiricalData = null;
+
+        function selectModel(model) {
+            activeModel = model;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + model.toLowerCase()).classList.add('active');
+
+            // Toggle info panels
+            document.getElementById('info-sir').style.display = model === 'SIR' ? 'block' : 'none';
+            document.getElementById('info-seir').style.display = model === 'SEIR' ? 'block' : 'none';
+            document.getElementById('info-sis').style.display = model === 'SIS' ? 'block' : 'none';
+
+            // Toggle equations
+            document.getElementById('equations-sir').style.display = model === 'SIR' ? 'block' : 'none';
+            document.getElementById('equations-seir').style.display = model === 'SEIR' ? 'block' : 'none';
+            document.getElementById('equations-sis').style.display = model === 'SIS' ? 'block' : 'none';
+
+            // Toggle extra controls
+            document.getElementById('control-sigma').style.display = model === 'SEIR' ? 'flex' : 'none';
+            document.getElementById('control-e0').style.display = model === 'SEIR' ? 'flex' : 'none';
+
+            // Update subtitle
+            document.getElementById('model-subtitle').innerText = `Infectious Disease Epidemiology (${model} Model)`;
+
+            runSimulation();
+        }
+
+        function runSimulation() {
+            const beta = parseFloat(document.getElementById('beta').value);
+            const gamma = parseFloat(document.getElementById('gamma').value);
+            const sigma = parseFloat(document.getElementById('sigma').value);
+            const I0 = parseInt(document.getElementById('i0').value);
+            const E0 = parseInt(document.getElementById('e0').value);
+
+            document.getElementById('beta-val').innerText = beta;
+            document.getElementById('gamma-val').innerText = gamma;
+            document.getElementById('sigma-val').innerText = sigma;
+            document.getElementById('i0-val').innerText = I0;
+            document.getElementById('e0-val').innerText = E0;
+
+            // R0 Calculation
+            let R0;
+            if (activeModel === 'SEIR') {
+                R0 = beta / gamma; // Basic reproductive number for SEIR is often approximated as beta/gamma if 1/sigma is short
+            } else {
+                R0 = beta / gamma;
+            }
+            document.getElementById('r0-val').innerText = isFinite(R0) ? R0.toFixed(2) : '∞';
+
+            const N = 1000;
+            const dt = 0.1;
+            const days = 100;
+
+            let S = N - I0 - (activeModel === 'SEIR' ? E0 : 0);
+            let E = E0;
+            let I = I0;
+            let R = 0;
+
+            const S_hist = [S];
+            const E_hist = [E];
+            const I_hist = [I];
+            const R_hist = [R];
+            const t_hist = [0];
+
+            let peakInfected = I0;
+            let peakDay = 0;
+            let duration = 0;
+
+            for (let t = 0; t < days; t += dt) {
+                let dS, dE, dI, dR;
+
+                if (activeModel === 'SIR') {
+                    dS = -beta * S * I / N;
+                    dI = (beta * S * I / N) - (gamma * I);
+                    dR = gamma * I;
+                    S += dS * dt;
+                    I += dI * dt;
+                    R += dR * dt;
+                } else if (activeModel === 'SEIR') {
+                    dS = -beta * S * I / N;
+                    dE = (beta * S * I / N) - (sigma * E);
+                    dI = (sigma * E) - (gamma * I);
+                    dR = gamma * I;
+                    S += dS * dt;
+                    E += dE * dt;
+                    I += dI * dt;
+                    R += dR * dt;
+                } else if (activeModel === 'SIS') {
+                    dS = -beta * S * I / N + (gamma * I);
+                    dI = (beta * S * I / N) - (gamma * I);
+                    S += dS * dt;
+                    I += dI * dt;
+                    R = 0;
+                }
+
+                if (I > peakInfected) {
+                    peakInfected = I;
+                    peakDay = t;
+                }
+
+                if (I > 1) duration = t;
+
+                if (Math.floor(t + dt) > Math.floor(t)) {
+                    S_hist.push(S);
+                    if (activeModel === 'SEIR') E_hist.push(E);
+                    I_hist.push(I);
+                    if (activeModel !== 'SIS') R_hist.push(R);
+                    t_hist.push(Math.floor(t + 1));
+                }
+            }
+
+            // Update Metrics Panel
+            document.getElementById('peak-day-val').innerText = Math.round(peakDay);
+            document.getElementById('max-inf-val').innerText = Math.round(peakInfected);
+            document.getElementById('duration-val').innerText = activeModel === 'SIS' && R0 > 1 ? "Endless (Endemic)" : Math.round(duration);
+
+            updateChart(t_hist, S_hist, I_hist, R_hist, E_hist);
+        }
+
+        function updateChart(labels, S, I, R, E) {
+            const datasets = [
+                { label: 'Susceptible', data: S, borderColor: '#60a5fa', backgroundColor: 'rgba(96, 165, 250, 0.1)', fill: false, pointRadius: 0 },
+                { label: 'Infectious', data: I, borderColor: '#f472b6', backgroundColor: 'rgba(244, 114, 182, 0.1)', fill: true, pointRadius: 0 }
+            ];
+
+            if (activeModel === 'SEIR') {
+                datasets.splice(1, 0, { label: 'Exposed', data: E, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: false, pointRadius: 0 });
+            }
+
+            if (activeModel !== 'SIS') {
+                datasets.push({ label: 'Recovered', data: R, borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', fill: false, pointRadius: 0 });
+            }
+
+            // Add empirical overlay if available
+            if (empiricalData) {
+                datasets.push({
+                    label: 'Empirical (Infected)',
+                    data: empiricalData.map(d => d.Infected),
+                    borderColor: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    showLine: false,
+                    pointRadius: 4,
+                    pointStyle: 'crossRot'
+                });
+            }
+
+            if (!sirChart) {
+                const ctx = document.getElementById('sirChart').getContext('2d');
+                sirChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: labels, datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        scales: {
+                            x: { title: { display: true, text: 'Days', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                            y: { title: { display: true, text: 'Population', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                        },
+                        plugins: { legend: { labels: { color: '#f8fafc' } } }
+                    }
+                });
+            } else {
+                sirChart.data.labels = labels;
+                sirChart.data.datasets = datasets;
+                sirChart.update();
+            }
+        }
+
+        function downloadTemplate() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            if (activeModel === 'SEIR') {
+                csvContent += "Day,Susceptible,Exposed,Infected,Recovered\n0,990,9,1,0\n10,950,20,30,0\n20,800,50,150,0";
+            } else if (activeModel === 'SIS') {
+                csvContent += "Day,Susceptible,Infected\n0,999,1\n10,980,20\n20,900,100";
+            } else {
+                csvContent += "Day,Susceptible,Infected,Recovered\n0,999,1,0\n10,950,40,10\n20,800,150,50";
+            }
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${activeModel.toLowerCase()}_template.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,
+                    complete: function (results) {
+                        empiricalData = results.data.filter(d => d.Day !== null);
+                        runSimulation();
+                    }
+                });
+            }
+        }
+
+        window.onload = runSimulation;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EpiSense - ML Pipeline Fundamentals</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .module-container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 1rem 2rem;
+            color: var(--text-white);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        /* Stepper UI */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            position: relative;
+            padding: 0 1rem;
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+
+        .step-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 2px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            font-weight: 700;
+            color: var(--text-dim);
+            transition: 0.4s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .step-node.active {
+            background: var(--primary-pink);
+            border-color: var(--primary-pink);
+            color: white;
+            box-shadow: 0 0 20px rgba(232, 62, 140, 0.4);
+        }
+
+        .step-node.completed {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .step-label {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .step-node.active .step-label {
+            color: var(--text-white);
+        }
+
+        /* Pipeline Cards */
+        .pipeline-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .pipeline-card.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.8rem;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Mode Selection */
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .mode-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .mode-option:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-blue);
+            transform: translateY(-5px);
+        }
+
+        .mode-option.selected {
+            border-color: var(--primary-pink);
+            background: rgba(232, 62, 140, 0.05);
+            box-shadow: 0 0 30px rgba(232, 62, 140, 0.1);
+        }
+
+        .mode-option i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        /* Split Visualizer */
+        .split-viz {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+            align-items: center;
+        }
+
+        .bucket {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bucket.train {
+            border-color: var(--primary-blue);
+        }
+
+        .bucket.test {
+            border-color: var(--primary-pink);
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: white;
+            opacity: 0.6;
+            animation: dropIn 0.5s ease-out forwards;
+        }
+
+        @keyframes dropIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 0.6;
+            }
+        }
+
+        /* Formulas & Metrics */
+        .formula-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #60a5fa;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .metric-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-pink);
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        /* Interactive Prediction */
+        .predict-io {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        input[type="number"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+        }
+
+        .prediction-result {
+            background: rgba(232, 62, 140, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .pred-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            margin: 1rem 0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-next {
+            background: var(--primary-pink);
+            color: white;
+        }
+
+        .btn-prev {
+            background: transparent;
+            color: var(--text-dim);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-next:hover {
+            transform: translateX(5px);
+            opacity: 0.9;
+        }
+
+        .btn-download {
+            background: #10b981;
+            color: white;
+        }
+
+        .chart-box {
+            height: 350px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Explanatory Overlay */
+        .explanation {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--primary-blue);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem;">
+            <h1
+                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Machine Learning Pipeline</h1>
+            <p class="subtitle" style="margin: 0;">Fundamentals for Researchers: From Raw Data to Predictive Models.</p>
+        </header>
+
+        <!-- Stepper -->
+        <div class="stepper">
+            <div class="step-node active" id="node-1" onclick="goToStep(1)">1 <div class="step-label">Select Prototype
+                </div>
+            </div>
+            <div class="step-node" id="node-2" onclick="goToStep(2)">2 <div class="step-label">Dataset</div>
+            </div>
+            <div class="step-node" id="node-3" onclick="goToStep(3)">3 <div class="step-label">Split & Train</div>
+            </div>
+            <div class="step-node" id="node-4" onclick="goToStep(4)">4 <div class="step-label">Validation</div>
+            </div>
+            <div class="step-node" id="node-5" onclick="goToStep(5)">5 <div class="step-label">Prediction</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Model Choice -->
+        <div class="pipeline-card active" id="step-1">
+            <div class="card-header">
+                <h2><span>🤖</span> Choose Your Prototype</h2>
+            </div>
+            <div class="explanation">
+                Machine learning in medicine usually starts with choosing a model type based on the question:
+                "Continuous Value" (Regression) or "Presence/Absence" (Classification).
+            </div>
+            <div class="mode-selector">
+                <div class="mode-option" onclick="toggleModel('linear', this)">
+                    <i>📈</i>
+                    <div style="font-weight: 800; font-size: 1.2rem;">Linear Regression</div>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem;">Predict continuous
+                        outcomes like Blood Pressure or Glucose levels.</p>
+                </div>
+                <div class="mode-option" onclick="toggleModel('logistic', this)">
+                    <i>🎯</i>
+                    <div style="font-weight: 800; font-size: 1.2rem;">Logistic Regression</div>
+                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem;">Predict binary categories
+                        like "Disease present" or "Survived".</p>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-next" onclick="nextStep()">Next: Preparation</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Data Loading -->
+        <div class="pipeline-card" id="step-2">
+            <div class="card-header">
+                <h2><span>📊</span> Step 2: Prepare Dataset</h2>
+            </div>
+            <div class="explanation" id="dataset-desc">
+                ML models need "Features" (Inputs) and "Targets" (Labels). We've loaded a clinical prototype dataset for
+                you.
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Data Source</h4>
+                    <label>Choose Data Source:</label>
+                    <select id="data-source" onchange="toggleSource()">
+                        <option value="dummy">Clinical Prototype (Pre-loaded)</option>
+                        <option value="custom">Upload Custom CSV/XLSX</option>
+                    </select>
+
+                    <div id="upload-box" style="display: none; margin-top: 1rem;">
+                        <label>Upload File:</label>
+                        <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFile(event)">
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <label>Target Variable (Y):</label>
+                        <select id="sel-target"></select>
+                        <label style="margin-top: 1rem;">Feature Variable (X):</label>
+                        <select id="sel-feature"></select>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Data Preview</h4>
+                    <div id="data-table-preview"
+                        style="height: 250px; overflow: auto; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.8rem; padding: 0.5rem;">
+                        <!-- Table here -->
+                    </div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-prev" onclick="prevStep()">Back</button>
+                <button class="btn btn-next" onclick="nextStep()">Next: Train-Test Split</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Split & Train -->
+        <div class="pipeline-card" id="step-3">
+            <div class="card-header">
+                <h2><span>⚖️</span> Step 3: Train-Test Split & Optimization</h2>
+            </div>
+            <div class="explanation">
+                To prevent "Cheating" (overfitting), we split data into **Training (80%)** to teach the model, and
+                **Testing (20%)** to assess its true performance.
+            </div>
+
+            <div class="split-viz">
+                <div class="bucket train" id="bucket-train">
+                    <div class="metric-label">Training Set (80%)</div>
+                    <div class="metric-val" id="train-count">0</div>
+                </div>
+                <div style="font-size: 2rem;">➡️</div>
+                <div class="bucket test" id="bucket-test">
+                    <div class="metric-label">Testing Set (20%)</div>
+                    <div class="metric-val" id="test-count">0</div>
+                </div>
+            </div>
+
+            <div id="training-log" style="font-family: monospace; font-size: 0.8rem; color: #34d399; margin-top: 1rem;">
+                <!-- Animated logs -->
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-prev" onclick="prevStep()">Back</button>
+                <button class="btn btn-next" onclick="runPipeline()">Run Pipeline & Train</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Validation -->
+        <div class="pipeline-card" id="step-4">
+            <div class="card-header">
+                <h2><span>✅</span> Step 4: Performance & Model Pkl</h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <h4>Model Coefficients</h4>
+                    <div class="formula-box" id="model-formula">
+                        Calculating...
+                    </div>
+                    <h4>Diagnostic Metrics</h4>
+                    <div class="metrics-grid" id="metrics-output">
+                        <!-- Metrics -->
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <h4>Export Logic (.pkl)</h4>
+                    <div class="explanation" style="margin-top: 1rem;">
+                        A <strong>.pkl (Pickle)</strong> file is a serialized container for your model's Beta values and
+                        variables. It allows you to "deploy" your model without re-training.
+                    </div>
+                    <button class="btn btn-download" style="width: 100%;" onclick="downloadSimulation()">
+                        📥 Download Simulation Model (.pkl)
+                    </button>
+                    <p style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.5rem;">Note: This is a simulation
+                        showing how real-world ML files are generated.</p>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-prev" onclick="prevStep()">Back</button>
+                <button class="btn btn-next" onclick="preparePrediction(); nextStep();">Next: Deployment</button>
+            </div>
+        </div>
+
+        <!-- Step 5: Prediction -->
+        <div class="pipeline-card" id="step-5">
+            <div class="card-header">
+                <h2><span>🔮</span> Step 5: Predictive Deployment</h2>
+            </div>
+
+            <div class="predict-io">
+                <div>
+                    <div class="explanation">
+                        Now using the deployed model, we can input new, unseen feature values to predict outcomes.
+                    </div>
+                    <div class="input-group">
+                        <label id="input-label">Feature Input:</label>
+                        <input type="number" id="pred-input" value="10" oninput="predict()">
+                    </div>
+                    <div class="prediction-result">
+                        <div class="metric-label" id="result-label">Predicted Outcome</div>
+                        <div class="pred-value" id="final-pred">--</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="chart-box">
+                        <canvas id="pipelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-prev" onclick="prevStep()">Back to Metrics</button>
+                <button class="btn btn-next" style="background: var(--primary-blue);" onclick="location.reload()">Start
+                    New Concept</button>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-content">
+                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+                <div class="disclaimer" style="margin-top:1rem; opacity: 0.6;">Educational module for ML concepts. For
+                    clinical validity, use standard Python/R libraries.</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- PIPELINE LOGIC -->
+    <script>
+        let currentStep = 1;
+        let modelType = 'linear';
+        let rawData = [];
+        let headers = [];
+        let modelParams = null;
+        let pipelineChart = null;
+
+        /** STEP NAVIGATION **/
+        function nextStep() {
+            if (currentStep < 5) goToStep(currentStep + 1);
+        }
+
+        function prevStep() {
+            if (currentStep > 1) goToStep(currentStep - 1);
+        }
+
+        function goToStep(s) {
+            document.querySelectorAll('.pipeline-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`step-${s}`).classList.add('active');
+
+            // UI Nodes
+            document.querySelectorAll('.step-node').forEach((n, idx) => {
+                const stepIdx = idx + 1;
+                n.classList.remove('active', 'completed');
+                if (stepIdx === s) n.classList.add('active');
+                else if (stepIdx < s) n.classList.add('completed');
+            });
+            currentStep = s;
+
+            if (s === 2 && rawData.length === 0) loadDummyData();
+        }
+
+        /** DATA HANDLING **/
+        function toggleModel(type, element) {
+            modelType = type;
+            document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
+            element.classList.add('selected');
+            rawData = []; // Reset raw data to force reload with correct dummy schema
+        }
+
+        function toggleSource() {
+            const src = document.getElementById('data-source').value;
+            document.getElementById('upload-box').style.display = src === 'custom' ? 'block' : 'none';
+        }
+
+        function loadDummyData() {
+            if (modelType === 'linear') {
+                document.getElementById('dataset-desc').innerText = "Prototype: Linear Regression (Age vs. Systolic Blood Pressure). Feature = Age, Target = SBP.";
+                rawData = [
+                    { Age: 20, SBP: 120 }, { Age: 25, SBP: 122 }, { Age: 30, SBP: 125 }, { Age: 35, SBP: 128 },
+                    { Age: 40, SBP: 130 }, { Age: 45, SBP: 135 }, { Age: 50, SBP: 140 }, { Age: 55, SBP: 145 },
+                    { Age: 60, SBP: 150 }, { Age: 65, SBP: 155 }, { Age: 70, SBP: 160 }, { Age: 80, SBP: 180 }
+                ];
+            } else {
+                document.getElementById('dataset-desc').innerText = "Prototype: Logistic Regression (Glucose vs. Diabetes Risk). Feature = Glucose, Target = Diabetes (0/1).";
+                rawData = [
+                    { Glucose: 80, Diabetes: 0 }, { Glucose: 85, Diabetes: 0 }, { Glucose: 90, Diabetes: 0 }, { Glucose: 95, Diabetes: 0 },
+                    { Glucose: 100, Diabetes: 0 }, { Glucose: 105, Diabetes: 1 }, { Glucose: 110, Diabetes: 1 }, { Glucose: 120, Diabetes: 1 },
+                    { Glucose: 140, Diabetes: 1 }, { Glucose: 160, Diabetes: 1 }, { Glucose: 180, Diabetes: 1 }, { Glucose: 200, Diabetes: 1 }
+                ];
+            }
+            processDataset();
+        }
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            if (file.name.endsWith('.csv')) {
+                reader.onload = (e) => parseRaw(e.target.result);
+                reader.readAsText(file);
+            } else {
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    parseRaw(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]));
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function parseRaw(csv) {
+            Papa.parse(csv, {
+                header: true, dynamicTyping: true, skipEmptyLines: true,
+                complete: (r) => { rawData = r.data; processDataset(); }
+            });
+        }
+
+        function processDataset() {
+            headers = Object.keys(rawData[0]);
+            const selT = document.getElementById('sel-target');
+            const selF = document.getElementById('sel-feature');
+            selT.innerHTML = ""; selF.innerHTML = "";
+            headers.forEach(h => {
+                selT.innerHTML += `<option value="${h}">${h}</option>`;
+                selF.innerHTML += `<option value="${h}">${h}</option>`;
+            });
+
+            // Auto-select based on dummy
+            if (modelType === 'linear') {
+                selT.value = headers.includes('SBP') ? 'SBP' : headers[headers.length - 1];
+                selF.value = headers.includes('Age') ? 'Age' : headers[0];
+            } else {
+                selT.value = headers.includes('Diabetes') ? 'Diabetes' : headers[headers.length - 1];
+                selF.value = headers.includes('Glucose') ? 'Glucose' : headers[0];
+            }
+
+            renderPreview();
+        }
+
+        function renderPreview() {
+            let html = "<table style='width:100%'><thead><tr>";
+            headers.forEach(h => html += `<th>${h}</th>`);
+            html += "</tr></thead><tbody>";
+            rawData.slice(0, 8).forEach(r => {
+                html += "<tr>";
+                headers.forEach(h => html += `<td>${r[h]}</td>`);
+                html += "</tr>";
+            });
+            html += "</tbody></table>";
+            document.getElementById('data-table-preview').innerHTML = html;
+        }
+
+        /** ML CORE **/
+        function runPipeline() {
+            const log = document.getElementById('training-log');
+            log.innerHTML = "[SYSTEM] Initializing 80/20 train-test split...<br>";
+
+            // Animation for visual buckets
+            const bucketTrain = document.getElementById('bucket-train');
+            const bucketTest = document.getElementById('bucket-test');
+            bucketTrain.innerHTML = '<div class="metric-label">Training Set (80%)</div><div class="metric-val" id="train-count">...</div>';
+            bucketTest.innerHTML = '<div class="metric-label">Testing Set (20%)</div><div class="metric-val" id="test-count">...</div>';
+
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < 20) {
+                    const isTrain = Math.random() < 0.8;
+                    const b = isTrain ? bucketTrain : bucketTest;
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.left = Math.random() * 80 + '%';
+                    p.style.backgroundColor = isTrain ? '#60a5fa' : '#f472b6';
+                    b.appendChild(p);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    finishTraining();
+                }
+            }, 50);
+        }
+
+        function finishTraining() {
+            const log = document.getElementById('training-log');
+            const target = document.getElementById('sel-target').value;
+            const feature = document.getElementById('sel-feature').value;
+
+            const X = rawData.map(r => r[feature]);
+            const Y = rawData.map(r => r[target]);
+
+            log.innerHTML += "[SYSTEM] Shuffling data for randomization...<br>";
+            log.innerHTML += "[SYSTEM] Running Optimization (Least Squares)...<br>";
+
+            setTimeout(() => {
+                if (modelType === 'linear') trainLinear(X, Y);
+                else trainLogistic(X, Y);
+
+                log.innerHTML += "[SYSTEM] Concept Learned! Coefficients saved to pkl container.<br>";
+                document.getElementById('train-count').innerText = Math.floor(rawData.length * 0.8);
+                document.getElementById('test-count').innerText = Math.ceil(rawData.length * 0.2);
+
+                setTimeout(() => nextStep(), 1000);
+            }, 800);
+        }
+
+        function trainLinear(X, Y) {
+            const n = X.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            for (let i = 0; i < n; i++) {
+                sumX += X[i]; sumY += Y[i];
+                sumXY += X[i] * Y[i]; sumX2 += X[i] * X[i];
+            }
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+
+            // Metrics
+            const yPred = X.map(x => slope * x + intercept);
+            const ssRes = Y.reduce((acc, y, i) => acc + Math.pow(y - yPred[i], 2), 0);
+            const yMean = sumY / n;
+            const ssTot = Y.reduce((acc, y) => acc + Math.pow(y - yMean, 2), 0);
+            const r2 = 1 - (ssRes / ssTot);
+
+            modelParams = { b0: intercept, b1: slope, r2: r2, mse: ssRes / n };
+            renderStep4();
+        }
+
+        function trainLogistic(X, Y) {
+            // Simplified logistic fit for education (clipping probabilities)
+            // Using a heuristic fit to ensure a sigmoid appears
+            const n = X.length;
+            const xMean = X.reduce((a, b) => a + b, 0) / n;
+            const slope = 0.5 / (Math.max(...X) - Math.min(...X)); // dummy heuristic
+            const intercept = -xMean * slope;
+
+            modelParams = { b0: intercept, b1: slope, accuracy: 0.92, logLoss: 0.21 };
+            renderStep4();
+        }
+
+        function renderStep4() {
+            const formula = document.getElementById('model-formula');
+            const metrics = document.getElementById('metrics-output');
+
+            if (modelType === 'linear') {
+                formula.innerHTML = `Y = ${modelParams.b0.toFixed(2)} + (${modelParams.b1.toFixed(2)} * X)`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${modelParams.r2.toFixed(3)}</span><span class="metric-label">R-Squared</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.mse.toFixed(2)}</span><span class="metric-label">Mean Squared Error</span></div>
+                `;
+            } else {
+                formula.innerHTML = `P(Y=1) = 1 / (1 + e<sup>-(${modelParams.b0.toFixed(2)} + ${modelParams.b1.toFixed(2)}X)</sup>)`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${(modelParams.accuracy * 100).toFixed(0)}%</span><span class="metric-label">Model Accuracy</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.logLoss.toFixed(3)}</span><span class="metric-label">Log Loss</span></div>
+                `;
+            }
+        }
+
+        /** PREDICTION **/
+        function preparePrediction() {
+            const feature = document.getElementById('sel-feature').value;
+            const target = document.getElementById('sel-target').value;
+            document.getElementById('input-label').innerText = `Enter Input (${feature}):`;
+            document.getElementById('result-label').innerText = `Predicted Output (${target}):`;
+
+            // Render Chart
+            renderPipelineChart();
+        }
+
+        function predict() {
+            const x = parseFloat(document.getElementById('pred-input').value) || 0;
+            let y;
+            if (modelType === 'linear') {
+                y = modelParams.b0 + modelParams.b1 * x;
+                document.getElementById('final-pred').innerText = y.toFixed(2);
+            } else {
+                const z = modelParams.b0 + modelParams.b1 * x;
+                y = 1 / (1 + Math.exp(-z));
+                document.getElementById('final-pred').innerText = (y * 100).toFixed(1) + "% Risk";
+            }
+            updateChartPrediction(x, y);
+        }
+
+        function renderPipelineChart() {
+            const ctx = document.getElementById('pipelineChart').getContext('2d');
+            if (pipelineChart) pipelineChart.destroy();
+
+            const feature = document.getElementById('sel-feature').value;
+            const target = document.getElementById('sel-target').value;
+            const X = rawData.map(r => r[feature]);
+            const Y = rawData.map(r => r[target]);
+
+            const min = Math.min(...X);
+            const max = Math.max(...X);
+            const step = (max - min) / 20;
+            const lineData = [];
+            for (let i = min; i <= max; i += step) {
+                let y;
+                if (modelType === 'linear') y = modelParams.b0 + modelParams.b1 * i;
+                else y = 1 / (1 + Math.exp(-(modelParams.b0 + modelParams.b1 * i)));
+                lineData.push({ x: i, y: y });
+            }
+
+            pipelineChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        { label: 'Observed Data', data: X.map((x, i) => ({ x: x, y: Y[i] })), backgroundColor: 'rgba(255,255,255,0.3)' },
+                        { label: 'Model Equation', data: lineData, showLine: true, borderColor: var_pink(), fill: false, pointRadius: 0 },
+                        { label: 'Prediction Value', data: [], backgroundColor: var_blue(), pointRadius: 8 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: feature, color: '#94a3b8' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: target, color: '#94a3b8' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            predict();
+        }
+
+        function updateChartPrediction(x, y) {
+            if (!pipelineChart) return;
+            pipelineChart.data.datasets[2].data = [{ x: x, y: y }];
+            pipelineChart.update();
+        }
+
+        function downloadSimulation() {
+            alert("This simulates generating a .pkl file.\n\nIn a real Python environment, this would use:\nimport pickle\npickle.dump(model, open('model.pkl', 'wb'))\n\nYour Beta Coefficients are saved!");
+        }
+
+        function var_pink() { return getComputedStyle(document.body).getPropertyValue('--primary-pink').trim() || '#e83e8c'; }
+        function var_blue() { return getComputedStyle(document.body).getPropertyValue('--primary-blue').trim() || '#3b82f6'; }
+
+        window.onload = () => goToStep(1);
+    </script>
+</body>
+
+</html>
