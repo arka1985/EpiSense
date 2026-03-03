@@ -157,22 +157,6 @@
             </a>
         </main>
 
-        <section style="text-align: center; margin-top: 4rem;">
-            <div class="rating-section">
-                <h3 style="margin-bottom: 1rem; color: var(--text-white);">Rate Your Experience</h3>
-                <div class="stars" id="star-rating">
-                    <span class="star" data-value="1">★</span>
-                    <span class="star" data-value="2">★</span>
-                    <span class="star" data-value="3">★</span>
-                    <span class="star" data-value="4">★</span>
-                    <span class="star" data-value="5">★</span>
-                </div>
-                <div class="rating-counter">
-                    Total 5-Star Ratings: <span id="five-star-count" class="count-badge">0</span>
-                </div>
-            </div>
-        </section>
-
         <footer>
             <div class="footer-content">
                 <!-- PWA Download Instructions -->
@@ -238,64 +222,6 @@
 
         // Update every 500ms
         setInterval(animateRNG, 500);
-
-        // Rating System Logic
-        const countDisplay = document.getElementById('five-star-count');
-        const stars = document.querySelectorAll('.star');
-
-        // Initialize counter from localStorage or default to 124
-        let storedCount = localStorage.getItem('epiSenseFiveStarCount');
-        let count = storedCount ? parseInt(storedCount) : 124;
-        if (isNaN(count)) count = 124;
-        countDisplay.innerText = count;
-
-        // Visual persistence: highlight stars if a rating was previously given
-        let userRating = localStorage.getItem('epiSenseUserRating');
-        if (userRating) {
-            const val = parseInt(userRating);
-            stars.forEach((s, idx) => {
-                if (idx < val) s.classList.add('active');
-            });
-        }
-
-        stars.forEach(star => {
-            star.addEventListener('click', function () {
-                const value = parseInt(this.getAttribute('data-value'));
-                localStorage.setItem('epiSenseUserRating', value);
-
-                // Visual feedback for star selection
-                stars.forEach((s, idx) => {
-                    if (idx < value) s.classList.add('active');
-                    else s.classList.remove('active');
-                });
-
-                // Increment counter only on 5-star rating (first time or if they change to 5)
-                if (value === 5 && userRating !== '5') {
-                    count++;
-                    countDisplay.innerText = count;
-                    localStorage.setItem('epiSenseFiveStarCount', count);
-                    alert("Thank you for the 5-star rating! Your feedback helps us improve.");
-                } else if (value < 5 && userRating === '5') {
-                    // Optional: decrement if they change from 5 to something lower
-                    count = Math.max(124, count - 1);
-                    countDisplay.innerText = count;
-                    localStorage.setItem('epiSenseFiveStarCount', count);
-                }
-
-                userRating = value.toString();
-            });
-
-            star.addEventListener('mouseover', function () {
-                const value = parseInt(this.getAttribute('data-value'));
-                stars.forEach((s, idx) => {
-                    if (idx < value) s.style.transform = 'scale(1.2) rotate(-5deg)';
-                });
-            });
-
-            star.addEventListener('mouseout', function () {
-                stars.forEach(s => s.style.transform = 'scale(1) rotate(0deg)');
-            });
-        });
 
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
