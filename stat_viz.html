@@ -34,22 +34,28 @@
 
         .viz-card,
         .stat-tile {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .viz-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
         }
 
         .viz-layout {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
+            grid-template-columns: 320px 1fr;
+            gap: 2.5rem;
             align-items: start;
         }
 
@@ -60,59 +66,69 @@
         }
 
         .controls-panel {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            padding: 1.5rem;
-            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.8rem;
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.8rem;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.8rem;
         }
 
         label {
             color: var(--text-dim);
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            display: flex;
+            justify-content: space-between;
         }
 
         input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
             width: 100%;
             height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            appearance: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
             outline: none;
+            transition: background 0.3s;
         }
 
         input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            background: var(--primary-pink);
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--primary-pink), #ff1744);
             border-radius: 50%;
             cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 0 10px var(--primary-pink);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 15px rgba(232, 62, 140, 0.4);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
         }
 
         .chart-wrapper {
             position: relative;
-            height: 400px;
+            height: 450px;
             width: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 16px;
-            padding: 2.5rem 1rem 1rem 1rem;
-            /* More top padding for titles */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
         }
 
         .charts-grid-2 {
@@ -264,12 +280,12 @@
                         <div style="margin-top: 5px;">
                             <label>Mean (μ): <span id="norm-mean-val">0</span></label>
                             <input type="range" id="norm-mean-slider" min="-20" max="20" value="0" step="0.5"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('norm-mean-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                         <div style="margin-top: 15px;">
                             <label>Standard Deviation (σ): <span id="norm-sd-val">5</span></label>
                             <input type="range" id="norm-sd-slider" min="1" max="15" value="5" step="0.5"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('norm-sd-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                     </div>
 
@@ -278,7 +294,7 @@
                         <div style="margin-top: 5px;">
                             <label>Degrees of Freedom (ν): <span id="t-df-val">5</span></label>
                             <input type="range" id="t-df-slider" min="1" max="50" value="5" step="1"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('t-df-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                     </div>
 
@@ -287,7 +303,7 @@
                         <div style="margin-top: 5px;">
                             <label>Degrees of Freedom (k): <span id="chi-df-val">3</span></label>
                             <input type="range" id="chi-df-slider" min="1" max="30" value="3" step="1"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('chi-df-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                     </div>
 
@@ -296,12 +312,12 @@
                         <div style="margin-top: 5px;">
                             <label>Number of Trials (n): <span id="binom-n-val">20</span></label>
                             <input type="range" id="binom-n-slider" min="1" max="100" value="20" step="1"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('binom-n-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                         <div style="margin-top: 15px;">
                             <label>Probability of Success (p): <span id="binom-p-val">0.5</span></label>
                             <input type="range" id="binom-p-slider" min="0.01" max="0.99" value="0.5" step="0.01"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('binom-p-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                     </div>
 
@@ -310,7 +326,7 @@
                         <div style="margin-top: 5px;">
                             <label>Rate of Events (λ): <span id="pois-l-val">5</span></label>
                             <input type="range" id="pois-l-slider" min="1" max="30" value="5" step="1"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('pois-l-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                     </div>
 
@@ -319,12 +335,12 @@
                         <div style="margin-top: 5px;">
                             <label>Location (μ): <span id="log-mu-val">0</span></label>
                             <input type="range" id="log-mu-slider" min="-2" max="2" value="0" step="0.1"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('log-mu-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                         <div style="margin-top: 15px;">
                             <label>Scale (σ): <span id="log-sigma-val">0.5</span></label>
                             <input type="range" id="log-sigma-slider" min="0.1" max="1.5" value="0.5" step="0.05"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('log-sigma-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                     </div>
 
@@ -333,7 +349,7 @@
                         <div style="margin-top: 5px;">
                             <label>Hazard Rate (λ): <span id="exp-l-val">1</span></label>
                             <input type="range" id="exp-l-slider" min="0.1" max="5" value="1" step="0.1"
-                                oninput="updateDistChart()">
+                                oninput="document.getElementById('exp-l-val').innerText = this.value; throttledUpdateDist()">
                         </div>
                     </div>
 
@@ -379,9 +395,9 @@
                     <label>Skew Parameter (α): <input type="number" id="true-skew-input" min="-10" max="10" value="0"
                             step="0.5"
                             style="width: 90px; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 2px 5px; margin-left: 5px;"
-                            oninput="document.getElementById('true-skew-slider').value = this.value; updateTrueShapeChart()"></label>
+                            oninput="document.getElementById('true-skew-slider').value = this.value; throttledUpdateTrueShape()"></label>
                     <input type="range" id="true-skew-slider" min="-10" max="10" value="0" step="0.5"
-                        oninput="document.getElementById('true-skew-input').value = this.value; updateTrueShapeChart()">
+                        oninput="document.getElementById('true-skew-input').value = this.value; throttledUpdateTrueShape()">
                 </div>
 
                 <div id="true-skew-desc"
@@ -456,9 +472,9 @@
                     <label>Extreme Tail Volatility (%): <input type="number" id="true-kurt-input" min="0" max="30"
                             value="5" step="1"
                             style="width: 70px; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 2px 5px; margin-left: 5px;"
-                            oninput="document.getElementById('true-kurt-slider').value = this.value; updateTrueShapeChart()"></label>
+                            oninput="document.getElementById('true-kurt-slider').value = this.value; throttledUpdateTrueShape()"></label>
                     <input type="range" id="true-kurt-slider" min="0" max="30" value="5" step="1"
-                        oninput="document.getElementById('true-kurt-input').value = this.value; updateTrueShapeChart()">
+                        oninput="document.getElementById('true-kurt-input').value = this.value; throttledUpdateTrueShape()">
                 </div>
 
                 <div id="true-kurt-desc"
@@ -554,6 +570,37 @@
 
 
     <div id="z-viz" class="viz-card" style="display: none;">
+        <!-- Morphing Section -->
+        <div class="viz-layout"
+            style="margin-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2rem;">
+            <div class="controls-panel">
+                <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;"><i class="fas fa-magic"></i> 1. Normal
+                    Distribution Morphing</h3>
+                <p class="subtitle" style="margin-bottom: 1rem; font-size: 0.85rem;">Watch a custom distribution "morph"
+                    into a Standard Normal (μ=0, σ=1).</p>
+
+                <div class="control-group">
+                    <label>Initial Mean: <span id="morph-mean-val">50</span></label>
+                    <input type="range" id="morph-mean-slider" min="-10" max="100" value="50" step="1"
+                        oninput="throttledUpdateMorph()">
+                </div>
+                <div class="control-group" style="margin-top: 1rem;">
+                    <label>Initial SD: <span id="morph-sd-val">15</span></label>
+                    <input type="range" id="morph-sd-slider" min="1" max="30" value="15" step="1"
+                        oninput="throttledUpdateMorph()">
+                </div>
+                <div class="control-group"
+                    style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <label style="color: var(--primary-blue); font-weight: 800;">Morphing Progress (%)</label>
+                    <input type="range" id="morph-slider" min="0" max="100" value="0" step="1"
+                        oninput="throttledUpdateMorph()" style="margin-top: 0.5rem;">
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="morphChart"></canvas>
+            </div>
+        </div>
+
         <!-- Z-Table Section -->
         <div class="viz-layout">
             <div class="controls-panel">
@@ -581,7 +628,8 @@
                 </div>
                 <div class="control-group">
                     <label>Z-Score Value: <span id="z-val">0</span></label>
-                    <input type="range" id="z-slider" min="-4" max="4" value="0" step="0.1" oninput="updateZChart()">
+                    <input type="range" id="z-slider" min="-4" max="4" value="0" step="0.1"
+                        oninput="throttledUpdateZ()">
                 </div>
                 <div class="stat-card" style="text-align: left;">
                     <span class="stat-label">Z-Score Formula</span>
@@ -1047,6 +1095,20 @@
         Chart.register(verticalLinePlugin);
 
 
+
+        // Performance Throttling
+        function throttle(func, limit) {
+            let inThrottle;
+            return function () {
+                const args = arguments;
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            }
+        }
 
         function normalPDF(x, mean, sd) {
             return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
@@ -2180,6 +2242,12 @@
         }
 
         function updateDistChart() {
+            requestAnimationFrame(() => {
+                _updateDistChart();
+            });
+        }
+
+        function _updateDistChart() {
             const distType = document.getElementById('dist-selector').value;
 
             // Manage UI visibility
@@ -2541,7 +2609,19 @@
             updateTrueShapeChart();
         }
 
+        // Throttled Handlers for Performance
+        const throttledUpdateTrueShape = throttle(updateTrueShapeChart, 32);
+        const throttledUpdateDist = throttle(updateDistChart, 32);
+        const throttledUpdateZ = throttle(updateZChart, 32);
+        const throttledUpdateMorph = throttle(updateMorphChart, 32);
+
         function updateTrueShapeChart() {
+            requestAnimationFrame(() => {
+                _updateTrueShapeChart();
+            });
+        }
+
+        function _updateTrueShapeChart() {
             // --- Update Skewness Chart ---
             const skewSlider = document.getElementById('true-skew-slider');
             const skewVal = parseFloat(skewSlider.value); // Range [-3.0, 3.0]
