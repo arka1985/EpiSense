@@ -622,13 +622,24 @@
                         Normal Distribution Morphing</h3>
                     <p class="subtitle"
                         style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #cbd5e1; line-height: 1.6;">
-                        <strong>What is Morphing?</strong> In statistics, standardization (Z-scoring) "morphs" any
-                        normal distribution
-                        into a Standard Normal (μ=0, σ=1). By adjusting the slider below, you are visually performing
-                        the
-                        mathematical operation: <code
-                            style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px;">Z = (X - μ) / σ</code>.
-                        Watch how the peak shifts to 0 and the width compresses/expands to 1.
+                        <strong>What is Morphing?</strong> Imagine comparing heights of people from two different
+                        countries.
+                        One measures in <em>cm</em> (μ=170, σ=10) and the other in <em>inches</em> (μ=67, σ=4).
+                        To compare them fairly, we "morph" (standardize) both into <strong>Z-scores</strong>.
+                        Standardization follows two simple steps:
+                    </p>
+                    <ul
+                        style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 2rem; padding-left: 1.2rem; line-height: 1.6;">
+                        <li><strong style="color: var(--primary-blue);">1. Shift (Centering):</strong> Subtract the Mean
+                            (μ) from every value. This physically slides the peak to <strong>0</strong>.</li>
+                        <li><strong style="color: var(--primary-pink);">2. Scale (Standardizing):</strong> Divide by the
+                            SD (σ). This squashes or stretches the curve so the width becomes exactly
+                            <strong>1</strong>.
+                        </li>
+                    </ul>
+                    <p
+                        style="color: #94a3b8; font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; font-style: italic;">
+                        Goal: Match your distribution to the <strong>dashed white baseline</strong> (μ=0, σ=1).
                     </p>
 
                     <div class="control-group">
@@ -642,12 +653,20 @@
                             oninput="throttledUpdateMorph()">
                     </div>
                     <div class="control-group"
-                        style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <label style="color: var(--primary-blue); font-weight: 800;">Morphing Progress (%)</label>
+                        style="margin-top: 1.5rem; background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label style="color: var(--primary-blue); font-weight: 800; margin: 0;">Morphing Progress
+                                (%)</label>
+                            <button id="morph-animate-btn" class="btn-generate btn-pill"
+                                style="padding: 0.4rem 1rem; font-size: 0.8rem; background: linear-gradient(135deg, #00e5ff, #007bff); border: none; min-width: 120px;"
+                                onclick="toggleMorphAnimation()">
+                                <i class="fas fa-play"></i> Auto-Animate
+                            </button>
+                        </div>
                         <input type="range" id="morph-slider" min="0" max="100" value="0" step="1"
                             oninput="throttledUpdateMorph()" style="margin-top: 0.5rem;">
                         <div
-                            style="display: flex; justify-content: space-between; margin-top: 1rem; font-family: monospace; font-size: 0.85rem;">
+                            style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: monospace; font-size: 0.85rem;">
                             <span style="color: #cbd5e1;">Target Mean: <span id="curr-mean"
                                     style="color: #fff; font-weight: bold;">0.00</span></span>
                             <span style="color: #cbd5e1;">Target SD: <span id="curr-sd"
@@ -2180,29 +2199,96 @@
                 type: 'line',
                 data: {
                     labels: [],
-                    datasets: [{
-                        label: 'Distribution',
-                        data: [],
-                        borderColor: '#f472b6', // Pink
-                        backgroundColor: 'rgba(244, 114, 182, 0.2)',
-                        borderWidth: 3,
-                        pointRadius: 0,
-                        fill: true,
-                        tension: 0.4
-                    }]
+                    datasets: [
+                        {
+                            label: 'Current Distribution',
+                            data: [],
+                            borderColor: '#f472b6', // Pink
+                            backgroundColor: 'rgba(244, 114, 182, 0.2)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.4,
+                            order: 0
+                        },
+                        {
+                            label: 'Standard Normal (Goal)',
+                            data: [], // Populated in init
+                            borderColor: 'rgba(255, 255, 255, 0.4)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.4,
+                            order: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
-                        x: { type: 'linear', min: -10, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { type: 'linear', min: -30, max: 120, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
                         y: { display: false, min: 0 }
                     },
                     animation: { duration: 0 }
                 }
             });
+
+            // Populate static Goal dataset (μ=0, σ=1)
+            const goalData = [];
+            for (let x = -40; x <= 140; x += 0.5) {
+                goalData.push({ x: x, y: normalPDF(x, 0, 1) });
+            }
+            morphChart.data.datasets[1].data = goalData;
+
             updateMorphChart();
+        }
+
+        let isMorphAnimating = false;
+        let morphAnimFrame = null;
+
+        function toggleMorphAnimation() {
+            const btn = document.getElementById('morph-animate-btn');
+            if (isMorphAnimating) {
+                stopMorphAnimation();
+            } else {
+                startMorphAnimation();
+            }
+        }
+
+        function startMorphAnimation() {
+            isMorphAnimating = true;
+            const btn = document.getElementById('morph-animate-btn');
+            btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+            btn.style.background = 'linear-gradient(135deg, #ff5252, #db2777)';
+
+            const slider = document.getElementById('morph-slider');
+            // If already at 100, reset to 0
+            if (parseInt(slider.value) >= 100) slider.value = 0;
+
+            function step() {
+                if (!isMorphAnimating) return;
+
+                let val = parseInt(slider.value);
+                if (val < 100) {
+                    slider.value = val + 1;
+                    updateMorphChart();
+                    morphAnimFrame = requestAnimationFrame(step);
+                } else {
+                    stopMorphAnimation();
+                }
+            }
+            morphAnimFrame = requestAnimationFrame(step);
+        }
+
+        function stopMorphAnimation() {
+            isMorphAnimating = false;
+            if (morphAnimFrame) cancelAnimationFrame(morphAnimFrame);
+            const btn = document.getElementById('morph-animate-btn');
+            btn.innerHTML = '<i class="fas fa-play"></i> Auto-Animate';
+            btn.style.background = 'linear-gradient(135deg, #00e5ff, #007bff)';
         }
 
         function updateMorphChart() {
@@ -2226,8 +2312,8 @@
             const data = [];
 
             // We use scatter data format {x, y} since X axis is linear/continuous
-            // Range -20 to 120
-            for (let x = -20; x <= 120; x += 0.5) {
+            // Range -40 to 140
+            for (let x = -40; x <= 140; x += 0.5) {
                 const y = normalPDF(x, currMean, currSD);
                 data.push({ x: x, y: y });
             }
