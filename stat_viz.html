@@ -1528,7 +1528,7 @@
                                 max: 1 // Normalize both to 0-1
                             }
                         },
-                        animation: { duration: 500 }
+                        animation: false
                     }
                 });
             }
@@ -1672,7 +1672,6 @@
             if (!popChart) return;
             const highlightData = indices.map(i => populationDots[i]);
             popChart.data.datasets[2].data = highlightData;
-            popChart.update('none'); // 'none' for performance? No, we want animation maybe?
             popChart.update();
         }
 
@@ -2024,7 +2023,8 @@
                             ticks: { color: '#94a3b8', precision: 0 },
                             grid: { display: false }
                         }
-                    }
+                    },
+                    animation: false
                 }
             });
         }
