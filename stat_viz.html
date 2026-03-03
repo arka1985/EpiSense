@@ -226,6 +226,8 @@
         /* Desktop Tabs Styling */
         .tabs {
             display: flex;
+            justify-content: center;
+            align-items: center;
             gap: 1rem;
             margin-bottom: 2.5rem;
             background: rgba(255, 255, 255, 0.03);
@@ -233,6 +235,7 @@
             border-radius: 20px;
             border: 1px solid var(--glass-border);
             flex-wrap: wrap;
+            text-align: center;
         }
 
         .tab {
@@ -458,19 +461,19 @@
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                        <button class="btn-generate btn-outline btn-pill" style="flex: 1; padding: 0.6rem;"
-                            onclick="applySkewExample('base')">
-                            <i class="fas fa-users"></i> Base
+                        <button class="btn-generate btn-outline btn-pill"
+                            style="flex: 1; padding: 0.6rem; min-width: 120px;" onclick="applySkewExample('base')">
+                            <i class="fas fa-users"></i> Base (₹10k)
                         </button>
                         <button class="btn-generate btn-pill"
-                            style="background: linear-gradient(135deg, #60a5fa, #3b82f6); border: none; flex: 1; padding: 0.6rem;"
+                            style="background: linear-gradient(135deg, #60a5fa, #3b82f6); border: none; flex: 1; padding: 0.6rem; min-width: 120px;"
                             onclick="applySkewExample('left')">
-                            <i class="fas fa-arrow-left"></i> Left
+                            <i class="fas fa-arrow-left"></i> Add Outlier (₹100)
                         </button>
                         <button class="btn-generate btn-pill"
-                            style="background: linear-gradient(135deg, #f472b6, #db2777); border: none; flex: 1; padding: 0.6rem;"
+                            style="background: linear-gradient(135deg, #f472b6, #db2777); border: none; flex: 1; padding: 0.6rem; min-width: 120px;"
                             onclick="applySkewExample('right')">
-                            <i class="fas fa-arrow-right"></i> Right
+                            <i class="fas fa-arrow-right"></i> Add Outlier (₹1L)
                         </button>
                     </div>
 
@@ -617,8 +620,16 @@
                 <div class="controls-panel">
                     <h3 style="color: var(--primary-pink); margin-bottom: 0.5rem;"><i class="fas fa-magic"></i> 1.
                         Normal Distribution Morphing</h3>
-                    <p class="subtitle" style="margin-bottom: 1rem; font-size: 0.85rem;">Watch a custom distribution
-                        "morph" into a Standard Normal (μ=0, σ=1).</p>
+                    <p class="subtitle"
+                        style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #cbd5e1; line-height: 1.6;">
+                        <strong>What is Morphing?</strong> In statistics, standardization (Z-scoring) "morphs" any
+                        normal distribution
+                        into a Standard Normal (μ=0, σ=1). By adjusting the slider below, you are visually performing
+                        the
+                        mathematical operation: <code
+                            style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px;">Z = (X - μ) / σ</code>.
+                        Watch how the peak shifts to 0 and the width compresses/expands to 1.
+                    </p>
 
                     <div class="control-group">
                         <label>Initial Mean: <span id="morph-mean-val">50</span></label>
@@ -635,6 +646,13 @@
                         <label style="color: var(--primary-blue); font-weight: 800;">Morphing Progress (%)</label>
                         <input type="range" id="morph-slider" min="0" max="100" value="0" step="1"
                             oninput="throttledUpdateMorph()" style="margin-top: 0.5rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; margin-top: 1rem; font-family: monospace; font-size: 0.85rem;">
+                            <span style="color: #cbd5e1;">Target Mean: <span id="curr-mean"
+                                    style="color: #fff; font-weight: bold;">0.00</span></span>
+                            <span style="color: #cbd5e1;">Target SD: <span id="curr-sd"
+                                    style="color: #fff; font-weight: bold;">1.00</span></span>
+                        </div>
                     </div>
                 </div>
                 <div class="chart-wrapper" style="max-width: 800px; margin-top: 2rem;">
@@ -3057,7 +3075,12 @@
             } else if (tab === 'z') {
                 document.getElementById('z-viz').style.display = 'block';
                 if (!zChart) initZChart();
-                if (!morphChart) initMorphChart();
+                if (!morphChart) {
+                    initMorphChart();
+                } else {
+                    morphChart.update();
+                    updateMorphChart();
+                }
             } else if (tab === 'sampling') {
                 document.getElementById('sampling-viz').style.display = 'block';
                 if (!cltChart) {
@@ -3138,11 +3161,28 @@
                 <strong style="color: #fff;">${labelText}</strong><br><br>
                 [${formattedArray}]
             `;
+
+            // SYNC with Main Visualizer
+            // Map the calculated skewness back to the slider to update the graph
+            const skewSlider = document.getElementById('true-skew-slider');
+            const skewInput = document.getElementById('true-skew-input');
+            if (skewSlider && skewInput) {
+                // Clamp skewness for slider bounds (-10 to 10)
+                const clampedSkew = Math.max(-10, Math.min(10, skewness));
+                skewSlider.value = clampedSkew;
+                skewInput.value = clampedSkew.toFixed(1);
+                // Trigger the graph update
+                if (typeof throttledUpdateTrueShape === 'function') {
+                    throttledUpdateTrueShape();
+                }
+            }
         }
 
         window.onload = () => {
             // First Module: Sampling & CLT
             switchTab('sampling');
+            // Initialize Shape Analysis Example
+            applySkewExample('base');
         };
     </script>
 </body>
