@@ -217,6 +217,29 @@
             align-items: center;
             margin-bottom: 1rem;
         }
+
+        @media (max-width: 768px) {
+            .module-container {
+                padding: 1rem;
+            }
+
+            .gis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 400px;
+                order: -1;
+            }
+
+            .sidebar {
+                order: 1;
+            }
+
+            header h1 {
+                font-size: 2rem !important;
+            }
+        }
     </style>
 </head>
 

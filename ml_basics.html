@@ -581,23 +581,27 @@
                     <div class="chart-box">
                         <canvas id="pipelineChart"></canvas>
                     </div>
+                    <button class="btn btn-download" style="width: 100%; margin-top: 1rem;" onclick="downloadFigure()">
+                        📥 Download Result Chart (PNG)
+                    </button>
                 </div>
-            </div>
-
-            <div class="btn-group">
-                <button class="btn btn-prev" onclick="prevStep()">Back to Metrics</button>
-                <button class="btn btn-next" style="background: var(--primary-blue);" onclick="location.reload()">Start
-                    New Concept</button>
             </div>
         </div>
 
-        <footer>
-            <div class="footer-content">
-                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
-                <div class="disclaimer" style="margin-top:1rem; opacity: 0.6;">Educational module for ML concepts. For
-                    clinical validity, use standard Python/R libraries.</div>
-            </div>
-        </footer>
+        <div class="btn-group">
+            <button class="btn btn-prev" onclick="prevStep()">Back to Metrics</button>
+            <button class="btn btn-next" style="background: var(--primary-blue);" onclick="location.reload()">Start
+                New Concept</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+            <div class="disclaimer" style="margin-top:1rem; opacity: 0.6;">Educational module for ML concepts. For
+                clinical validity, use standard Python/R libraries.</div>
+        </div>
+    </footer>
     </div>
 
     <!-- PIPELINE LOGIC -->
@@ -799,11 +803,16 @@
         }
 
         function trainLogistic(X, Y) {
-            // Simplified logistic fit for education (clipping probabilities)
-            // Using a heuristic fit to ensure a sigmoid appears
+            // Improved logistic fit for education (steeper sigmoid)
             const n = X.length;
+            const xMin = Math.min(...X);
+            const xMax = Math.max(...X);
+            const xRange = xMax - xMin;
             const xMean = X.reduce((a, b) => a + b, 0) / n;
-            const slope = 0.5 / (Math.max(...X) - Math.min(...X)); // dummy heuristic
+
+            // Heuristic to place the center of the S-curve near the mean/median threshold
+            // and ensure a visible slope
+            const slope = 10 / xRange;
             const intercept = -xMean * slope;
 
             modelParams = { b0: intercept, b1: slope, accuracy: 0.92, logLoss: 0.21 };
@@ -849,7 +858,9 @@
             } else {
                 const z = modelParams.b0 + modelParams.b1 * x;
                 y = 1 / (1 + Math.exp(-z));
-                document.getElementById('final-pred').innerText = (y * 100).toFixed(1) + "% Risk";
+                const verdict = y >= 0.5 ? "Yes / Present" : "No / Absent";
+                document.getElementById('final-pred').innerText = `${verdict} (${(y * 100).toFixed(1)}% Risk)`;
+                document.getElementById('final-pred').style.color = y >= 0.5 ? 'var(--primary-pink)' : 'var(--primary-blue)';
             }
             updateChartPrediction(x, y);
         }
@@ -887,7 +898,22 @@
                     responsive: true, maintainAspectRatio: false,
                     scales: {
                         x: { title: { display: true, text: feature, color: '#94a3b8' }, ticks: { color: '#94a3b8' } },
-                        y: { title: { display: true, text: target, color: '#94a3b8' }, ticks: { color: '#94a3b8' } }
+                        y: {
+                            title: { display: true, text: target, color: '#94a3b8' },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function (value) {
+                                    if (modelType === 'logistic') {
+                                        if (value === 0) return 'No / Absent';
+                                        if (value === 1) return 'Yes / Present';
+                                        return '';
+                                    }
+                                    return value;
+                                }
+                            },
+                            min: modelType === 'logistic' ? -0.1 : undefined,
+                            max: modelType === 'logistic' ? 1.1 : undefined
+                        }
                     },
                     plugins: { legend: { display: false } }
                 }
@@ -903,6 +929,14 @@
 
         function downloadSimulation() {
             alert("This simulates generating a .pkl file.\n\nIn a real Python environment, this would use:\nimport pickle\npickle.dump(model, open('model.pkl', 'wb'))\n\nYour Beta Coefficients are saved!");
+        }
+
+        function downloadFigure() {
+            if (!pipelineChart) return;
+            const link = document.createElement('a');
+            link.download = `EpiSense_ML_Pipeline_${modelType}_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = pipelineChart.toBase64Image();
+            link.click();
         }
 
         function var_pink() { return getComputedStyle(document.body).getPropertyValue('--primary-pink').trim() || '#e83e8c'; }

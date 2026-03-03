@@ -371,7 +371,8 @@ function updateVariableSelectors() {
 // 4. Test Execution Router
 function runTest() {
     const testType = document.getElementById('test-type').value;
-    let result = { name: "Unknown", statName: "Stat", stat: 0, p: 1, df: 0, error: null };
+    const tail = document.getElementById('test-tail')?.value || 'two';
+    let result = { name: "Unknown", statName: "Stat", stat: 0, p: 1, df: 0, error: null, tail: tail };
 
     try {
         if (['t-test', 'mann-whitney', 'anova', 'kruskal'].includes(testType)) {
@@ -398,8 +399,8 @@ function runTest() {
                 const g1 = groups[groupKeys[0]];
                 const g2 = groups[groupKeys[1]];
 
-                if (testType === 't-test') result = runTTest(g1, g2);
-                if (testType === 'mann-whitney') result = runMannWhitney(g1, g2);
+                if (testType === 't-test') result = runTTest(g1, g2, tail);
+                if (testType === 'mann-whitney') result = runMannWhitney(g1, g2, tail);
 
             } else {
                 // ANOVA or Kruskal (can handle >2 groups)
@@ -423,10 +424,10 @@ function runTest() {
             });
             if (d1.length < 3) throw "Need at least 3 valid complete pairs.";
 
-            if (testType === 'paired-t') result = runPairedT(d1, d2);
-            if (testType === 'wilcoxon') result = runWilcoxon(d1, d2);
-            if (testType === 'pearson') result = runPearson(d1, d2);
-            if (testType === 'spearman') result = runSpearman(d1, d2);
+            if (testType === 'paired-t') result = runPairedT(d1, d2, tail);
+            if (testType === 'wilcoxon') result = runWilcoxon(d1, d2, tail);
+            if (testType === 'pearson') result = runPearson(d1, d2, tail);
+            if (testType === 'spearman') result = runSpearman(d1, d2, tail);
 
         } else if (['chi-square', 'fisher'].includes(testType)) {
             const rCol = document.getElementById('var-row').value;
@@ -446,7 +447,7 @@ function runTest() {
 // 5. Statistical Algorithms
 // ============================================
 
-function runTTest(g1, g2) {
+function runTTest(g1, g2, tail = 'two') {
     const n1 = g1.length, n2 = g2.length;
     const m1 = jStat.mean(g1), m2 = jStat.mean(g2);
     // student's t-test (assumes equal variance)
@@ -459,7 +460,8 @@ function runTTest(g1, g2) {
     const df = n1 + n2 - 2;
 
     // Two tailed p-value
-    const p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+    let p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+    if (tail === 'one') p = p / 2;
 
     return {
         name: "Unpaired t-test",
@@ -477,7 +479,7 @@ function runTTest(g1, g2) {
     };
 }
 
-function runPairedT(d1, d2) {
+function runPairedT(d1, d2, tail = 'two') {
     const diffs = d1.map((v, i) => v - d2[i]);
     const n = diffs.length;
     const m_diff = jStat.mean(diffs);
@@ -485,7 +487,8 @@ function runPairedT(d1, d2) {
 
     const t = m_diff / (sd_diff / Math.sqrt(n));
     const df = n - 1;
-    const p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+    let p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+    if (tail === 'one') p = p / 2;
 
     return {
         name: "Paired t-test",
@@ -502,13 +505,14 @@ function runPairedT(d1, d2) {
     };
 }
 
-function runPearson(d1, d2) {
+function runPearson(d1, d2, tail = 'two') {
     const r = jStat.corrcoeff(d1, d2);
     const n = d1.length;
     const df = n - 2;
     // t transform for r
     const t = r * Math.sqrt(df / (1 - r * r));
-    const p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+    let p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+    if (tail === 'one') p = p / 2;
 
     return {
         name: "Pearson Correlation",
@@ -536,7 +540,7 @@ function getRanks(arr) {
     return ranks;
 }
 
-function runSpearman(d1, d2) {
+function runSpearman(d1, d2, tail = 'two') {
     const r1 = getRanks(d1);
     const r2 = getRanks(d2);
     const rs = jStat.corrcoeff(r1, r2);
@@ -548,10 +552,11 @@ function runSpearman(d1, d2) {
         const t = rs * Math.sqrt((n - 2) / (1 - rs * rs));
         p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), n - 2));
     }
-    return { name: "Spearman Rank Correlation", statName: "rs", stat: rs, p: p, df: n - 2 };
+    if (tail === 'one') p = p / 2;
+    return { name: "Spearman Rank Correlation", statName: "rs", stat: rs, p: p, df: n - 2, tail: tail };
 }
 
-function runMannWhitney(g1, g2) {
+function runMannWhitney(g1, g2, tail = 'two') {
     const combined = g1.concat(g2);
     const ranks = getRanks(combined);
 
@@ -568,12 +573,13 @@ function runMannWhitney(g1, g2) {
     const m_U = (n1 * n2) / 2;
     const s_U = Math.sqrt((n1 * n2 * (n1 + n2 + 1)) / 12);
     const z = (U - m_U) / s_U;
-    const p = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
+    let p = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
+    if (tail === 'one') p = p / 2;
 
-    return { name: "Mann-Whitney U Test", statName: "U", stat: U, p: p, df: null };
+    return { name: "Mann-Whitney U Test", statName: "U", stat: U, p: p, df: null, tail: tail };
 }
 
-function runWilcoxon(d1, d2) {
+function runWilcoxon(d1, d2, tail = 'two') {
     const diffs = d1.map((v, i) => v - d2[i]).filter(d => d !== 0); // Discard zeros
     const absDiffs = diffs.map(Math.abs);
     const n = diffs.length;
@@ -593,9 +599,10 @@ function runWilcoxon(d1, d2) {
     const m_W = (n * (n + 1)) / 4;
     const s_W = Math.sqrt((n * (n + 1) * (2 * n + 1)) / 24);
     const z = (Math.abs(W - m_W) - 0.5) / s_W; // continuity correction
-    const p = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
+    let p = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
+    if (tail === 'one') p = p / 2;
 
-    return { name: "Wilcoxon Signed-Rank Test", statName: "W", stat: W, p: p, df: null };
+    return { name: "Wilcoxon Signed-Rank Test", statName: "W", stat: W, p: p, df: null, tail: tail };
 }
 
 function runANOVA(groups) {
@@ -778,7 +785,8 @@ function displayResult(res) {
     const box = document.getElementById('result-box');
     box.style.display = 'block';
 
-    document.getElementById('test-name-display').innerText = res.name;
+    const tailText = res.tail === 'one' ? ' (1-Tailed)' : (res.tail === 'two' ? ' (2-Tailed)' : '');
+    document.getElementById('test-name-display').innerText = res.name + tailText;
     document.getElementById('stat-value').innerText = `${res.statName} = ${res.stat.toFixed(4)}${res.df !== null ? ' (df=' + res.df + ')' : ''}`;
 
     const pDisplay = document.getElementById('p-value');
@@ -1684,6 +1692,7 @@ function downloadCanvas(canvasId, filename) {
 
 function runSummaryCalculation() {
     const testType = document.getElementById('summary-test-select').value;
+    const tail = document.getElementById('summary-test-tail')?.value || 'two';
     const resBanner = document.getElementById('summary-test-results-banner');
     const statBlock = document.getElementById('summary-stat-block');
     const verdictBadge = document.getElementById('summary-verdict-badge');
@@ -1724,8 +1733,9 @@ function runSummaryCalculation() {
             const dfDen = (Math.pow(v1 / n1, 2) / (n1 - 1)) + (Math.pow(v2 / n2, 2) / (n2 - 1));
             const df = dfNum / dfDen;
 
-            // P-value (Two-tailed)
-            const p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+            // P-value
+            let p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+            if (tail === 'one') p = p / 2;
 
             statBlock.innerHTML = `
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem 2rem; border-radius: 8px;">
@@ -1737,7 +1747,7 @@ function runSummaryCalculation() {
                     <div style="font-size: 1.8rem; font-weight: 700; color: #a78bfa;">${df.toFixed(2)}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem 2rem; border-radius: 8px;">
-                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem;">P-Value</div>
+                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem;">P-Value (${tail === 'one' ? '1-Tailed' : '2-Tailed'})</div>
                     <div style="font-size: 1.8rem; font-weight: 700; color: ${p < 0.05 ? '#f472b6' : '#94a3b8'};">${p < 0.0001 ? '<0.0001' : p.toFixed(4)}</div>
                 </div>
             `;
@@ -1762,7 +1772,8 @@ function runSummaryCalculation() {
             const t = meanDiff / se;
             const df = n - 1;
 
-            const p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+            let p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+            if (tail === 'one') p = p / 2;
 
             statBlock.innerHTML = `
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem 2rem; border-radius: 8px;">
@@ -1774,7 +1785,7 @@ function runSummaryCalculation() {
                     <div style="font-size: 1.8rem; font-weight: 700; color: #a78bfa;">${df}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem 2rem; border-radius: 8px;">
-                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem;">P-Value</div>
+                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem;">P-Value (${tail === 'one' ? '1-Tailed' : '2-Tailed'})</div>
                     <div style="font-size: 1.8rem; font-weight: 700; color: ${p < 0.05 ? '#f472b6' : '#94a3b8'};">${p < 0.0001 ? '<0.0001' : p.toFixed(4)}</div>
                 </div>
             `;
@@ -1982,7 +1993,8 @@ function runSummaryCalculation() {
 
             const df = n - 2;
             const t = r * Math.sqrt(df / (1 - r * r));
-            const p = jStat.ttest(t, df, 2);
+            let p = jStat.ttest(t, df, 2);
+            if (tail === 'one') p = p / 2;
 
             statBlock.innerHTML = `
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem 2rem; border-radius: 8px;">
@@ -1990,7 +2002,7 @@ function runSummaryCalculation() {
                     <div style="font-size: 1.8rem; font-weight: 700; color: #fbbf24;">${r.toFixed(3)}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem 2rem; border-radius: 8px;">
-                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem;">P-Value</div>
+                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem;">P-Value (${tail === 'one' ? '1-Tailed' : '2-Tailed'})</div>
                     <div style="font-size: 1.8rem; font-weight: 700; color: ${p < 0.05 ? '#f472b6' : '#94a3b8'};">${p < 0.0001 ? '<0.0001' : p.toFixed(4)}</div>
                 </div>
             `;
@@ -2070,6 +2082,7 @@ function generateMedicalInterpretation(p, testType, metrics = {}) {
 // ---------------------------------------------------------
 // Summary Statistics Dynamic Plotting & Download
 // ---------------------------------------------------------
+
 
 function drawSummaryChart(testType, plotData) {
     const chartContainer = document.getElementById('summary-chart-container');

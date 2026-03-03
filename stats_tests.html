@@ -224,8 +224,29 @@
         }
 
         @media (max-width: 768px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
+            .module-container {
+                padding: 1rem;
+            }
+
+            .viz-card {
+                padding: 1.2rem;
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr !important;
+            }
+
+            header h1 {
+                font-size: 2rem !important;
+            }
+
+            .p-value-display {
+                font-size: 1.5rem;
+            }
+
+            .wizard-btn {
+                padding: 0.8rem;
             }
         }
     </style>
@@ -466,7 +487,102 @@
                     </div>
                 </div>
             </div>
+            <!-- NEW: One-Tailed vs Two-Tailed & Degrees of Freedom Education -->
+            <div class="grid-2"
+                style="gap: 2rem; margin-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2.5rem;">
+                <!-- One-Tailed vs Two-Tailed Card -->
+                <div class="viz-card"
+                    style="margin-bottom: 0; border-top: 4px solid #f472b6; background: rgba(255,255,255,0.02);">
+                    <div class="card-title"
+                        style="color: #f472b6; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="m19 9-5 5-4-4-3 3" />
+                        </svg>
+                        One-Tailed vs Two-Tailed Test
+                    </div>
+                    <div style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                        <p style="margin-bottom: 1.2rem;">
+                            Imagine you are conducting a clinical trial on a new <strong>antihypertensive drug</strong>.
+                            The standard drug lowers systolic blood pressure by 10 mmHg on average.
+                        </p>
+                        <div
+                            style="background: rgba(96, 165, 250, 0.05); padding: 1.2rem; border-radius: 12px; border-left: 4px solid #60a5fa; margin-bottom: 1.2rem;">
+                            <strong style="color: #60a5fa; display: block; margin-bottom: 0.5rem;">Two-Tailed
+                                Test:</strong>
+                            If your question is: <em>“Does the new drug change blood pressure compared to the
+                                standard?”</em> — you are open to either possibility: it might lower BP more, or it
+                            might unexpectedly increase it. This is like a hospital safety committee that investigates
+                            both unusually high and unusually low oxygen levels in ICU patients. You are guarding
+                            against deviations in <strong>both directions</strong>.
+                        </div>
+                        <div
+                            style="background: rgba(244, 114, 182, 0.05); padding: 1.2rem; border-radius: 12px; border-left: 4px solid #f472b6;">
+                            <strong style="color: #f472b6; display: block; margin-bottom: 0.5rem;">One-Tailed
+                                Test:</strong>
+                            Now imagine your drug has shown evidence that it can only lower BP. Your question becomes:
+                            <em>“Does the new drug reduce blood pressure <strong>more</strong> than the standard?”</em>
+                            This is like a vaccination campaign where the only meaningful question is whether the
+                            vaccine <strong>reduces</strong> infection rates. Your statistical attention is focused in
+                            <strong>one direction</strong>.
+                        </div>
+                        <p style="margin-top: 1.2rem; font-size: 0.85rem; opacity: 0.7; font-style: italic;">
+                            *One-tailed tests should only be chosen when there is strong theoretical or clinical
+                            justification before data analysis.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Degrees of Freedom Card -->
+                <div class="viz-card"
+                    style="margin-bottom: 0; border-top: 4px solid #60a5fa; background: rgba(255,255,255,0.02);">
+                    <div class="card-title"
+                        style="color: #60a5fa; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                        What is "Degree of Freedom"?
+                    </div>
+                    <div style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                        <div
+                            style="background: rgba(255, 255, 255, 0.03); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: #fff; display: block; margin-bottom: 0.5rem;">The Anemia Patient
+                                Analogy:</strong>
+                            Suppose you are analyzing hemoglobin levels of <strong>5 patients</strong>. Once you
+                            calculate the mean, it acts like a constraint. The first four patients can vary freely, but
+                            the fifth patient's level <strong>must</strong> balance the others to keep the average
+                            fixed. Although you have 5 data points, only 4 are truly "free to vary."
+                            <div
+                                style="margin-top: 1rem; font-family: monospace; font-size: 1.2rem; color: #60a5fa; text-align: center; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 8px;">
+                                df = n - 1 (5 - 1 = 4)
+                            </div>
+                        </div>
+
+                        <div
+                            style="background: rgba(255, 255, 255, 0.03); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: #fff; display: block; margin-bottom: 0.5rem;">The Hospital Budget
+                                Analogy:</strong>
+                            Imagine distributing a fixed budget of <strong>₹10 lakhs</strong> across five departments.
+                            You can allocate funds freely to the first four, but the fifth automatically receives
+                            whatever remains to keep the total at ₹10 lakhs. That last allocation has <strong>no
+                                independent freedom</strong>.
+                        </div>
+
+                        <p
+                            style="margin-top: 1.5rem; font-size: 0.9rem; border: 1px dashed rgba(255,255,255,0.2); padding: 1.2rem; border-radius: 10px; background: rgba(96, 165, 250, 0.05);">
+                            <strong style="color: #60a5fa;">The Core Concept:</strong><br>
+                            Degree of freedom represents the number of independent pieces of information available to
+                            estimate variability in a study.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <!-- ========================================== -->
         <!-- STEP 2: DATA UPLOAD CARD (ALWAYS VISIBLE)  -->
         <!-- ========================================== -->
@@ -983,6 +1099,13 @@ Control, 48, 129.0, Recovered</code>
                     </optgroup>
                 </select>
 
+                <label for="test-tail">Select Test Tail (Directionality):</label>
+                <select id="test-tail"
+                    style="width: 100%; padding: 0.8rem; border-radius: 8px; background: #fff; border: 1px solid rgba(255,255,255,0.2); color: #1e293b; font-weight: 500; margin-bottom: 1rem;">
+                    <option value="two">Two-Tailed (Standard)</option>
+                    <option value="one">One-Tailed (Specific Direction)</option>
+                </select>
+
                 <div class="grid-2" style="margin-top: 1.5rem;" id="variable-selectors-container">
                     <!-- Dropdowns will be generated here -->
                 </div>
@@ -1261,6 +1384,17 @@ Control, 48, 129.0, Recovered</code>
                     <option value="fisher-exact">Fisher's Exact Test (2x2 Small Sample)</option>
                     <option value="anova">One-Way ANOVA (3+ Groups)</option>
                     <option value="correlation">Correlation (Pearson's R & N)</option>
+                </select>
+            </div>
+
+            <!-- 2. Select Tail Type -->
+            <div style="margin-bottom: 2rem;">
+                <label style="color: #cbd5e1; font-weight: 600; display: block; margin-bottom: 0.5rem;">2. Select Test
+                    Directionality (Tails):</label>
+                <select id="summary-test-tail"
+                    style="width: 100%; max-width: 500px; padding: 0.8rem; border-radius: 8px; background: #fff; border: 1px solid rgba(255,255,255,0.2); color: #1e293b; font-weight: 600;">
+                    <option value="two">Two-Tailed (Any difference)</option>
+                    <option value="one">One-Tailed (Difference in specific direction)</option>
                 </select>
             </div>
 

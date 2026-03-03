@@ -121,109 +121,50 @@
             gap: 1.5rem;
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 900px) {
+            .viz-layout {
+                grid-template-columns: 1fr;
+            }
+
             .charts-grid-2 {
                 grid-template-columns: 1fr;
             }
         }
 
-        .tabs {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 2.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0.5rem;
-            border-radius: 50px;
-            border: 1px solid var(--glass-border);
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
-        }
+        @media (max-width: 768px) {
+            .module-container {
+                padding: 1rem;
+            }
 
-        .tab {
-            padding: 0.75rem 1.5rem;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--text-dim);
-            font-weight: 500;
-            border: 1px solid transparent;
-        }
+            .viz-card {
+                padding: 1.2rem;
+            }
 
-        .tab:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-        }
+            .tabs {
+                border-radius: 20px;
+                padding: 1rem;
+                justify-content: center;
+                width: 100%;
+            }
 
-        .tab.active {
-            background: var(--primary-blue);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-        }
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                flex: 1 1 140px;
+                text-align: center;
+            }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
+            h1 {
+                font-size: 2.2rem !important;
+            }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid var(--glass-border);
-        }
+            .chart-wrapper {
+                height: 300px;
+            }
 
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .input-light {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--glass-border);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            width: 100%;
-            font-family: inherit;
-        }
-
-        .btn-generate {
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 0.8rem 1.2rem;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-family: inherit;
-        }
-
-        .btn-generate:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary-pink);
-            color: var(--primary-pink);
-        }
-
-        .btn-outline:hover {
-            background: rgba(232, 62, 140, 0.1);
+            .stats-grid {
+                grid-template-columns: 1fr 1fr !important;
+            }
         }
     </style>
 </head>
