@@ -10,6 +10,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="icon" href="logo.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -228,17 +230,28 @@
         setInterval(animateRNG, 500);
 
         // Rating System Logic
-        const starContainer = document.getElementById('star-rating');
-        const stars = document.querySelectorAll('.star');
         const countDisplay = document.getElementById('five-star-count');
+        const stars = document.querySelectorAll('.star');
 
-        // Initialize counter from localStorage or default to 124 (mock value)
-        let count = parseInt(localStorage.getItem('epiSenseFiveStarCount')) || 124;
+        // Initialize counter from localStorage or default to 124
+        let storedCount = localStorage.getItem('epiSenseFiveStarCount');
+        let count = storedCount ? parseInt(storedCount) : 124;
+        if (isNaN(count)) count = 124;
         countDisplay.innerText = count;
+
+        // Visual persistence: highlight stars if a rating was previously given
+        let userRating = localStorage.getItem('epiSenseUserRating');
+        if (userRating) {
+            const val = parseInt(userRating);
+            stars.forEach((s, idx) => {
+                if (idx < val) s.classList.add('active');
+            });
+        }
 
         stars.forEach(star => {
             star.addEventListener('click', function () {
                 const value = parseInt(this.getAttribute('data-value'));
+                localStorage.setItem('epiSenseUserRating', value);
 
                 // Visual feedback for star selection
                 stars.forEach((s, idx) => {
@@ -246,26 +259,31 @@
                     else s.classList.remove('active');
                 });
 
-                // If 5 stars are selected, increment the mock counter
-                if (value === 5) {
+                // Increment counter only on 5-star rating (first time or if they change to 5)
+                if (value === 5 && userRating !== '5') {
                     count++;
                     countDisplay.innerText = count;
                     localStorage.setItem('epiSenseFiveStarCount', count);
-
-                    // Simple alert for engagement
-                    alert("Thank you for the 5-star rating!");
+                    alert("Thank you for the 5-star rating! Your feedback helps us improve.");
+                } else if (value < 5 && userRating === '5') {
+                    // Optional: decrement if they change from 5 to something lower
+                    count = Math.max(124, count - 1);
+                    countDisplay.innerText = count;
+                    localStorage.setItem('epiSenseFiveStarCount', count);
                 }
+
+                userRating = value.toString();
             });
 
             star.addEventListener('mouseover', function () {
                 const value = parseInt(this.getAttribute('data-value'));
                 stars.forEach((s, idx) => {
-                    if (idx < value) s.style.transform = 'scale(1.2)';
+                    if (idx < value) s.style.transform = 'scale(1.2) rotate(-5deg)';
                 });
             });
 
             star.addEventListener('mouseout', function () {
-                stars.forEach(s => s.style.transform = 'scale(1)');
+                stars.forEach(s => s.style.transform = 'scale(1) rotate(0deg)');
             });
         });
 

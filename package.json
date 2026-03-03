@@ -1,0 +1,20 @@
+{
+  "name": "episense",
+  "version": "1.0.0",
+  "description": "EpiSense is a comprehensive web-based platform designed for infectious disease surveillance, statistical analysis, and mathematical modeling. It provides tools for public health professionals and researchers to visualize data, perform statistical tests, and simulate outbreak scenarios.",
+  "main": "stats_algo.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arka1985/EpiSense.git"
+  },
+  "keywords": [],
+  "author": "Developer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arka1985/EpiSense/issues"
+  },
+  "homepage": "https://github.com/arka1985/EpiSense#readme"
+}

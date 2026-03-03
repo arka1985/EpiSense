@@ -1,4 +1,4 @@
-const CACHE_NAME = 'episense-v1';
+const CACHE_NAME = 'episense-v2';
 const ASSETS = [
     'index.html',
     'main.css',
