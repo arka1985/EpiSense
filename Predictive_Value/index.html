@@ -4,14 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculation of Positive and Negative Predictive Values</title>
+    <title>Parameters of Screening Tests</title>
     <link rel="stylesheet" href="style.css">
     <!-- Plotly.js for charts -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-
     <div class="container">
         <a href="../index.html" class="back-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -23,112 +25,416 @@
         </a>
 
         <header>
-            <h1>Calculation of Positive and Negative Predictive Values of a Screening Test in Medical Science</h1>
-            <div class="subtitle">Monte Carlo Simulation Approach</div>
+            <h1>Parameters of Screening Tests</h1>
+            <div class="subtitle">Predictive Values Simulation & Test Combinations</div>
         </header>
 
-        <div class="card">
-            <h2 style="margin-bottom: 2rem;">Simulation Parameters</h2>
-            <p style="margin-bottom: 2rem; color: #aaa;">Please specify the range of Sensitivity, Specificity,
-                Prevalence, and Number of Simulations.</p>
+        <!-- Main Navigation Tabs -->
+        <div class="main-tabs">
+            <button class="main-tab-btn active" onclick="switchThemeTab('simulation-view')">PPV / NPV
+                Simulation</button>
+            <button class="main-tab-btn" onclick="switchThemeTab('combination-view')">Test Combinations &
+                Errors</button>
+            <button class="main-tab-btn" onclick="switchThemeTab('custom-table-view')">2x2 Table Calculator</button>
+            <button class="main-tab-btn" onclick="switchThemeTab('roc-curve-view')">ROC Curve</button>
+        </div>
 
-            <!-- Number of Simulations -->
-            <div class="input-group">
-                <label for="num-sims" class="input-label">Number of Simulations</label>
-                <input type="number" id="num-sims" value="1000" min="10" max="10000">
+        <!-- ========================================== -->
+        <!-- VIEW 1: PPV / NPV MONTE CARLO SIMULATION   -->
+        <!-- ========================================== -->
+        <div id="simulation-view" class="view-section active-view">
+            <div class="card">
+                <h2 style="margin-bottom: 2rem;">Monte Carlo Simulation Parameters</h2>
+                <p style="margin-bottom: 2rem; color: #aaa;">Specify the ranges to simulate predictive values across
+                    multiple populations.</p>
+
+                <div class="input-group">
+                    <label for="num-sims" class="input-label">Number of Simulations</label>
+                    <input type="number" id="num-sims" value="1000" min="10" max="10000">
+                </div>
+
+                <div class="slider-group section-sensitivity">
+                    <div class="slider-label">
+                        <span>Sensitivity (%)</span>
+                        <span class="slider-values" id="sen-val">(25, 75)</span>
+                    </div>
+                    <div class="dual-slider-container">
+                        <div class="slider-track"></div>
+                        <div class="slider-range-highlight" id="sen-track"></div>
+                        <input type="range" id="sen-min" min="0" max="100" value="25">
+                        <input type="range" id="sen-max" min="0" max="100" value="75">
+                    </div>
+                </div>
+
+                <div class="slider-group section-specificity">
+                    <div class="slider-label">
+                        <span>Specificity (%)</span>
+                        <span class="slider-values" id="sp-val">(25, 75)</span>
+                    </div>
+                    <div class="dual-slider-container">
+                        <div class="slider-track"></div>
+                        <div class="slider-range-highlight" id="sp-track"></div>
+                        <input type="range" id="sp-min" min="0" max="100" value="25">
+                        <input type="range" id="sp-max" min="0" max="100" value="75">
+                    </div>
+                </div>
+
+                <div class="slider-group section-prevalence">
+                    <div class="slider-label">
+                        <span>Prevalence (%)</span>
+                        <span class="slider-values" id="prev-val">(25, 75)</span>
+                    </div>
+                    <div class="dual-slider-container">
+                        <div class="slider-track"></div>
+                        <div class="slider-range-highlight" id="prev-track"></div>
+                        <input type="range" id="prev-min" min="0" max="100" value="25">
+                        <input type="range" id="prev-max" min="0" max="100" value="75">
+                    </div>
+                </div>
+
+                <div class="btn-container">
+                    <button id="run-btn" class="btn-neon btn-pulse">Run Simulation</button>
+                </div>
             </div>
 
-            <!-- Sensitivity -->
-            <div class="slider-group section-sensitivity">
-                <div class="slider-label">
-                    <span>Sensitivity (%)</span>
-                    <span class="slider-values" id="sen-val">(25, 75)</span>
-                </div>
-                <div class="dual-slider-container">
-                    <div class="slider-track"></div>
-                    <div class="slider-range-highlight" id="sen-track"></div>
-                    <input type="range" id="sen-min" min="0" max="100" value="25">
-                    <input type="range" id="sen-max" min="0" max="100" value="75">
-                </div>
-            </div>
+            <div id="results-section">
+                <h2 style="text-align: center; border: none; width: 100%;">Results based on Simulation</h2>
 
-            <!-- Specificity -->
-            <div class="slider-group section-specificity">
-                <div class="slider-label">
-                    <span>Specificity (%)</span>
-                    <span class="slider-values" id="sp-val">(25, 75)</span>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <h3>PPV Mean (SD)</h3>
+                        <div class="stat-value" id="ppv-result">--</div>
+                    </div>
+                    <div class="stat-box negative">
+                        <h3>NPV Mean (SD)</h3>
+                        <div class="stat-value" id="npv-result">--</div>
+                    </div>
                 </div>
-                <div class="dual-slider-container">
-                    <div class="slider-track"></div>
-                    <div class="slider-range-highlight" id="sp-track"></div>
-                    <input type="range" id="sp-min" min="0" max="100" value="25">
-                    <input type="range" id="sp-max" min="0" max="100" value="75">
-                </div>
-            </div>
 
-            <!-- Prevalence -->
-            <div class="slider-group section-prevalence">
-                <div class="slider-label">
-                    <span>Prevalence (%)</span>
-                    <span class="slider-values" id="prev-val">(25, 75)</span>
+                <div class="charts-container">
+                    <div id="chart-ppv" class="chart-wrapper"></div>
+                    <div id="chart-npv" class="chart-wrapper"></div>
                 </div>
-                <div class="dual-slider-container">
-                    <div class="slider-track"></div>
-                    <div class="slider-range-highlight" id="prev-track"></div>
-                    <input type="range" id="prev-min" min="0" max="100" value="25">
-                    <input type="range" id="prev-max" min="0" max="100" value="75">
-                </div>
-            </div>
 
-            <div class="btn-container">
-                <button id="run-btn" class="btn-neon btn-pulse">Run Simulation</button>
+                <div class="card interpretation-card" style="margin-top: 2rem;">
+                    <h2>Interpretation of the Result</h2>
+                    <div id="interpretation-content" style="line-height: 1.6; color: #ddd;">
+                        <p style="color: #888; font-style: italic;">Run the simulation to generate an interpretation...
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="results-section">
-            <h2 style="text-align: center; border: none; width: 100%;">Results based on Simulation</h2>
 
-            <div class="stats-grid">
-                <!-- PPV Stats -->
-                <div class="stat-box">
-                    <h3>PPV Mean (SD)</h3>
-                    <div class="stat-value" id="ppv-result">--</div>
+        <!-- ========================================== -->
+        <!-- VIEW 2: TEST COMBINATIONS & ERRORS         -->
+        <!-- ========================================== -->
+        <div id="combination-view" class="view-section" style="display: none;">
+
+            <div class="info-section">
+                <div class="info-card">
+                    <h2><span class="icon">🔍</span> Why Combine Tests?</h2>
+                    <p>No single screening test is perfect. Healthcare professionals often combine tests to maximize the
+                        chances of correctly identifying a disease. Here are real-world examples:</p>
+                    <ul class="styled-list">
+                        <li><strong>Parallel Testing (Net Sensitivity):</strong> Multiple tests run at once. Example: An
+                            ER doctor ordering multiple blood cultures and imaging at the same time for suspected sepsis
+                            because missing the infection is fatal. Net sensitivity increases, specificity decreases.
+                        </li>
+                        <li><strong>Sequential Testing (Net Specificity):</strong> Tests run one after another. Example:
+                            Standard HIV screening where a highly sensitive ELISA test is done first, and if positive, a
+                            highly specific Western Blot is done to confirm. Net specificity increases, sensitivity
+                            decreases.</li>
+                    </ul>
                 </div>
 
-                <!-- NPV Stats -->
-                <div class="stat-box negative">
-                    <h3>NPV Mean (SD)</h3>
-                    <div class="stat-value" id="npv-result">--</div>
+                <div class="info-card">
+                    <h2><span class="icon">⚖️</span> Statistical Errors</h2>
+                    <div class="error-types">
+                        <div class="error-box type-i">
+                            <h3>Type I Error (Alpha)</h3>
+                            <p><strong><span style="color: #f472b6;">False Positive</span></strong></p>
+                            <p>Telling a healthy patient they are sick. Causes anxiety.</p>
+                        </div>
+                        <div class="error-box type-ii">
+                            <h3>Type II Error (Beta)</h3>
+                            <p><strong><span style="color: #60a5fa;">False Negative</span></strong></p>
+                            <p>Missing a disease in a sick patient. Extremely dangerous.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="charts-container">
-                <div id="chart-ppv" class="chart-wrapper"></div>
-                <div id="chart-npv" class="chart-wrapper"></div>
-            </div>
+            <div class="simulation-area">
+                <!-- Controls Section -->
+                <div class="card controls-card">
+                    <h2 style="margin-bottom: 2rem; color: #fff;">Network Parameters</h2>
 
-            <!-- Interpretation Section -->
-            <div class="card" style="margin-top: 2rem; border-color: var(--secondary-neon);">
-                <h2>Interpretation of the Result</h2>
-                <div id="interpretation-content" style="line-height: 1.6; color: #ddd;">
-                    <p style="color: #888; font-style: italic;">Run the simulation to generate an interpretation...</p>
+                    <div class="test-config styled-test-a">
+                        <h3>Test A</h3>
+                        <div class="slider-group single">
+                            <div class="slider-label"><span>Sensitivity</span><span class="slider-value"
+                                    id="testa-sen-val">95%</span></div>
+                            <input type="range" id="testa-sen" min="1" max="99" value="95">
+                        </div>
+                        <div class="slider-group single">
+                            <div class="slider-label"><span>Specificity</span><span class="slider-value"
+                                    id="testa-sp-val">80%</span></div>
+                            <input type="range" id="testa-sp" min="1" max="99" value="80">
+                        </div>
+                    </div>
+
+                    <div class="test-config styled-test-b" style="margin-top: 1.5rem;">
+                        <h3>Test B</h3>
+                        <div class="slider-group single">
+                            <div class="slider-label"><span>Sensitivity</span><span class="slider-value"
+                                    id="testb-sen-val">80%</span></div>
+                            <input type="range" id="testb-sen" min="1" max="99" value="80">
+                        </div>
+                        <div class="slider-group single">
+                            <div class="slider-label"><span>Specificity</span><span class="slider-value"
+                                    id="testb-sp-val">99%</span></div>
+                            <input type="range" id="testb-sp" min="1" max="99" value="99">
+                        </div>
+                    </div>
+
+                    <div class="slider-group single" style="margin-top: 2rem;">
+                        <div class="slider-label">
+                            <span style="color:#ff0055;">Disease Prevalence (%)</span>
+                            <span class="slider-value" id="prev-val-combo">10%</span>
+                        </div>
+                        <input type="range" id="prev-combo" min="0.1" max="50" step="0.1" value="10">
+                    </div>
+
+                </div>
+
+                <!-- Results Section -->
+                <div class="card results-card">
+                    <h2 style="text-align: center; margin-bottom: 1.5rem;">Combined Test Performace</h2>
+
+                    <div class="combo-tabs">
+                        <button class="combo-tab-btn active" onclick="switchComboMode('parallel')">Parallel
+                            Testing</button>
+                        <button class="combo-tab-btn" onclick="switchComboMode('sequential')">Sequential
+                            Testing</button>
+                    </div>
+
+                    <div class="tab-content">
+                        <div class="metrics-grid">
+                            <div class="metric-box box-sen">
+                                <h4>Net Sensitivity</h4>
+                                <div class="metric-value" id="res-sen">--</div>
+                            </div>
+                            <div class="metric-box box-sp">
+                                <h4>Net Specificity</h4>
+                                <div class="metric-value" id="res-sp">--</div>
+                            </div>
+                            <div class="metric-box box-ppv">
+                                <h4>Net PPV</h4>
+                                <div class="metric-value" id="res-ppv">--</div>
+                            </div>
+                            <div class="metric-box box-npv">
+                                <h4>Net NPV</h4>
+                                <div class="metric-value" id="res-npv">--</div>
+                            </div>
+                        </div>
+
+                        <!-- Heatmap Container -->
+                        <div class="viz-container">
+                            <h3 style="text-align:center; padding-top:1rem;">Confusion Matrix for 1,000 Patients</h3>
+
+                            <div id="heatmap-chart" style="width:100%; height:350px; margin-top: 1rem;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <footer>
-            <div class="footer-line" style="color:var(--primary-neon)">Developed By</div>
-            <div class="footer-line" style="color:var(--secondary-neon)">Dr. Arkaprabha Sau, MBBS, MD (Gold Medalist),
-                DPH, Dip. Geriatric Medicine, CCEBDM</div>
-            <div class="footer-line" style="color:var(--secondary-neon)">PhD (Computer Science & Engineering)</div>
+        <!-- ========================================== -->
+        <!-- VIEW 3: CUSTOM 2X2 TABLE                   -->
+        <!-- ========================================== -->
+        <div id="custom-table-view" class="view-section" style="display: none;">
+            <div class="card" style="width: 100%;">
+                <h2 style="margin-bottom: 1.5rem; text-align: center;">Evaluate a New Screening Test</h2>
+                <p style="color: var(--text-dim); text-align: center; margin-bottom: 2rem;">Enter the counts from
+                    your study comparing a new screening test against a Gold Standard test to automatically
+                    calculate its parameters.</p>
 
-            <div class="disclaimer" style="margin-top:1rem; font-size:0.8rem; color:#888;">
-                This is for educational purposes only. Researchers are requested to verify the results based on standard
-                procedures as per standard epidemiological textbooks. For any errors, bugs, or suggestions, please email
-                me at
-                <a href="mailto:arka.doctor@gmail.com" style="color:var(--primary-neon)">arka.doctor@gmail.com</a>
+                <div class="calculator-layout">
+                    <div class="two-by-two-grid">
+                        <!-- Headers -->
+                        <div></div>
+                        <div style="text-align: center; color: var(--primary-neon); font-weight: bold;">Gold
+                            Standard
+                            (+) <br><span style="font-size: 0.8rem; color: var(--text-dim);">(Disease
+                                Present)</span>
+                        </div>
+                        <div style="text-align: center; color: var(--secondary-neon); font-weight: bold;">Gold
+                            Standard
+                            (-) <br><span style="font-size: 0.8rem; color: var(--text-dim);">(Disease Absent)</span>
+                        </div>
+
+                        <!-- Row 1 -->
+                        <div style="text-align: right; color: #fff; font-weight: bold;">New Test (+)<br><span
+                                style="font-size: 0.8rem; color: var(--text-dim);">(Screen Positive)</span></div>
+                        <div class="input-cell"
+                            style="background: rgba(52, 211, 153, 0.1); border: 2px solid var(--success-neon); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <label
+                                style="display: block; font-size: 0.9rem; color: var(--success-neon); margin-bottom: 0.5rem;">True
+                                Positive (a)</label>
+                            <input type="number" id="input-tp" value="80" min="0"
+                                style="width: 100%; text-align: center; font-size: 1.5rem; max-width: none;">
+                        </div>
+                        <div class="input-cell"
+                            style="background: rgba(244, 114, 182, 0.1); border: 2px solid var(--danger-neon); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <label
+                                style="display: block; font-size: 0.9rem; color: var(--danger-neon); margin-bottom: 0.5rem;">False
+                                Positive (b)</label>
+                            <input type="number" id="input-fp" value="10" min="0"
+                                style="width: 100%; text-align: center; font-size: 1.5rem; max-width: none;">
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div style="text-align: right; color: #fff; font-weight: bold;">New Test (-)<br><span
+                                style="font-size: 0.8rem; color: var(--text-dim);">(Screen Negative)</span></div>
+                        <div class="input-cell"
+                            style="background: rgba(248, 113, 113, 0.1); border: 2px solid var(--warning-neon); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <label
+                                style="display: block; font-size: 0.9rem; color: var(--warning-neon); margin-bottom: 0.5rem;">False
+                                Negative (c)</label>
+                            <input type="number" id="input-fn" value="5" min="0"
+                                style="width: 100%; text-align: center; font-size: 1.5rem; max-width: none;">
+                        </div>
+                        <div class="input-cell"
+                            style="background: rgba(56, 189, 248, 0.1); border: 2px solid var(--primary-neon); padding: 1rem; border-radius: 8px; text-align: center;">
+                            <label
+                                style="display: block; font-size: 0.9rem; color: var(--primary-neon); margin-bottom: 0.5rem;">True
+                                Negative (d)</label>
+                            <input type="number" id="input-tn" value="100" min="0"
+                                style="width: 100%; text-align: center; font-size: 1.5rem; max-width: none;">
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid calc-metrics">
+                        <div class="metric-box box-sen">
+                            <h4>Sensitivity <span style="font-size:0.75rem;"> [a / (a+c)]</span></h4>
+                            <div class="metric-value" id="calc-sen">--</div>
+                        </div>
+                        <div class="metric-box box-sp">
+                            <h4>Specificity <span style="font-size:0.75rem;"> [d / (b+d)]</span></h4>
+                            <div class="metric-value" id="calc-sp">--</div>
+                        </div>
+                        <div class="metric-box box-ppv">
+                            <h4>PPV <span style="font-size:0.75rem;"> [a / (a+b)]</span></h4>
+                            <div class="metric-value" id="calc-ppv">--</div>
+                        </div>
+                        <div class="metric-box box-npv">
+                            <h4>NPV <span style="font-size:0.75rem;"> [d / (c+d)]</span></h4>
+                            <div class="metric-value" id="calc-npv">--</div>
+                        </div>
+                        <div class="metric-box" style="border-bottom: 3px solid #ffaa00;">
+                            <h4>Accuracy <span style="font-size:0.75rem;"> [(a+d)/Total]</span></h4>
+                            <div class="metric-value" id="calc-acc" style="color: #ffaa00;">--</div>
+                        </div>
+                        <div class="metric-box" style="border-bottom: 3px solid #60a5fa;">
+                            <h4>Prevalence <span style="font-size:0.75rem;"> [(a+c)/Total]</span></h4>
+                            <div class="metric-value" id="calc-prev" style="color: #60a5fa;">--</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </footer>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: ROC CURVE ANALYSIS                 -->
+        <!-- ========================================== -->
+        <div id="roc-curve-view" class="view-section" style="display: none;">
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2><span class="icon">📈</span> Concept of ROC Curve Analysis</h2>
+                <div style="font-size: 1.1rem; line-height: 1.6; color: var(--text-color);">
+                    <p style="margin-bottom: 1rem;">The <strong>Receiver Operating Characteristic (ROC) curve</strong>
+                        is a graphical plot that illustrates the diagnostic ability of a binary classifier system as its
+                        discrimination threshold is varied.</p>
+                    <p style="margin-bottom: 1rem;">It is created by plotting the <strong>True Positive Rate
+                            (Sensitivity)</strong> on the Y-axis against the <strong>False Positive Rate (1 -
+                            Specificity)</strong> on the X-axis at various threshold settings.</p>
+                    <ul class="styled-list">
+                        <li><strong>AUC (Area Under the Curve):</strong> Measures the total two-dimensional area
+                            underneath the ROC curve. A model whose predictions are 100% wrong has an AUC of 0.0; one
+                            whose predictions are perfectly correct has an AUC of 1.0.</li>
+                        <li><strong>Perfect Test:</strong> Passes through the upper left corner (100% Sensitivity, 0%
+                            False Positives).</li>
+                        <li><strong>Useless Test:</strong> Follows the diagonal line (AUC = 0.5), meaning it is no
+                            better than randomly flipping a coin.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 style="text-align: center; margin-bottom: 1rem; border-bottom: none;">Interactive ROC Curve
+                    Visualization</h2>
+                <p style="text-align: center; color: var(--text-dim); margin-bottom: 2rem;">
+                    Adjust the diagnostic sliding threshold to observe how moving the cutoff for a "positive" test
+                    result trades off Sensitivity versus Specificity. The left side of the distributions typically
+                    represents healthy individuals, while the right side represents diseased individuals.
+                </p>
+
+                <div class="slider-group single" style="max-width: 600px; margin: 0 auto 1.5rem auto;">
+                    <div class="slider-label">
+                        <span style="color: var(--primary-neon); font-size: 1.2rem;">Diagnostic Threshold Cutoff</span>
+                        <span class="slider-value" id="roc-threshold-val" style="font-size: 1.2rem;">50</span>
+                    </div>
+                    <input type="range" id="roc-threshold" min="20" max="80" value="50">
+                </div>
+
+                <div class="metrics-grid roc-metrics">
+                    <div class="metric-box box-sen" style="padding: 1.5rem; text-align: center;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-dim);">Sensitivity (TPR)
+                        </h4>
+                        <div class="metric-value" id="roc-sen-val" style="font-size: 1.8rem;">--</div>
+                    </div>
+                    <div class="metric-box box-sp"
+                        style="padding: 1.5rem; text-align: center; border-bottom: 3px solid #ff0055;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-dim);">False Positive Rate
+                            (FPR)</h4>
+                        <div class="metric-value" id="roc-fpr-val" style="font-size: 1.8rem; color: #ff0055;">--</div>
+                        <div style="font-size:0.8rem; color:var(--text-dim); margin-top:0.3rem;">(100% - Specificity)
+                        </div>
+                    </div>
+                    <div class="metric-box box-ppv"
+                        style="padding: 1.5rem; text-align: center; border-bottom: 3px solid #bc13fe;">
+                        <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-dim);">AUC-ROC
+                            (Area Under Curve)</h4>
+                        <div class="metric-value" id="roc-auc-val" style="font-size: 1.8rem; color: #bc13fe;">--</div>
+                    </div>
+                </div>
+
+                <div class="charts-container roc-charts">
+                    <div class="viz-container">
+                        <div id="roc-distribution-chart" style="width:100%; height:400px;"></div>
+                    </div>
+                    <div class="viz-container">
+                        <div id="roc-curve-chart" style="width:100%; height:400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Close container -->
+
+    <footer>
+        <div class="footer-line" style="color:var(--primary-neon)">Developed By</div>
+        <div class="footer-line" style="color:var(--secondary-neon)">Dr. Arkaprabha Sau, MBBS, MD (Gold Medalist),
+            DPH, Dip. Geriatric Medicine, CCEBDM</div>
+        <div class="footer-line" style="color:var(--secondary-neon)">PhD (Computer Science & Engineering)</div>
+
+        <div class="disclaimer" style="margin-top:1rem; font-size:0.8rem; color:#888;">
+            This is for educational purposes only. Researchers are requested to verify the results based on standard
+            procedures as per standard epidemiological textbooks. For any errors, bugs, or suggestions, please email
+            me at
+            <a href="mailto:arka.doctor@gmail.com" style="color:var(--primary-neon)">arka.doctor@gmail.com</a>
+        </div>
+    </footer>
     </div>
 
     <script src="script.js"></script>
