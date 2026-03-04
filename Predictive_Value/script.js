@@ -266,6 +266,7 @@ function renderConfusionHeatmap(tp, fp, tn, fn) {
         [`True Positives (TP): ${tp}<br>Sick & Correct`, `False Negatives (FN): ${fn}<br>Type II Error`]
     ];
 
+    const isMobile = window.innerWidth <= 600;
     const data = [{
         z: zData,
         x: ['Screen Positive (+)', 'Screen Negative (-)'],
@@ -276,7 +277,7 @@ function renderConfusionHeatmap(tp, fp, tn, fn) {
         texttemplate: "%{text}",
         textfont: {
             family: 'Outfit, sans-serif',
-            size: 16,
+            size: isMobile ? 10 : 14,
             color: '#ffffff'
         },
         colorscale: [
@@ -290,11 +291,11 @@ function renderConfusionHeatmap(tp, fp, tn, fn) {
     const layout = {
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
-        margin: { t: 20, l: 150, r: 20, b: 50 }, // Increased left padding (l: 150)
-        font: { color: '#ccc', size: 14, family: 'Outfit, sans-serif' },
+        margin: isMobile ? { t: 50, l: 90, r: 10, b: 50 } : { t: 40, l: 150, r: 30, b: 50 },
+        font: { color: '#ccc', size: isMobile ? 10 : 14, family: 'Outfit, sans-serif' },
         xaxis: { title: 'Test Result Given', autorange: true, showgrid: false },
-        yaxis: { title: 'Actual Patient Status', tickangle: 0, tickpad: 15, autorange: true, showgrid: false }, // Added tickpad
-        height: 350
+        yaxis: { title: isMobile ? '' : 'Actual Patient Status', tickangle: 0, tickpad: 10, autorange: true, showgrid: false },
+        height: isMobile ? 300 : 400
     };
 
     Plotly.newPlot('heatmap-chart', data, layout, { responsive: true, displayModeBar: false });
@@ -495,3 +496,14 @@ function renderROCorDistributions() {
 
     Plotly.newPlot('roc-curve-chart', [traceRoc, traceRandom, traceCurrentPoint], layoutRoc, { responsive: true, displayModeBar: false });
 }
+
+// Handle window resize for Plotly charts
+window.addEventListener('resize', function () {
+    const ids = ['chart-ppv', 'chart-npv', 'heatmap-chart', 'roc-distribution-chart', 'roc-curve-chart'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.innerHTML !== '') {
+            Plotly.Plots.resize(el);
+        }
+    });
+});
