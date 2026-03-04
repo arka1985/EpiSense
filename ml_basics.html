@@ -154,19 +154,42 @@
         /* Mode Selection */
         .mode-selector {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
             margin-top: 1rem;
+        }
+
+        .mode-group-title {
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mode-group-title span {
+            background: rgba(96, 165, 250, 0.1);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .mode-option {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: 20px;
             cursor: pointer;
             transition: 0.3s;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .mode-option:hover {
@@ -373,14 +396,327 @@
             margin-top: 1rem;
         }
 
-        /* Explanatory Overlay */
-        .explanation {
+        /* Fundamentals Section Styles */
+        .fundamentals-section {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        /* NEW: Path Navigation Styles */
+        .path-navigator {
+            display: flex;
+            gap: 1.5rem;
+            margin: 2rem 0 3rem 0;
+            justify-content: center;
+        }
+
+        .path-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            flex: 1;
+            max-width: 450px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .path-btn:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .path-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+        }
+
+        .path-btn.active::after {
+            content: 'Active Path';
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--primary-blue);
             background: rgba(59, 130, 246, 0.1);
-            border-left: 4px solid var(--primary-blue);
-            padding: 1rem;
-            margin-bottom: 1.5rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .path-icon {
+            font-size: 2.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+        }
+
+        .path-text h3 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+        }
+
+        .path-text p {
             font-size: 0.9rem;
-            color: #d1d5db;
+            color: var(--text-dim);
+            margin: 0.5rem 0 0 0;
+        }
+
+        .module-path-section {
+            display: none;
+            /* Hidden by default */
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        .module-path-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Viz Card for Fundamentals */
+        .viz-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .viz-container {
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* Fit Badges */
+        .fit-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-underfit {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .badge-optimal {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-overfit {
+            background: rgba(244, 114, 182, 0.15);
+            color: #f472b6;
+            border: 1px solid rgba(244, 114, 182, 0.3);
+        }
+
+        /* Relation Boxes */
+        .relation-box {
+            padding: 0.75rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .rel-bias {
+            border-left: 4px solid #60a5fa;
+        }
+
+        .rel-var {
+            border-left: 4px solid #f472b6;
+        }
+
+        .rel-label {
+            font-size: 0.7rem;
+            font-weight: 900;
+            opacity: 0.7;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .rel-link {
+            font-size: 0.85rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Slider Enhancement */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            height: 6px;
+            border-radius: 5px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .concept-tile {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            cursor: default;
+        }
+
+        .concept-tile:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(96, 165, 250, 0.2);
+        }
+
+        .concept-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-pink));
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+
+        .concept-tile:hover::before {
+            opacity: 1;
+        }
+
+        .tile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tile-icon {
+            font-size: 1.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .tile-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            background: rgba(96, 165, 250, 0.1);
+            color: var(--primary-blue);
+            letter-spacing: 0.05rem;
+        }
+
+        .tile-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: white;
+            margin-top: 0.5rem;
+        }
+
+        .tile-desc {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-dim);
+            flex-grow: 1;
+        }
+
+        .example-box {
+            margin-top: auto;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            border-left: 2px solid var(--primary-pink);
+        }
+
+        .example-label {
+            font-weight: 800;
+            color: var(--primary-pink);
+            display: block;
+            margin-bottom: 0.2rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
         }
     </style>
 </head>
@@ -401,206 +737,728 @@
             Back to Dashboard
         </a>
 
-        <header style="text-align: left; margin-bottom: 2rem;">
-            <h1
-                style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
-                Machine Learning Pipeline</h1>
-            <p class="subtitle" style="margin: 0;">Fundamentals for Researchers: From Raw Data to Predictive Models.</p>
-        </header>
-
-        <!-- Stepper -->
-        <div class="stepper">
-            <div class="step-node active" id="node-1" onclick="goToStep(1)">1 <div class="step-label">Select Prototype
+        <!-- Path Navigator -->
+        <div class="path-navigator">
+            <div class="path-btn active" id="btn-path-fundamentals" onclick="switchPath('fundamentals')">
+                <div class="path-icon">🎓</div>
+                <div class="path-text">
+                    <h3>AI & ML Fundamentals</h3>
+                    <p>Learn core concepts, theory, and intuitive visualizations.</p>
                 </div>
             </div>
-            <div class="step-node" id="node-2" onclick="goToStep(2)">2 <div class="step-label">Dataset</div>
-            </div>
-            <div class="step-node" id="node-3" onclick="goToStep(3)">3 <div class="step-label">Split & Train</div>
-            </div>
-            <div class="step-node" id="node-4" onclick="goToStep(4)">4 <div class="step-label">Validation</div>
-            </div>
-            <div class="step-node" id="node-5" onclick="goToStep(5)">5 <div class="step-label">Prediction</div>
+            <div class="path-btn" id="btn-path-pipeline" onclick="switchPath('pipeline')">
+                <div class="path-icon">🚀</div>
+                <div class="path-text">
+                    <h3>Implementation Pipeline</h3>
+                    <p>Build and train real ML models with clinical markers.</p>
+                </div>
             </div>
         </div>
 
-        <!-- Step 1: Model Choice -->
-        <div class="pipeline-card active" id="step-1">
-            <div class="card-header">
-                <h2><span>🤖</span> Choose Your Prototype</h2>
-            </div>
-            <div class="explanation">
-                Machine learning in medicine usually starts with choosing a model type based on the question:
-                "Continuous Value" (Regression) or "Presence/Absence" (Classification).
-            </div>
-            <div class="mode-selector">
-                <div class="mode-option" onclick="toggleModel('linear', this)">
-                    <i>📈</i>
-                    <div style="font-weight: 800; font-size: 1.2rem;">Linear Regression</div>
-                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem;">Predict continuous
-                        outcomes like Blood Pressure or Glucose levels.</p>
+        <div id="path-fundamentals" class="module-path-section active">
+
+            <!-- AI/ML Fundamentals Intro -->
+            <section class="fundamentals-section">
+                <div class="section-header">
+                    <h2 class="section-title"><span>🎓</span> AI & ML Fundamentals</h2>
+                    <p class="section-subtitle">Core concepts to understand before exploring the implementation
+                        pipeline.
+                    </p>
                 </div>
-                <div class="mode-option" onclick="toggleModel('logistic', this)">
-                    <i>🎯</i>
-                    <div style="font-weight: 800; font-size: 1.2rem;">Logistic Regression</div>
-                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem;">Predict binary categories
-                        like "Disease present" or "Survived".</p>
+
+                <div class="concept-grid">
+                    <!-- 1. Features -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">📥</div>
+                            <span class="tile-tag">Level 1: The Inputs</span>
+                        </div>
+                        <div class="tile-title">Features (Variables)</div>
+                        <p class="tile-desc">The specific data points used by a model to find patterns and make
+                            predictions.</p>
+                        <div class="example-box">
+                            <span class="example-label">Clinical Example</span>
+                            Patient Age, BMI, Blood Pressure, and Heart Rate.
+                        </div>
+                    </div>
+
+                    <!-- 2. Targets -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">📤</div>
+                            <span class="tile-tag">Level 1: The Goal</span>
+                        </div>
+                        <div class="tile-title">Outcomes (Targets)</div>
+                        <p class="tile-desc">The specific value or category the model is trying to learn and predict.
+                        </p>
+                        <div class="example-box">
+                            <span class="example-label">Clinical Example</span>
+                            Predicting if a patient has a disease (Yes/No).
+                        </div>
+                    </div>
+
+                    <!-- 3. AI -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🤖</div>
+                            <span class="tile-tag">Level 2: The Core</span>
+                        </div>
+                        <div class="tile-title">Artificial Intelligence (AI)</div>
+                        <p class="tile-desc">The broad science of making machines mimic human intelligence and
+                            reasoning.</p>
+                        <div class="example-box">
+                            <span class="example-label">Broad Context</span>
+                            Chess-playing computers or automated hospital schedules.
+                        </div>
+                    </div>
+
+                    <!-- 4. ML -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">📈</div>
+                            <span class="tile-tag">Level 2: Statistical</span>
+                        </div>
+                        <div class="tile-title">Machine Learning (ML)</div>
+                        <p class="tile-desc">A subset of AI where machines "learn" patterns directly from data.</p>
+                        <div class="example-box">
+                            <span class="example-label">Key Difference</span>
+                            Learns rules from data instead of being told what to do.
+                        </div>
+                    </div>
+
+                    <!-- 5. Supervised -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🏷️</div>
+                            <span class="tile-tag">Level 3: Learning Types</span>
+                        </div>
+                        <div class="tile-title">Supervised Learning</div>
+                        <p class="tile-desc">Training with a teacher: The model sees data and the correct answer
+                            (Label).</p>
+                        <div class="example-box">
+                            <span class="example-label">Utility</span>
+                            Used for diagnosis when historical "answers" exist.
+                        </div>
+                    </div>
+
+                    <!-- 6. Unsupervised -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🔦</div>
+                            <span class="tile-tag">Level 3: Discovery</span>
+                        </div>
+                        <div class="tile-title">Unsupervised Learning</div>
+                        <p class="tile-desc">Finding paths in the dark: The model groups data without being told the
+                            answer.</p>
+                        <div class="example-box">
+                            <span class="example-label">Utility</span>
+                            Discovering new patient clusters or distinct disease subtypes.
+                        </div>
+                    </div>
+
+                    <!-- 7. Train-Test Split -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">✂️</div>
+                            <span class="tile-tag">Level 4: Evaluation</span>
+                        </div>
+                        <div class="tile-title">Train-Test Split</div>
+                        <p class="tile-desc">Hiding part of the data to test if the model actually "knows" its stuff.
+                        </p>
+                        <div class="example-box">
+                            <span class="example-label">Why</span>
+                            Ensures the model works on patients it has NEVER seen before.
+                        </div>
+                    </div>
+
+                    <!-- 8. Train-Validation-Test -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">📊</div>
+                            <span class="tile-tag">Level 4: Honing</span>
+                        </div>
+                        <div class="tile-title">Train-Val-Test Split</div>
+                        <p class="tile-desc">A three-way split to fine-tune the model "settings" before the final exam.
+                        </p>
+                        <div class="example-box">
+                            <span class="example-label">Benefit</span>
+                            Prevents "cheating" by adjusting settings using test data.
+                        </div>
+                    </div>
+
+                    <!-- 9. Underfitting -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">📉</div>
+                            <span class="tile-tag">Level 5: Model Error</span>
+                        </div>
+                        <div class="tile-title">Underfitting</div>
+                        <p class="tile-desc">When a model is too simple to capture the complexity of the data.</p>
+                        <div class="example-box">
+                            <span class="example-label">Metaphor</span>
+                            Studying only Chapter 1 and failing the whole medical exam.
+                        </div>
+                    </div>
+
+                    <!-- 10. Overfitting -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">📈</div>
+                            <span class="tile-tag">Level 5: Model Error</span>
+                        </div>
+                        <div class="tile-title">Overfitting</div>
+                        <p class="tile-desc">When a model memorizes "noise" instead of learning the actual trend.</p>
+                        <div class="example-box">
+                            <span class="example-label">Metaphor</span>
+                            Memorizing exact test answers but not understanding the topic.
+                        </div>
+                    </div>
+
+                    <!-- 11. Bias vs Variance -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🎯</div>
+                            <span class="tile-tag">Level 5: The Balance</span>
+                        </div>
+                        <div class="tile-title">Bias vs Variance</div>
+                        <p class="tile-desc">The trade-off between strict assumptions and sensitivity to data noise.</p>
+                        <div class="example-box">
+                            <span class="example-label">Goal</span>
+                            Finding the "Goldilocks" model: not too loose, not too rigid.
+                        </div>
+                    </div>
+
+                    <!-- 12. Cross Validation -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🔄</div>
+                            <span class="tile-tag">Level 5: Robustness</span>
+                        </div>
+                        <div class="tile-title">Cross-Validation (K-Fold)</div>
+                        <p class="tile-desc">Rotating data so every piece is used for both training and testing.</p>
+                        <div class="example-box">
+                            <span class="example-label">Benefit</span>
+                            Eliminates the risk of a "lucky" or "unlucky" data split.
+                        </div>
+                    </div>
+
+                    <!-- 13. Explainable AI -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🧩</div>
+                            <span class="tile-tag">Level 6: Modern Tech</span>
+                        </div>
+                        <div class="tile-title">Explainable AI (XAI)</div>
+                        <p class="tile-desc">Opening the "Black Box" to see exactly how and why AI made a decision.</p>
+                        <div class="example-box">
+                            <span class="example-label">Healthcare Role</span>
+                            Understanding why a model flagged a patient for high risk.
+                        </div>
+                    </div>
+
+                    <!-- 14. Ethics in AI -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🛡️</div>
+                            <span class="tile-tag">Level 6: Responsibility</span>
+                        </div>
+                        <div class="tile-title">Ethics in AI</div>
+                        <p class="tile-desc">Ensuring algorithms are fair, unbiased, and respectful of human dignity.
+                        </p>
+                        <div class="example-box">
+                            <span class="example-label">Goal</span>
+                            Preventing bias against specific patient demographics.
+                        </div>
+                    </div>
+
+                    <!-- 15. Ensemble Learning -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">👥</div>
+                            <span class="tile-tag">Level 7: Architecture</span>
+                        </div>
+                        <div class="tile-title">Ensemble Learning</div>
+                        <p class="tile-desc">Combining many models together to improve overall accuracy and stability.
+                        </p>
+                        <div class="example-box">
+                            <span class="example-label">Example</span>
+                            A "Random Forest" is an ensemble of many Decision Trees.
+                        </div>
+                    </div>
+
+                    <!-- 16. Deep Learning -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🧠</div>
+                            <span class="tile-tag">Level 7: Neural Nets</span>
+                        </div>
+                        <div class="tile-title">Deep Learning (DL)</div>
+                        <p class="tile-desc">Complex networks inspired by the human brain for processing
+                            high-dimensional data.</p>
+                        <div class="example-box">
+                            <span class="example-label">Strength</span>
+                            Identifying diseases in medical images (X-rays, MRIs).
+                        </div>
+                    </div>
+
+                    <!-- 17. Federated Learning -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🌐</div>
+                            <span class="tile-tag">Level 7: Privacy</span>
+                        </div>
+                        <div class="tile-title">Federated Learning</div>
+                        <p class="tile-desc">Training AI across institutions without ever moving raw patient data.</p>
+                        <div class="example-box">
+                            <span class="example-label">Healthcare Role</span>
+                            Safe collaboration between hospitals while keeping records local.
+                        </div>
+                    </div>
+
+                    <!-- 18. Transformer -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">⚡</div>
+                            <span class="tile-tag">Level 8: The Frontier</span>
+                        </div>
+                        <div class="tile-title">Transformers</div>
+                        <p class="tile-desc">The architecture that powers modern AI by focusing on relevant patterns.
+                        </p>
+                        <div class="example-box">
+                            <span class="example-label">Concept</span>
+                            Uses "Self-Attention" to understand long-range context in data.
+                        </div>
+                    </div>
+
+                    <!-- 19. LLM -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">📚</div>
+                            <span class="tile-tag">Level 8: Scale</span>
+                        </div>
+                        <div class="tile-title">Large Language Models</div>
+                        <p class="tile-desc">Massive models trained on almost all human text to understand language.</p>
+                        <div class="example-box">
+                            <span class="example-label">Capability</span>
+                            Can summarize medical journals or bridge language barriers.
+                        </div>
+                    </div>
+
+                    <!-- 20. GPT -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🗨️</div>
+                            <span class="tile-tag">Level 8: Conversation</span>
+                        </div>
+                        <div class="tile-title">GPT Models</div>
+                        <p class="tile-desc">A specific type of Transformer designed to generate coherent, human-like
+                            text.</p>
+                        <div class="example-box">
+                            <span class="example-label">Status</span>
+                            Powers ChatGPT, Claude, and specialized medical assistants.
+                        </div>
+                    </div>
+
+                    <!-- 21. Generative AI -->
+                    <div class="concept-tile">
+                        <div class="tile-header">
+                            <div class="tile-icon">🎨</div>
+                            <span class="tile-tag">Level 8: Creatvity</span>
+                        </div>
+                        <div class="tile-title">Generative AI (GenAI)</div>
+                        <p class="tile-desc">The ability of AI to create entirely new content (text, images, synthetic
+                            data).</p>
+                        <div class="example-box">
+                            <span class="example-label">Innovation</span>
+                            Generating new drug candidates or synthetic training data.
+                        </div>
+                    </div>
+                </div> <!-- End concept-grid -->
+            </section>
+
+            <!-- Intuitive Concept Visualizations -->
+            <div class="section-header" style="margin-top: 4rem;">
+                <h2 class="section-title"><span>📊</span> Intuitive Concept Visualizations</h2>
+                <p class="section-subtitle">Visual aids to grasp complex statistical trade-offs in Machine Learning.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
+                <!-- Overfitting/Underfitting -->
+                <div class="viz-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="color: white; font-weight: 800; margin-bottom: 0.25rem;">Overfitting vs
+                                Underfitting</h3>
+                            <p style="font-size: 0.8rem; color: var(--text-dim); margin: 0;">Watch how model complexity
+                                captures noise.</p>
+                        </div>
+                        <div id="fit-status" class="fit-badge badge-underfit">Underfit</div>
+                    </div>
+                    <div class="viz-container">
+                        <canvas id="overfitChart"></canvas>
+                    </div>
+                    <div
+                        style="margin-top: 1.5rem; background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--glass-border);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <label style="font-size: 0.85rem; color: white; font-weight: 600;">Model Complexity
+                                (Degree)</label>
+                            <span id="deg-label"
+                                style="background: var(--primary-blue); color: white; padding: 0.1rem 0.6rem; border-radius: 6px; font-weight: 800; font-size: 0.85rem;">1</span>
+                        </div>
+                        <input type="range" id="complexitySlider" min="1" max="15" value="1" step="1"
+                            style="width: 100%; cursor: pointer;" oninput="updateOverfit(this.value)">
+                        <div
+                            style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">
+                            <span>Simple (Bias)</span>
+                            <span>Complex (Variance)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accuracy vs Precision (Bias-Variance) -->
+                <div class="viz-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="color: white; font-weight: 800; margin-bottom: 0.25rem;">Accuracy vs Precision
+                            </h3>
+                            <p style="font-size: 0.8rem; color: var(--text-dim); margin: 0;">Bias (Accuracy) vs Variance
+                                (Precision).</p>
+                        </div>
+                        <div id="phase-status" class="fit-badge badge-optimal">Perfect (Ideal)</div>
+                    </div>
+                    <div class="viz-container">
+                        <canvas id="biasVarChart"></canvas>
+                    </div>
+
+                    <!-- Interactive Sliders for Accuracy/Precision -->
+                    <div
+                        style="margin-top: 1.5rem; background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--glass-border);">
+                        <div style="margin-bottom: 1.25rem;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label style="font-size: 0.85rem; color: white; font-weight: 600;">Target Accuracy
+                                    (1/Bias)</label>
+                                <span id="acc-val"
+                                    style="color: #10b981; font-weight: 800; font-size: 0.85rem;">High</span>
+                            </div>
+                            <input type="range" id="accSlider" min="0" max="100" value="90" step="1"
+                                style="width: 100%; cursor: pointer;" oninput="updateAccuracyPrecision()">
+                            <div
+                                style="display: flex; justify-content: space-between; margin-top: 0.35rem; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase;">
+                                <span>High Bias</span>
+                                <span>Accurate</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label style="font-size: 0.85rem; color: white; font-weight: 600;">Shot Precision
+                                    (1/Variance)</label>
+                                <span id="prec-val"
+                                    style="color: #10b981; font-weight: 800; font-size: 0.85rem;">High</span>
+                            </div>
+                            <input type="range" id="precSlider" min="0" max="100" value="90" step="1"
+                                style="width: 100%; cursor: pointer;" oninput="updateAccuracyPrecision()">
+                            <div
+                                style="display: flex; justify-content: space-between; margin-top: 0.35rem; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase;">
+                                <span>Unpredictable</span>
+                                <span>Precise</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div class="relation-box rel-bias">
+                            <div class="rel-label">Accuracy (Inverses Bias)</div>
+                            <div class="rel-link">➔ Better Fit</div>
+                        </div>
+                        <div class="relation-box rel-var">
+                            <div class="rel-label">Precision (Inverses Var)</div>
+                            <div class="rel-link">➔ Consistency</div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div> <!-- End path-fundamentals (Correctly contains all theory content) -->
+
+        <div id="path-pipeline" class="module-path-section">
+
+            <header style="text-align: left; margin-bottom: 2rem;">
+                <h1
+                    style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                    Machine Learning Pipeline</h1>
+                <p class="subtitle" style="margin: 0;">Fundamentals for Researchers: From Raw Data to Predictive Models.
+                </p>
+            </header>
+
+            <!-- Stepper -->
+            <div class="stepper">
+                <div class="step-node active" id="node-1" onclick="goToStep(1)">1 <div class="step-label">Select
+                        Prototype
+                    </div>
+                </div>
+                <div class="step-node" id="node-2" onclick="goToStep(2)">2 <div class="step-label">Dataset</div>
+                </div>
+                <div class="step-node" id="node-3" onclick="goToStep(3)">3 <div class="step-label">Split & Train</div>
+                </div>
+                <div class="step-node" id="node-4" onclick="goToStep(4)">4 <div class="step-label">Validation</div>
+                </div>
+                <div class="step-node" id="node-5" onclick="goToStep(5)">5 <div class="step-label">Prediction</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Model Choice -->
+            <div class="pipeline-card active" id="step-1">
+                <div class="card-header">
+                    <h2><span>🤖</span> Choose Your Prototype</h2>
+                </div>
+                <div class="explanation">
+                    Machine learning in medicine usually starts with choosing a model type based on the question:
+                    "Continuous Value" (Regression) or "Presence/Absence" (Classification).
+                </div>
+                <div class="mode-selector">
+                    <div class="mode-group-title"><span>Supervised Learning</span> (Predicting Outomes)</div>
+                    <div class="mode-option selected" onclick="toggleModel('linear', this)">
+                        <i>📈</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Linear Regression</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Continuous outcomes
+                            (e.g.
+                            SBP).</p>
+                    </div>
+                    <div class="mode-option" onclick="toggleModel('logistic', this)">
+                        <i>🎯</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Logistic Regression</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Binary categories
+                            (e.g.
+                            Disease Risk).</p>
+                    </div>
+                    <div class="mode-option" onclick="toggleModel('forest', this)">
+                        <i>🌲</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Random Forest</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Robust ensemble
+                            classification.</p>
+                    </div>
+                    <div class="mode-option" onclick="toggleModel('ann', this)">
+                        <i>🧠</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Neural Networks (ANN)</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Complex non-linear
+                            patterns.</p>
+                    </div>
+                    <div class="mode-option" onclick="toggleModel('tree', this)">
+                        <i>🌳</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Decision Trees</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Logical flows for
+                            binary
+                            splits.</p>
+                    </div>
+
+                    <div class="mode-group-title" style="color: var(--primary-pink);"><span>Unsupervised Learning</span>
+                        (Finding Patterns)</div>
+                    <div class="mode-option" onclick="toggleModel('kmeans', this)">
+                        <i>🪐</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">K-Means Clustering</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Grouping unlabelled
+                            data
+                            by distance.</p>
+                    </div>
+                    <div class="mode-option" onclick="toggleModel('pca', this)">
+                        <i>🧬</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">PCA Analysis</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Reducing dimensions
+                            to
+                            find core variance.</p>
+                    </div>
+                    <div class="mode-option" onclick="toggleModel('hierarchical', this)">
+                        <i>🌿</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">Hierarchical</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Nested grouping by
+                            distance hierarchy.</p>
+                    </div>
+                    <div class="mode-option" onclick="toggleModel('dbscan', this)">
+                        <i>🌊</i>
+                        <div style="font-weight: 800; font-size: 1.1rem;">DBSCAN Clustering</div>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem;">Density-based
+                            grouping
+                            with noise handling.</p>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-next" onclick="nextStep()">Next: Preparation</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Data Loading -->
+            <div class="pipeline-card" id="step-2">
+                <div class="card-header">
+                    <h2><span>📊</span> Step 2: Prepare Dataset</h2>
+                </div>
+                <div class="explanation" id="dataset-desc">
+                    ML models need "Features" (Inputs) and "Targets" (Labels). We've loaded a clinical prototype dataset
+                    for
+                    you.
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4 style="margin-bottom: 1rem;">Data Source</h4>
+                        <label>Choose Data Source:</label>
+                        <select id="data-source" onchange="toggleSource()">
+                            <option value="dummy">Clinical Prototype (Pre-loaded)</option>
+                            <option value="custom">Upload Custom CSV/XLSX</option>
+                        </select>
+
+                        <div id="upload-box" style="display: none; margin-top: 1rem;">
+                            <label>Upload File:</label>
+                            <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFile(event)">
+                        </div>
+
+                        <div style="margin-top: 1.5rem;">
+                            <label>Target Variable (Y):</label>
+                            <select id="sel-target"></select>
+                            <label style="margin-top: 1rem;">Feature Variable (X):</label>
+                            <select id="sel-feature"></select>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom: 1rem;">Data Preview</h4>
+                        <div id="data-table-preview"
+                            style="height: 250px; overflow: auto; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.8rem; padding: 0.5rem;">
+                            <!-- Table here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-prev" onclick="prevStep()">Back</button>
+                    <button class="btn btn-next" onclick="nextStep()">Next: Train-Test Split</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Split & Train -->
+            <div class="pipeline-card" id="step-3">
+                <div class="card-header">
+                    <h2><span>⚖️</span> Step 3: Train-Test Split & Optimization</h2>
+                </div>
+                <div class="explanation">
+                    To evaluate performance, we split data into <b>Training</b> (to teach patterns) and
+                    <b>Testing</b> (to assess accuracy). Choose your preferred split ratio below.
+                </div>
+
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: var(--text-dim);">Data Split Ratio:</span>
+                        <span id="split-label" style="color: var(--primary-pink); font-weight: 800;">80% Train / 20%
+                            Test</span>
+                    </div>
+                    <input type="range" id="split-slider" min="50" max="90" value="80" step="5"
+                        style="width: 100%; cursor: pointer; accent-color: var(--primary-pink);"
+                        oninput="updateSplitLabel(this.value)">
+                </div>
+
+                <div class="split-viz">
+                    <div class="bucket train" id="bucket-train">
+                        <div class="metric-label" id="train-label">Training Set (80%)</div>
+                        <div class="metric-val" id="train-count">0</div>
+                    </div>
+                    <div style="font-size: 2rem;">➡️</div>
+                    <div class="bucket test" id="bucket-test">
+                        <div class="metric-label" id="test-label">Testing Set (20%)</div>
+                        <div class="metric-val" id="test-count">0</div>
+                    </div>
+                </div>
+
+                <div id="training-log"
+                    style="font-family: monospace; font-size: 0.8rem; color: #34d399; margin-top: 1rem;">
+                    <!-- Animated logs -->
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-prev" onclick="prevStep()">Back</button>
+                    <button class="btn btn-next" onclick="runPipeline()">Run Pipeline & Train</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Validation -->
+            <div class="pipeline-card" id="step-4">
+                <div class="card-header">
+                    <h2><span>✅</span> Step 4: Performance & Model Pkl</h2>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4>Model Coefficients</h4>
+                        <div class="formula-box" id="model-formula">
+                            Calculating...
+                        </div>
+                        <h4>Diagnostic Metrics</h4>
+                        <div class="metrics-grid" id="metrics-output">
+                            <!-- Metrics -->
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <h4>Export Logic (.pkl)</h4>
+                        <div class="explanation" style="margin-top: 1rem;">
+                            A <strong>.pkl (Pickle)</strong> file is a serialized container for your model's Beta values
+                            and
+                            variables. It allows you to "deploy" your model without re-training.
+                        </div>
+                        <button class="btn btn-download" style="width: 100%;" onclick="downloadSimulation()">
+                            📥 Download Simulation Model (.pkl)
+                        </button>
+                        <p style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.5rem;">Note: This is a
+                            simulation
+                            showing how real-world ML files are generated.</p>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-prev" onclick="prevStep()">Back</button>
+                    <button class="btn btn-next" onclick="preparePrediction(); nextStep();">Next: Deployment</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Prediction -->
+            <div class="pipeline-card" id="step-5">
+                <div class="card-header">
+                    <h2><span>🔮</span> Step 5: Predictive Deployment</h2>
+                </div>
+
+                <div class="predict-io">
+                    <div>
+                        <div class="explanation">
+                            Now using the deployed model, we can input new, unseen feature values to predict outcomes.
+                        </div>
+                        <div class="input-group">
+                            <label id="input-label">Feature Input:</label>
+                            <input type="number" id="pred-input" value="10" oninput="predict()">
+                        </div>
+                        <div class="prediction-result">
+                            <div class="metric-label" id="result-label">Predicted Outcome</div>
+                            <div class="pred-value" id="final-pred">--</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="chart-box">
+                            <canvas id="pipelineChart"></canvas>
+                        </div>
+                        <button class="btn btn-download" style="width: 100%; margin-top: 1rem;"
+                            onclick="downloadFigure()">
+                            📥 Download Result Chart (PNG)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="btn-group">
-                <button class="btn btn-next" onclick="nextStep()">Next: Preparation</button>
+                <button class="btn btn-prev" onclick="prevStep()">Back to Metrics</button>
+                <button class="btn btn-next" style="background: var(--primary-blue);" onclick="location.reload()">Start
+                    New Concept</button>
             </div>
-        </div>
-
-        <!-- Step 2: Data Loading -->
-        <div class="pipeline-card" id="step-2">
-            <div class="card-header">
-                <h2><span>📊</span> Step 2: Prepare Dataset</h2>
-            </div>
-            <div class="explanation" id="dataset-desc">
-                ML models need "Features" (Inputs) and "Targets" (Labels). We've loaded a clinical prototype dataset for
-                you.
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div>
-                    <h4 style="margin-bottom: 1rem;">Data Source</h4>
-                    <label>Choose Data Source:</label>
-                    <select id="data-source" onchange="toggleSource()">
-                        <option value="dummy">Clinical Prototype (Pre-loaded)</option>
-                        <option value="custom">Upload Custom CSV/XLSX</option>
-                    </select>
-
-                    <div id="upload-box" style="display: none; margin-top: 1rem;">
-                        <label>Upload File:</label>
-                        <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFile(event)">
-                    </div>
-
-                    <div style="margin-top: 1.5rem;">
-                        <label>Target Variable (Y):</label>
-                        <select id="sel-target"></select>
-                        <label style="margin-top: 1rem;">Feature Variable (X):</label>
-                        <select id="sel-feature"></select>
-                    </div>
-                </div>
-                <div>
-                    <h4 style="margin-bottom: 1rem;">Data Preview</h4>
-                    <div id="data-table-preview"
-                        style="height: 250px; overflow: auto; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.8rem; padding: 0.5rem;">
-                        <!-- Table here -->
-                    </div>
-                </div>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-prev" onclick="prevStep()">Back</button>
-                <button class="btn btn-next" onclick="nextStep()">Next: Train-Test Split</button>
-            </div>
-        </div>
-
-        <!-- Step 3: Split & Train -->
-        <div class="pipeline-card" id="step-3">
-            <div class="card-header">
-                <h2><span>⚖️</span> Step 3: Train-Test Split & Optimization</h2>
-            </div>
-            <div class="explanation">
-                To prevent "Cheating" (overfitting), we split data into **Training (80%)** to teach the model, and
-                **Testing (20%)** to assess its true performance.
-            </div>
-
-            <div class="split-viz">
-                <div class="bucket train" id="bucket-train">
-                    <div class="metric-label">Training Set (80%)</div>
-                    <div class="metric-val" id="train-count">0</div>
-                </div>
-                <div style="font-size: 2rem;">➡️</div>
-                <div class="bucket test" id="bucket-test">
-                    <div class="metric-label">Testing Set (20%)</div>
-                    <div class="metric-val" id="test-count">0</div>
-                </div>
-            </div>
-
-            <div id="training-log" style="font-family: monospace; font-size: 0.8rem; color: #34d399; margin-top: 1rem;">
-                <!-- Animated logs -->
-            </div>
-
-            <div class="btn-group">
-                <button class="btn btn-prev" onclick="prevStep()">Back</button>
-                <button class="btn btn-next" onclick="runPipeline()">Run Pipeline & Train</button>
-            </div>
-        </div>
-
-        <!-- Step 4: Validation -->
-        <div class="pipeline-card" id="step-4">
-            <div class="card-header">
-                <h2><span>✅</span> Step 4: Performance & Model Pkl</h2>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div>
-                    <h4>Model Coefficients</h4>
-                    <div class="formula-box" id="model-formula">
-                        Calculating...
-                    </div>
-                    <h4>Diagnostic Metrics</h4>
-                    <div class="metrics-grid" id="metrics-output">
-                        <!-- Metrics -->
-                    </div>
-                </div>
-                <div style="text-align: center;">
-                    <h4>Export Logic (.pkl)</h4>
-                    <div class="explanation" style="margin-top: 1rem;">
-                        A <strong>.pkl (Pickle)</strong> file is a serialized container for your model's Beta values and
-                        variables. It allows you to "deploy" your model without re-training.
-                    </div>
-                    <button class="btn btn-download" style="width: 100%;" onclick="downloadSimulation()">
-                        📥 Download Simulation Model (.pkl)
-                    </button>
-                    <p style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.5rem;">Note: This is a simulation
-                        showing how real-world ML files are generated.</p>
-                </div>
-            </div>
-
-            <div class="btn-group">
-                <button class="btn btn-prev" onclick="prevStep()">Back</button>
-                <button class="btn btn-next" onclick="preparePrediction(); nextStep();">Next: Deployment</button>
-            </div>
-        </div>
-
-        <!-- Step 5: Prediction -->
-        <div class="pipeline-card" id="step-5">
-            <div class="card-header">
-                <h2><span>🔮</span> Step 5: Predictive Deployment</h2>
-            </div>
-
-            <div class="predict-io">
-                <div>
-                    <div class="explanation">
-                        Now using the deployed model, we can input new, unseen feature values to predict outcomes.
-                    </div>
-                    <div class="input-group">
-                        <label id="input-label">Feature Input:</label>
-                        <input type="number" id="pred-input" value="10" oninput="predict()">
-                    </div>
-                    <div class="prediction-result">
-                        <div class="metric-label" id="result-label">Predicted Outcome</div>
-                        <div class="pred-value" id="final-pred">--</div>
-                    </div>
-                </div>
-                <div>
-                    <div class="chart-box">
-                        <canvas id="pipelineChart"></canvas>
-                    </div>
-                    <button class="btn btn-download" style="width: 100%; margin-top: 1rem;" onclick="downloadFigure()">
-                        📥 Download Result Chart (PNG)
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="btn-group">
-            <button class="btn btn-prev" onclick="prevStep()">Back to Metrics</button>
-            <button class="btn btn-next" style="background: var(--primary-blue);" onclick="location.reload()">Start
-                New Concept</button>
-        </div>
-    </div>
+        </div> <!-- Closing path-pipeline -->
+    </div> <!-- Closing module-container -->
 
     <footer>
         <div class="footer-content">
@@ -619,6 +1477,196 @@
         let headers = [];
         let modelParams = null;
         let pipelineChart = null;
+        let trainPercent = 80;
+
+        function updateSplitLabel(val) {
+            trainPercent = parseInt(val);
+            document.getElementById('split-label').innerText = `${trainPercent}% Train / ${100 - trainPercent}% Test`;
+            document.getElementById('train-label').innerText = `Training Set (${trainPercent}%)`;
+            document.getElementById('test-label').innerText = `Testing Set (${100 - trainPercent}%)`;
+        }
+
+        /** PATH NAVIGATION **/
+        function switchPath(path) {
+            document.querySelectorAll('.module-path-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.path-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(`path-${path}`).classList.add('active');
+            document.getElementById(`btn-path-${path}`).classList.add('active');
+
+            if (path === 'fundamentals') {
+                initFundamentalsCharts();
+            }
+        }
+
+        /** FUNDAMENTALS CHARTS **/
+        let overfitChart = null;
+        let biasVarChart = null;
+        let basePoints = [];
+
+        function updateAccuracyPrecision() {
+            if (!biasVarChart) return;
+            const accuracy = parseInt(document.getElementById('accSlider').value);
+            const precision = parseInt(document.getElementById('precSlider').value);
+
+            // Labels
+            const accVal = document.getElementById('acc-val');
+            const precVal = document.getElementById('prec-val');
+            const phaseBadge = document.getElementById('phase-status');
+
+            accVal.innerText = accuracy > 75 ? "High" : (accuracy > 40 ? "Medium" : "Low");
+            precVal.innerText = precision > 75 ? "High" : (precision > 40 ? "Medium" : "Low");
+
+            // Define Phase & Color
+            let color = "#10b981"; // Default Green
+            let phaseText = "Perfect (Ideal)";
+            let phaseClass = "badge-optimal";
+
+            if (accuracy >= 70 && precision >= 70) {
+                color = "#10b981"; phaseText = "Perfect (Ideal)"; phaseClass = "badge-optimal";
+            } else if (accuracy < 70 && precision >= 70) {
+                color = "#3b82f6"; phaseText = "Systematic Bias"; phaseClass = "badge-underfit";
+            } else if (accuracy >= 70 && precision < 70) {
+                color = "#f59e0b"; phaseText = "Random Noise"; phaseClass = "badge-underfit";
+                // Note: using badge-underfit style but will customize if needed
+            } else {
+                color = "#ef4444"; phaseText = "High Total Error"; phaseClass = "badge-overfit";
+            }
+
+            phaseBadge.innerText = phaseText;
+            phaseBadge.className = 'fit-badge ' + phaseClass;
+            // Overriding color for Random Noise as it reuses a blue-ish style usually
+            if (phaseText === "Random Noise") {
+                phaseBadge.style.background = "rgba(245, 158, 11, 0.15)";
+                phaseBadge.style.color = "#f59e0b";
+            } else {
+                phaseBadge.style.background = ""; // Reset
+                phaseBadge.style.color = "";
+            }
+
+            // Internal params for calculation
+            const bias = (100 - accuracy) / 5;
+            const variance = (100 - precision) / 5;
+
+            // Generate Points
+            const newPoints = Array.from({ length: 30 }, () => {
+                const offsetX = bias * 1.0;
+                const offsetY = bias * 1.0;
+                const spread = variance * 0.7;
+                const rx = (Math.random() - 0.5) * spread * 5;
+                const ry = (Math.random() - 0.5) * spread * 5;
+                return { x: offsetX + rx, y: offsetY + ry, r: 4 };
+            });
+
+            biasVarChart.data.datasets[0].data = newPoints;
+            biasVarChart.data.datasets[0].backgroundColor = color;
+            biasVarChart.update('none');
+        }
+
+        // Custom plugin for bullseye rings
+        const bullseyePlugin = {
+            id: 'bullseye',
+            beforeDraw: (chart) => {
+                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                const centerX = left + width / 2;
+                const centerY = top + height / 2;
+                const maxRadius = Math.min(width, height) / 2;
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+
+                // Draw 5 rings
+                for (let i = 1; i <= 5; i++) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, (maxRadius / 5) * i, 0, Math.PI * 2);
+                    ctx.stroke();
+                    if (i === 1) { // Center Bullseye
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                        ctx.fill();
+                    }
+                }
+
+                // Crosshairs
+                ctx.beginPath();
+                ctx.moveTo(left, centerY); ctx.lineTo(right, centerY);
+                ctx.moveTo(centerX, top); ctx.lineTo(centerX, bottom);
+                ctx.stroke();
+                ctx.restore();
+            }
+        };
+
+        function updateOverfit(degree) {
+            if (!overfitChart) return;
+            degree = parseInt(degree);
+            document.getElementById('deg-label').innerText = degree;
+
+            const badge = document.getElementById('fit-status');
+            badge.className = 'fit-badge';
+            if (degree <= 1) { badge.innerText = 'Underfit'; badge.classList.add('badge-underfit'); }
+            else if (degree <= 4) { badge.innerText = 'Optimal'; badge.classList.add('badge-optimal'); }
+            else { badge.innerText = 'Overfitting'; badge.classList.add('badge-overfit'); }
+
+            const trendX = Array.from({ length: 40 }, (_, i) => i * 0.5);
+            const trendData = trendX.map(x => {
+                let y = 0.5 * x * x - 2 * x + 5;
+                if (degree > 4) y += Math.sin(x * (degree / 2)) * (degree - 4) * 1.5;
+                if (degree === 1) y = 1.5 * x + 2;
+                return { x, y };
+            });
+
+            overfitChart.data.datasets[1].data = trendData;
+            overfitChart.data.datasets[1].borderColor = degree <= 1 ? '#60a5fa' : (degree <= 4 ? '#10b981' : '#f472b6');
+            overfitChart.update('none');
+        }
+
+        function initFundamentalsCharts() {
+            if (overfitChart) return;
+            basePoints = Array.from({ length: 15 }, (_, i) => {
+                let x = i * 1.3;
+                let y = 0.5 * x * x - 2 * x + 5 + (Math.random() * 6 - 3);
+                return { x, y };
+            });
+
+            setTimeout(() => {
+                const canvasO = document.getElementById('overfitChart');
+                if (!canvasO) return;
+                overfitChart = new Chart(canvasO.getContext('2d'), {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            { label: 'Data', data: basePoints, backgroundColor: 'rgba(255,255,255,0.4)', pointRadius: 5 },
+                            { label: 'Model', data: [], showLine: true, borderColor: '#60a5fa', fill: false, pointRadius: 0, borderWidth: 3 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { x: { display: false, min: -1, max: 20 }, y: { display: false, min: -5, max: 100 } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+                updateOverfit(1);
+
+                const canvasB = document.getElementById('biasVarChart');
+                if (!canvasB) return;
+                biasVarChart = new Chart(canvasB.getContext('2d'), {
+                    type: 'bubble',
+                    plugins: [bullseyePlugin],
+                    data: {
+                        datasets: [
+                            { label: 'Model Performance', data: [], backgroundColor: '#60a5fa' }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        layout: { padding: 10 },
+                        scales: { x: { min: -20, max: 20, display: false }, y: { min: -20, max: 20, display: false } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+                updateAccuracyPrecision();
+            }, 100);
+        }
 
         /** STEP NAVIGATION **/
         function nextStep() {
@@ -659,20 +1707,65 @@
         }
 
         function loadDummyData() {
+            rawData = [];
+            const pointCount = 200; // Increased to 200 pts for Phase 3
+
             if (modelType === 'linear') {
-                document.getElementById('dataset-desc').innerText = "Prototype: Linear Regression (Age vs. Systolic Blood Pressure). Feature = Age, Target = SBP.";
-                rawData = [
-                    { Age: 20, SBP: 120 }, { Age: 25, SBP: 122 }, { Age: 30, SBP: 125 }, { Age: 35, SBP: 128 },
-                    { Age: 40, SBP: 130 }, { Age: 45, SBP: 135 }, { Age: 50, SBP: 140 }, { Age: 55, SBP: 145 },
-                    { Age: 60, SBP: 150 }, { Age: 65, SBP: 155 }, { Age: 70, SBP: 160 }, { Age: 80, SBP: 180 }
-                ];
-            } else {
-                document.getElementById('dataset-desc').innerText = "Prototype: Logistic Regression (Glucose vs. Diabetes Risk). Feature = Glucose, Target = Diabetes (0/1).";
-                rawData = [
-                    { Glucose: 80, Diabetes: 0 }, { Glucose: 85, Diabetes: 0 }, { Glucose: 90, Diabetes: 0 }, { Glucose: 95, Diabetes: 0 },
-                    { Glucose: 100, Diabetes: 0 }, { Glucose: 105, Diabetes: 1 }, { Glucose: 110, Diabetes: 1 }, { Glucose: 120, Diabetes: 1 },
-                    { Glucose: 140, Diabetes: 1 }, { Glucose: 160, Diabetes: 1 }, { Glucose: 180, Diabetes: 1 }, { Glucose: 200, Diabetes: 1 }
-                ];
+                document.getElementById('dataset-desc').innerText = `Prototype: Linear Regression (${pointCount} pts). Age vs. Blood Pressure.`;
+                for (let i = 0; i < pointCount; i++) {
+                    let age = 20 + (i * 0.3);
+                    let sbp = 110 + (age * 0.7) + (Math.random() * 10 - 5);
+                    rawData.push({ Age: Math.round(age), SBP: Math.round(sbp) });
+                }
+            } else if (['logistic', 'tree', 'forest', 'ann'].includes(modelType)) {
+                const descMap = {
+                    'logistic': `Logistic Regression (${pointCount} pts). Glucose vs. Diabetes Risk.`,
+                    'tree': `Decision Tree (${pointCount} pts). Symptom Score vs. Admission.`,
+                    'forest': `Random Forest (${pointCount} pts). BioMarker vs. Severity.`,
+                    'ann': `Neural Network (${pointCount} pts). Complex Risk Score vs. Outcome.`
+                };
+                document.getElementById('dataset-desc').innerText = descMap[modelType];
+                const fName = modelType === 'logistic' ? 'Glucose' : (modelType === 'tree' ? 'SymptomScore' : (modelType === 'forest' ? 'BioMarker' : 'RiskScore'));
+                const tName = (['logistic', 'forest'].includes(modelType)) ? 'Diabetes' : (modelType === 'tree' ? 'Admitted' : 'Outcome');
+                const threshold = 120;
+                for (let i = 0; i < pointCount; i++) {
+                    let val = 70 + (i * 0.75);
+                    let prob = 1 / (1 + Math.exp(-(val - threshold) / 10));
+                    let target = Math.random() < prob ? 1 : 0;
+                    let obj = {}; obj[fName] = Math.round(val); obj[tName] = target;
+                    rawData.push(obj);
+                }
+            } else if (['kmeans', 'hierarchical', 'dbscan'].includes(modelType)) {
+                const descMap = {
+                    'kmeans': `K-Means Clustering (${pointCount} pts). Patient Age vs. Hospital Visits.`,
+                    'hierarchical': `Hierarchical Clustering (${pointCount} pts). Distance nested grouping.`,
+                    'dbscan': `DBSCAN Clustering (${pointCount} pts). Density-based grouping with noise.`
+                };
+                document.getElementById('dataset-desc').innerText = descMap[modelType];
+
+                for (let i = 0; i < pointCount; i++) {
+                    let age, visits;
+                    if (modelType === 'dbscan' && i > pointCount * 0.85) {
+                        // Noise points for DBSCAN
+                        age = 20 + Math.random() * 80;
+                        visits = Math.random() * 25;
+                    } else {
+                        let cluster = i % 4;
+                        if (cluster === 0) { age = 22 + Math.random() * 10; visits = 1 + Math.random() * 2; }
+                        else if (cluster === 1) { age = 28 + Math.random() * 10; visits = 4 + Math.random() * 2; }
+                        else if (cluster === 2) { age = 55 + Math.random() * 15; visits = 10 + Math.random() * 5; }
+                        else { age = 78 + Math.random() * 12; visits = 18 + Math.random() * 6; }
+                    }
+                    rawData.push({ Age: Math.round(age), Visits: Math.round(visits) });
+                }
+            } else if (modelType === 'pca') {
+                document.getElementById('dataset-desc').innerText = `PCA Analysis (${pointCount} pts). Reduction of multi-marker data.`;
+                for (let i = 0; i < pointCount; i++) {
+                    let latent = i * 0.5;
+                    let markerA = latent + (Math.random() * 15 - 7.5);
+                    let markerB = latent * 0.8 + (Math.random() * 15 - 7.5);
+                    rawData.push({ Marker_A: Math.round(markerA), Marker_B: Math.round(markerB) });
+                }
             }
             processDataset();
         }
@@ -715,9 +1808,24 @@
             if (modelType === 'linear') {
                 selT.value = headers.includes('SBP') ? 'SBP' : headers[headers.length - 1];
                 selF.value = headers.includes('Age') ? 'Age' : headers[0];
-            } else {
+            } else if (modelType === 'logistic') {
                 selT.value = headers.includes('Diabetes') ? 'Diabetes' : headers[headers.length - 1];
                 selF.value = headers.includes('Glucose') ? 'Glucose' : headers[0];
+            } else if (modelType === 'tree') {
+                selT.value = headers.includes('Admitted') ? 'Admitted' : headers[headers.length - 1];
+                selF.value = headers.includes('SymptomScore') ? 'SymptomScore' : headers[0];
+            } else if (modelType === 'forest') {
+                selT.value = headers.includes('Diabetes') ? 'Diabetes' : headers[headers.length - 1];
+                selF.value = headers.includes('BioMarker') ? 'BioMarker' : headers[0];
+            } else if (modelType === 'ann') {
+                selT.value = headers.includes('Outcome') ? 'Outcome' : headers[headers.length - 1];
+                selF.value = headers.includes('RiskScore') ? 'RiskScore' : headers[0];
+            } else if (['kmeans', 'hierarchical', 'dbscan'].includes(modelType)) {
+                selT.value = headers.includes('Visits') ? 'Visits' : headers[headers.length - 1];
+                selF.value = headers.includes('Age') ? 'Age' : headers[0];
+            } else if (modelType === 'pca') {
+                selT.value = headers.includes('Marker_B') ? 'Marker_B' : headers[headers.length - 1];
+                selF.value = headers.includes('Marker_A') ? 'Marker_A' : headers[0];
             }
 
             renderPreview();
@@ -749,8 +1857,8 @@
 
             let i = 0;
             const interval = setInterval(() => {
-                if (i < 20) {
-                    const isTrain = Math.random() < 0.8;
+                if (i < 100) {
+                    const isTrain = Math.random() < (trainPercent / 100);
                     const b = isTrain ? bucketTrain : bucketTest;
                     const p = document.createElement('div');
                     p.className = 'particle';
@@ -778,13 +1886,20 @@
 
             setTimeout(() => {
                 if (modelType === 'linear') trainLinear(X, Y);
-                else trainLogistic(X, Y);
+                else if (modelType === 'logistic') trainLogistic(X, Y);
+                else if (modelType === 'tree') trainTree(X, Y);
+                else if (modelType === 'forest') trainForest(X, Y);
+                else if (modelType === 'ann') trainANN(X, Y);
+                else if (modelType === 'kmeans') trainKMeans(X, Y);
+                else if (modelType === 'hierarchical') trainHierarchical(X, Y);
+                else if (modelType === 'dbscan') trainDBSCAN(X, Y);
+                else if (modelType === 'pca') trainPCA(X, Y);
 
-                log.innerHTML += "[SYSTEM] Concept Learned! Coefficients saved to pkl container.<br>";
-                document.getElementById('train-count').innerText = Math.floor(rawData.length * 0.8);
-                document.getElementById('test-count').innerText = Math.ceil(rawData.length * 0.2);
+                log.innerHTML += "[SYSTEM] Concept Learned! Model parameters saved.<br>";
+                document.getElementById('train-count').innerText = Math.floor(rawData.length * (trainPercent / 100));
+                document.getElementById('test-count').innerText = Math.ceil(rawData.length * (1 - trainPercent / 100));
 
-                setTimeout(() => nextStep(), 1000);
+                setTimeout(() => nextStep(), 1500);
             }, 800);
         }
 
@@ -810,19 +1925,60 @@
         }
 
         function trainLogistic(X, Y) {
-            // Improved logistic fit for education (steeper sigmoid)
             const n = X.length;
-            const xMin = Math.min(...X);
-            const xMax = Math.max(...X);
-            const xRange = xMax - xMin;
             const xMean = X.reduce((a, b) => a + b, 0) / n;
-
-            // Heuristic to place the center of the S-curve near the mean/median threshold
-            // and ensure a visible slope
-            const slope = 10 / xRange;
+            const slope = 0.5; // Simulated slope
             const intercept = -xMean * slope;
+            modelParams = { b0: intercept, b1: slope, accuracy: 0.88, logLoss: 0.32 };
+            renderStep4();
+        }
 
-            modelParams = { b0: intercept, b1: slope, accuracy: 0.92, logLoss: 0.21 };
+        function trainTree(X, Y) {
+            const threshold = X.reduce((a, b) => a + b, 0) / X.length;
+            modelParams = { threshold: threshold, accuracy: 0.85, gini: 0.42 };
+            renderStep4();
+        }
+
+        function trainForest(X, Y) {
+            const threshold = X.reduce((a, b) => a + b, 0) / X.length;
+            modelParams = { threshold: threshold, accuracy: 0.94, n_estimators: 100 };
+            renderStep4();
+        }
+
+        function trainANN(X, Y) {
+            const min = Math.min(...X), max = Math.max(...X);
+            const center = min + (max - min) * 0.5;
+            modelParams = { center: center, scale: (max - min) / 10, accuracy: 0.94, epochs: 150 };
+            renderStep4();
+        }
+
+        function trainKMeans(X, Y) {
+            const clusters = [[], [], [], []];
+            rawData.forEach((r, i) => clusters[i % 4].push(r));
+            const centroids = clusters.map(c => ({
+                x: c.reduce((a, b) => a + (b.Age || 0), 0) / c.length,
+                y: c.reduce((a, b) => a + (b.Visits || 0), 0) / c.length
+            }));
+            modelParams = { centroids: centroids, sse: 285.4, clusters: 4 };
+            renderStep4();
+        }
+
+        function trainHierarchical(X, Y) {
+            // Simulate Ward's linkage or similar
+            modelParams = { linkage: 'Ward', max_dist: 12.5, cophenetic: 0.82 };
+            renderStep4();
+        }
+
+        function trainDBSCAN(X, Y) {
+            // Simulate DBSCAN: Epsilon and MinPts resulting in clusters + noise
+            const noiseCount = Math.floor(X.length * 0.15);
+            modelParams = { epsilon: 5.0, minPts: 5, clusters: 4, noise_pts: noiseCount };
+            renderStep4();
+        }
+
+        function trainPCA(X, Y) {
+            // Simulate PCA: Single Principal Component is an axis through the correlation
+            modelParams = { angle: Math.PI / 4, variance_explained: 0.89 };
             renderStep4();
         }
 
@@ -836,11 +1992,53 @@
                     <div class="metric-item"><span class="metric-val">${modelParams.r2.toFixed(3)}</span><span class="metric-label">R-Squared</span></div>
                     <div class="metric-item"><span class="metric-val">${modelParams.mse.toFixed(2)}</span><span class="metric-label">Mean Squared Error</span></div>
                 `;
-            } else {
+            } else if (modelType === 'logistic') {
                 formula.innerHTML = `P(Y=1) = 1 / (1 + e<sup>-(${modelParams.b0.toFixed(2)} + ${modelParams.b1.toFixed(2)}X)</sup>)`;
                 metrics.innerHTML = `
                     <div class="metric-item"><span class="metric-val">${(modelParams.accuracy * 100).toFixed(0)}%</span><span class="metric-label">Model Accuracy</span></div>
                     <div class="metric-item"><span class="metric-val">${modelParams.logLoss.toFixed(3)}</span><span class="metric-label">Log Loss</span></div>
+                `;
+            } else if (modelType === 'tree') {
+                formula.innerHTML = `Decision Rule: if X > ${modelParams.threshold.toFixed(2)} then 1 else 0`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${(modelParams.accuracy * 100).toFixed(0)}%</span><span class="metric-label">Model Accuracy</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.gini.toFixed(3)}</span><span class="metric-label">Gini Impurity</span></div>
+                `;
+            } else if (modelType === 'forest') {
+                formula.innerHTML = `Ensemble: Average of 100 Trees (Baggage/Voting)`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${(modelParams.accuracy * 100).toFixed(0)}%</span><span class="metric-label">OOB Accuracy</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.n_estimators}</span><span class="metric-label">Estimators</span></div>
+                `;
+            } else if (modelType === 'ann') {
+                formula.innerHTML = `Activation: σ(Σ w<sub>i</sub>x<sub>i</sub> + b) [Universal Approx]`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${(modelParams.accuracy * 100).toFixed(0)}%</span><span class="metric-label">Pattern Accuracy</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.epochs}</span><span class="metric-label">Epochs</span></div>
+                `;
+            } else if (modelType === 'kmeans') {
+                formula.innerHTML = `Unsupervised: Grouping by Euclidean Distance (Minimizing Variance)`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${modelParams.sse.toFixed(1)}</span><span class="metric-label">Total SSE</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.clusters}</span><span class="metric-label">K Clusters</span></div>
+                `;
+            } else if (modelType === 'hierarchical') {
+                formula.innerHTML = `Bottom-Up: Merging clusters by ${modelParams.linkage} Linkage`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${modelParams.max_dist.toFixed(1)}</span><span class="metric-label">Max Linkage</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.cophenetic.toFixed(2)}</span><span class="metric-label">Cophenetic Corr</span></div>
+                `;
+            } else if (modelType === 'dbscan') {
+                formula.innerHTML = `Density-Based: Ɛ-Neighborhood Clusters with Noise Handling`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${modelParams.clusters}</span><span class="metric-label">Est. Clusters</span></div>
+                    <div class="metric-item"><span class="metric-val">${modelParams.noise_pts}</span><span class="metric-label">Noise Points</span></div>
+                `;
+            } else if (modelType === 'pca') {
+                formula.innerHTML = `Reduction: Projecting data onto Maximum Variance Axis`;
+                metrics.innerHTML = `
+                    <div class="metric-item"><span class="metric-val">${(modelParams.variance_explained * 100).toFixed(0)}%</span><span class="metric-label">Explained Var</span></div>
+                    <div class="metric-item"><span class="metric-val">1 PC</span><span class="metric-label">Components</span></div>
                 `;
             }
         }
@@ -859,16 +2057,54 @@
         function predict() {
             const x = parseFloat(document.getElementById('pred-input').value) || 0;
             let y;
+            const predEl = document.getElementById('final-pred');
+
             if (modelType === 'linear') {
                 y = modelParams.b0 + modelParams.b1 * x;
-                document.getElementById('final-pred').innerText = y.toFixed(2);
-            } else {
+                predEl.innerText = y.toFixed(2);
+            } else if (modelType === 'logistic') {
                 const z = modelParams.b0 + modelParams.b1 * x;
                 y = 1 / (1 + Math.exp(-z));
-                const verdict = y >= 0.5 ? "Yes / Present" : "No / Absent";
-                document.getElementById('final-pred').innerText = `${verdict} (${(y * 100).toFixed(1)}% Risk)`;
-                document.getElementById('final-pred').style.color = y >= 0.5 ? 'var(--primary-pink)' : 'var(--primary-blue)';
+                predEl.innerText = (y * 100).toFixed(1) + "% Risk";
+            } else if (modelType === 'tree' || modelType === 'forest') {
+                y = x > modelParams.threshold ? 1 : 0;
+                predEl.innerText = y === 1 ? "Positive (1)" : "Negative (0)";
+            } else if (modelType === 'ann') {
+                // Correct Sigmoid symmetry: Center at threshold
+                const z = (x - modelParams.center) / modelParams.scale;
+                y = 1 / (1 + Math.exp(-z));
+                predEl.innerText = (y * 100).toFixed(1) + "% Probability";
+            } else if (['kmeans', 'hierarchical', 'dbscan'].includes(modelType)) {
+                const simulatedY = 10;
+                let closest = 0, minDist = Infinity;
+                const points = (modelType === 'kmeans') ? modelParams.centroids : [
+                    { x: 25, y: 2 }, { x: 40, y: 6 }, { x: 60, y: 12 }, { x: 80, y: 20 }
+                ];
+                points.forEach((c, idx) => {
+                    const d = Math.sqrt(Math.pow(x - (c.x || c[0]), 2) + Math.pow(simulatedY - (c.y || 10), 2));
+                    if (d < minDist) { minDist = d; closest = idx + 1; }
+                });
+
+                if (modelType === 'dbscan' && minDist > 10) {
+                    predEl.innerText = "Noise / Outlier";
+                    predEl.style.color = '#ef4444';
+                } else {
+                    predEl.innerText = (modelType === 'dbscan' ? "Cluster #" : "Group #") + closest;
+                    predEl.style.color = 'var(--primary-blue)';
+                }
+                document.getElementById('result-label').innerText = "Assigned Status:";
+                y = 0;
+            } else if (modelType === 'pca') {
+                y = x * Math.cos(modelParams.angle);
+                predEl.innerText = y.toFixed(2) + " (Projected)";
+                document.getElementById('result-label').innerText = "Coordinate on PC1:";
             }
+
+            // Visual feedback on prediction
+            if (modelType !== 'kmeans') {
+                predEl.style.color = (y > 0.5 || modelType === 'linear') ? 'var(--primary-blue)' : 'var(--primary-pink)';
+            }
+
             updateChartPrediction(x, y);
         }
 
@@ -883,46 +2119,144 @@
 
             const min = Math.min(...X);
             const max = Math.max(...X);
-            const step = (max - min) / 20;
+            const range = max - min;
+            const step = range / 50;
             const lineData = [];
-            for (let i = min; i <= max; i += step) {
+
+            for (let i = min - range * 0.1; i <= max + range * 0.1; i += step) {
                 let y;
-                if (modelType === 'linear') y = modelParams.b0 + modelParams.b1 * i;
-                else y = 1 / (1 + Math.exp(-(modelParams.b0 + modelParams.b1 * i)));
+                if (modelType === 'linear') {
+                    y = modelParams.b0 + modelParams.b1 * i;
+                } else if (modelType === 'logistic') {
+                    y = 1 / (1 + Math.exp(-(modelParams.b0 + modelParams.b1 * i)));
+                } else if (modelType === 'tree' || modelType === 'forest') {
+                    y = i > modelParams.threshold ? 1 : 0;
+                } else if (modelType === 'ann') {
+                    const z = (i - modelParams.center) / modelParams.scale;
+                    y = 1 / (1 + Math.exp(-z));
+                } else if (modelType === 'pca' || modelType === 'kmeans' || modelType === 'hierarchical' || modelType === 'dbscan') {
+                    y = 0;
+                }
                 lineData.push({ x: i, y: y });
             }
 
+            const chartDatasets = [];
+
+            if (['kmeans', 'hierarchical', 'dbscan'].includes(modelType)) {
+                const colors = ['#60a5fa', '#f472b6', '#fbbf24', '#a855f7'];
+                const numClusters = 4;
+                const clusterData = Array.from({ length: numClusters + 1 }, () => []); // +1 for noise
+                const proxies = modelType === 'kmeans' ? modelParams.centroids : [
+                    { x: 25, y: 2 }, { x: 35, y: 5 }, { x: 60, y: 12 }, { x: 80, y: 20 }
+                ];
+
+                X.forEach((x, i) => {
+                    let closest = 0, minDist = Infinity;
+                    proxies.forEach((c, idx) => {
+                        const d = Math.sqrt(Math.pow(x - c.x, 2) + Math.pow(Y[i] - c.y, 2));
+                        if (d < minDist) { minDist = d; closest = idx; }
+                    });
+
+                    if (modelType === 'dbscan' && minDist > 8) {
+                        clusterData[numClusters].push({ x: x, y: Y[i] }); // Noise
+                    } else {
+                        clusterData[closest].push({ x: x, y: Y[i] });
+                    }
+                });
+
+                clusterData.forEach((data, idx) => {
+                    if (idx < numClusters) {
+                        chartDatasets.push({
+                            label: `${modelType === 'kmeans' ? 'Cluster' : (modelType === 'dbscan' ? 'Core' : 'Branch')} ${idx + 1}`,
+                            data: data,
+                            backgroundColor: colors[idx],
+                            pointRadius: 5
+                        });
+                    } else if (modelType === 'dbscan' && data.length > 0) {
+                        chartDatasets.push({
+                            label: 'Noise / Outliers',
+                            data: data,
+                            backgroundColor: '#64748b',
+                            pointRadius: 4,
+                            pointStyle: 'crossRot'
+                        });
+                    }
+                });
+
+                if (modelType === 'kmeans') {
+                    chartDatasets.push({
+                        label: 'Centroids',
+                        data: modelParams.centroids.map(c => ({ x: c.x, y: c.y })),
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderColor: 'white',
+                        pointRadius: 12,
+                        pointStyle: 'star'
+                    });
+                }
+            } else {
+                chartDatasets.push({
+                    label: 'Observed Data',
+                    data: X.map((x, i) => ({ x: x, y: Y[i] })),
+                    backgroundColor: 'rgba(96, 165, 250, 0.4)',
+                    pointRadius: 5
+                });
+                chartDatasets.push({
+                    label: modelType === 'pca' ? 'Principal Axis (PC1)' : 'Model Prediction',
+                    data: lineData,
+                    showLine: true,
+                    borderColor: 'rgba(244, 114, 182, 0.8)',
+                    fill: false,
+                    pointRadius: 0
+                });
+
+                if (modelType === 'pca') {
+                    const slope = Math.tan(modelParams.angle);
+                    const pcLine = [];
+                    for (let i = min; i <= max; i += range / 10) pcLine.push({ x: i, y: i * slope });
+                    chartDatasets[1].data = pcLine;
+                }
+            }
+
+            chartDatasets.push({
+                label: 'Active Point',
+                data: [],
+                backgroundColor: '#10b981',
+                pointRadius: 10,
+                pointStyle: 'rectRot'
+            });
+
             pipelineChart = new Chart(ctx, {
                 type: 'scatter',
-                data: {
-                    datasets: [
-                        { label: 'Observed Data', data: X.map((x, i) => ({ x: x, y: Y[i] })), backgroundColor: 'rgba(255,255,255,0.3)' },
-                        { label: 'Model Equation', data: lineData, showLine: true, borderColor: var_pink(), fill: false, pointRadius: 0 },
-                        { label: 'Prediction Value', data: [], backgroundColor: var_blue(), pointRadius: 8 }
-                    ]
-                },
+                data: { datasets: chartDatasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
-                        x: { title: { display: true, text: feature, color: '#94a3b8' }, ticks: { color: '#94a3b8' } },
+                        x: {
+                            title: { display: true, text: feature, color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
                         y: {
                             title: { display: true, text: target, color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
                             ticks: {
                                 color: '#94a3b8',
                                 callback: function (value) {
-                                    if (modelType === 'logistic') {
-                                        if (value === 0) return 'No / Absent';
-                                        if (value === 1) return 'Yes / Present';
+                                    if (['logistic', 'tree', 'forest'].includes(modelType)) {
+                                        if (value === 0) return 'NO / NEG';
+                                        if (value === 1) return 'YES / POS';
                                         return '';
                                     }
                                     return value;
                                 }
-                            },
-                            min: modelType === 'logistic' ? -0.1 : undefined,
-                            max: modelType === 'logistic' ? 1.1 : undefined
+                            }
                         }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: {
+                        legend: { display: true, labels: { color: '#94a3b8', boxWidth: 12 } },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)' }
+                    }
                 }
             });
             predict();
@@ -930,7 +2264,8 @@
 
         function updateChartPrediction(x, y) {
             if (!pipelineChart) return;
-            pipelineChart.data.datasets[2].data = [{ x: x, y: y }];
+            const ds = pipelineChart.data.datasets.find(d => d.label === 'Active Point');
+            if (ds) ds.data = [{ x: x, y: y }];
             pipelineChart.update();
         }
 
@@ -949,7 +2284,10 @@
         function var_pink() { return getComputedStyle(document.body).getPropertyValue('--primary-pink').trim() || '#e83e8c'; }
         function var_blue() { return getComputedStyle(document.body).getPropertyValue('--primary-blue').trim() || '#3b82f6'; }
 
-        window.onload = () => goToStep(1);
+        window.onload = () => {
+            switchPath('fundamentals');
+            goToStep(1);
+        };
     </script>
 </body>
 

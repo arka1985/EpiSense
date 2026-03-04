@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --step-active: var(--primary-blue);
@@ -38,6 +39,111 @@
             border: 1px solid var(--glass-border);
             z-index: 1;
             background: #1a1a1a;
+        }
+
+        .choropleth-active .outbreak-control {
+            display: none !important;
+        }
+
+        .choropleth-control {
+            display: none;
+        }
+
+        .choropleth-active .choropleth-control {
+            display: block;
+        }
+
+        .map-overlay-info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            text-align: center;
+            pointer-events: none;
+            width: 80%;
+        }
+
+        .map-main-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .map-sub-title {
+            font-size: 1rem;
+            color: #ccc;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .choropleth-legend {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            line-height: 1.8;
+            font-size: 0.85rem;
+        }
+
+        .choropleth-legend i {
+            width: 20px;
+            height: 20px;
+            float: left;
+            margin-right: 10px;
+            opacity: 0.8;
+            border-radius: 4px;
+        }
+
+        .module-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 2rem auto;
+            max-width: 800px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 1.2rem;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-align: center;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(244, 114, 182, 0.2));
+            border-color: var(--primary-blue);
+            box-shadow: 0 8px 30px rgba(96, 165, 250, 0.3);
+        }
+
+        .mode-btn.active span {
+            color: var(--primary-blue);
+        }
+
+        .mode-btn i {
+            font-size: 1.5rem;
         }
 
         .sidebar {
@@ -270,10 +376,28 @@
             </p>
         </header>
 
-        <div class="gis-grid">
+        <div class="module-selector">
+            <button id="btn-clustering" class="mode-btn active" onclick="setGISMode('clustering')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 2v3m0 14v3M2 12h3m14 0h3m-3-7 1.5 1.5M4.5 4.5 6 6m12 12 1.5 1.5m-15-1.5L6 18"></path>
+                </svg>
+                <span>Geospatial Clustering</span>
+            </button>
+            <button id="btn-choropleth" class="mode-btn" onclick="setGISMode('choropleth')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>Choropleth Mapping</span>
+            </button>
+        </div>
+
+        <div id="gis-main-container" class="gis-grid">
             <div class="sidebar">
-                <!-- Data Entry -->
-                <div class="control-card">
+
+                <!-- Data Entry (Outbreak Mode) -->
+                <div class="control-card outbreak-control">
                     <h3>Spatial Data Entry</h3>
                     <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1rem;">
                         Simulate an outbreak or upload incident reports.
@@ -344,7 +468,7 @@
                 </div>
 
                 <!-- Clustering Controls -->
-                <div class="control-card">
+                <div class="control-card outbreak-control">
                     <h3>Clustering Algorithm</h3>
                     <div style="margin-bottom: 1rem;">
                         <label style="font-size: 0.85rem;">Distance Threshold</label>
@@ -371,7 +495,63 @@
                     </div>
                 </div>
 
-                <div class="control-card">
+                <!-- Choropleth Controls -->
+                <div class="control-card choropleth-control">
+                    <h3>Choropleth Designer</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.2rem;">
+                        Visualize state-wise health parameters across India.
+                    </p>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Map Title</label>
+                        <input type="text" id="choro-title" class="gis-select"
+                            placeholder="e.g., Dengue Prevalence 2024" oninput="updateMapOverlays()"
+                            style="background: rgba(255,255,255,0.05); color: white;">
+
+                        <label
+                            style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem; margin-top: 0.8rem;">Sub-title</label>
+                        <input type="text" id="choro-subtitle" class="gis-select"
+                            placeholder="e.g., Cases per 100,000 population" oninput="updateMapOverlays()"
+                            style="background: rgba(255,255,255,0.05); color: white;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Color Scheme</label>
+                        <select id="choro-theme" class="gis-select" onchange="applyChoroplethData()">
+                            <option value="Oranges">Warm Oranges</option>
+                            <option value="Blues">Cool Blues</option>
+                            <option value="Greens">Forest Greens</option>
+                            <option value="Viridis">Viridis (High Contrast)</option>
+                            <option value="Spectral">Spectral (Multi-color)</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input type="file" id="choro-upload" hidden accept=".csv,.xlsx">
+                        <button class="btn-gis" onclick="document.getElementById('choro-upload').click()"
+                            style="background: var(--primary-pink); flex: 1; margin-bottom: 0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Upload CSV/Excel
+                        </button>
+                    </div>
+
+                    <button class="btn-gis secondary" onclick="downloadChoroplethTemplate()"
+                        style="font-size: 0.8rem; border-style: dashed; border-color: var(--primary-blue); margin-bottom: 1rem;">
+                        Download Data Template
+                    </button>
+
+                    <button class="btn-gis" onclick="generateChoroplethDemo()"
+                        style="background: rgba(255,255,255,0.05); font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);">
+                        ✨ Show Demo Map
+                    </button>
+                </div>
+
+                <div class="control-card outbreak-control">
                     <h3>Legend</h3>
                     <div id="dynamic-legend">
                         <p style="font-size: 0.8rem; color: var(--text-dim);">No data loaded to show legend.</p>
@@ -398,185 +578,188 @@
                     Download Current Data (CSV)
                 </button>
 
-                <button class="btn-gis" onclick="downloadMapPNG()" style="background: var(--primary-blue);">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Download Map (PNG)
-                </button>
-
-                <!-- Educational Section (Moved to Sidebar) REMOVED -->
             </div>
 
-            <div style="position: relative; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div id="map-container" style="position: relative; display: flex; flex-direction: column; gap: 1.5rem;">
+                <!-- Overlays -->
+                <div id="choro-overlay" class="map-overlay-info" style="display: none;">
+                    <h2 id="choro-main-title" class="map-main-title"></h2>
+                    <p id="choro-sub-title" class="map-sub-title"></p>
+                </div>
                 <div id="map"></div>
                 <div id="map-loader"
                     style="display:none; position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; color: white;">
                     Loading India Geometry...
                 </div>
 
-                <!-- Educational Section (Consolidated below Map) -->
-                <div class="control-card" style="padding: 1.5rem; border-color: rgba(96, 165, 250, 0.3); width: 100%;">
-                    <h3
-                        style="color: var(--primary-blue); margin-bottom: 0.8rem; font-size: 1.2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
-                        Algorithm Insights & Spatial Logic
-                    </h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem;">
-                        <div style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
-                            <p style="margin-bottom: 1rem;">
-                                This module utilizes a <strong>Proximity-Linked Aggregation</strong> (DBSCAN logic) to
-                                identify high-density geographic clusters.
-                            </p>
-                            <div
-                                style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                                <ul style="list-style: none; padding: 0;">
-                                    <li style="margin-bottom: 0.8rem;">📍 <strong>Spatial Join:</strong> Pairs points
-                                        within threshold distance.</li>
-                                    <li style="margin-bottom: 0.8rem;">📏 <strong>Threshold:</strong> Clusters only form
-                                        if points overlap in chosen radius.</li>
-                                    <li>🔥 <strong>Hotspot:</strong> Confirmed when density reaches the threshold (min.
-                                        3 points).</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div
-                            style="padding: 1.2rem; background: rgba(244, 114, 182, 0.05); border-left: 4px solid var(--primary-pink); border-radius: 10px;">
-                            <span
-                                style="font-size: 0.9rem; font-weight: 700; color: var(--primary-pink); display: block; margin-bottom: 0.5rem;">EPIDEMIOLOGICAL
-                                VALUE:</span>
-                            <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
-                                Spatial clustering is vital for identifying <strong>Shared Exposure Points</strong>. By
-                                pinpointing where incidents occur in close temporal and spatial proximity, public health
-                                teams can deploy targeted interventions, such as vector control or sanitation
-                                improvements, effectively breaking the chain of transmission.
-                            </p>
-                            <p
-                                style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; font-style: italic;">
-                                Note: Adjust the <strong>Distance Threshold</strong> to vary analysis between
-                                street-level (e.g. 100m) and city-wide (e.g. 5km) trends.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <button class="btn-gis" onclick="downloadMapPNG()"
+                    style="background: var(--primary-blue); margin: 0 auto; width: fit-content; padding: 1rem 2rem; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="margin-right: 8px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Map (PNG)
+                </button>
             </div>
         </div>
 
-        <!-- Mapping Modal -->
-        <div id="mapping-modal">
-            <div class="mapping-card">
-                <h2>Field Mapping</h2>
-                <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Select corresponding columns from your CSV.
-                </p>
-
-                <div id="mapping-fields">
-                    <div class="map-field">
-                        <label>Case ID / Serial</label>
-                        <select id="map-id" class="gis-select"></select>
+        <!-- Educational Section (Consolidated below Map) -->
+        <div class="control-card" style="padding: 1.5rem; border-color: rgba(96, 165, 250, 0.3); width: 100%;">
+            <h3
+                style="color: var(--primary-blue); margin-bottom: 0.8rem; font-size: 1.2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Algorithm Insights & Spatial Logic
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem;">
+                <div style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
+                    <p style="margin-bottom: 1rem;">
+                        This module utilizes a <strong>Proximity-Linked Aggregation</strong> (DBSCAN logic) to
+                        identify high-density geographic clusters.
+                    </p>
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 0.8rem;">📍 <strong>Spatial Join:</strong> Pairs points
+                                within threshold distance.</li>
+                            <li style="margin-bottom: 0.8rem;">📏 <strong>Threshold:</strong> Clusters only form
+                                if points overlap in chosen radius.</li>
+                            <li>🔥 <strong>Hotspot:</strong> Confirmed when density reaches the threshold (min.
+                                3 points).</li>
+                        </ul>
                     </div>
+                </div>
+                <div
+                    style="padding: 1.2rem; background: rgba(244, 114, 182, 0.05); border-left: 4px solid var(--primary-pink); border-radius: 10px;">
+                    <span
+                        style="font-size: 0.9rem; font-weight: 700; color: var(--primary-pink); display: block; margin-bottom: 0.5rem;">EPIDEMIOLOGICAL
+                        VALUE:</span>
+                    <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
+                        Spatial clustering is vital for identifying <strong>Shared Exposure Points</strong>. By
+                        pinpointing where incidents occur in close temporal and spatial proximity, public health
+                        teams can deploy targeted interventions, such as vector control or sanitation
+                        improvements, effectively breaking the chain of transmission.
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; font-style: italic;">
+                        Note: Adjust the <strong>Distance Threshold</strong> to vary analysis between
+                        street-level (e.g. 100m) and city-wide (e.g. 5km) trends.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Mapping Modal -->
+    <div id="mapping-modal">
+        <div class="mapping-card">
+            <h2>Field Mapping</h2>
+            <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Select corresponding columns from your CSV.
+            </p>
+
+            <div id="mapping-fields">
+                <div class="map-field">
+                    <label>Case ID / Serial</label>
+                    <select id="map-id" class="gis-select"></select>
+                </div>
+                <div class="map-field">
+                    <label>Latitude <span style="color:red">*</span></label>
+                    <select id="map-lat" class="gis-select"></select>
+                </div>
+                <div class="map-field">
+                    <label>Longitude <span style="color:red">*</span></label>
+                    <select id="map-lng" class="gis-select"></select>
+                </div>
+                <div class="map-field">
+                    <label>Exposure Type</label>
+                    <select id="map-type" class="gis-select"></select>
+                </div>
+                <div class="map-field">
+                    <label>State Name</label>
+                    <select id="map-state" class="gis-select"></select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button class="btn-gis secondary"
+                    onclick="document.getElementById('mapping-modal').style.display='none'">Cancel</button>
+                <button class="btn-gis" style="margin-bottom:0" onclick="applyMapping()">Load Mapped Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Entry Modal -->
+    <div id="manual-entry-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; align-items: center; justify-content: center;">
+        <div class="mapping-card">
+            <h2>Manual Data Entry</h2>
+            <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Enter a single case report manually or capture
+                your current location.</p>
+
+            <div id="manual-fields">
+                <div class="map-field">
+                    <label>Case ID / Serial</label>
+                    <input type="text" id="manual-id" class="gis-select" placeholder="e.g. ID-101 (Optional)"
+                        style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
+                </div>
+
+                <button class="btn-gis" onclick="captureLocation()"
+                    style="background: #10b981; font-size: 0.85rem; padding: 0.5rem; margin-bottom: 1rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    Capture Current Device Location
+                </button>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="map-field">
                         <label>Latitude <span style="color:red">*</span></label>
-                        <select id="map-lat" class="gis-select"></select>
+                        <input type="number" id="manual-lat" class="gis-select" step="any" placeholder="e.g. 22.5726"
+                            style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
                     </div>
                     <div class="map-field">
                         <label>Longitude <span style="color:red">*</span></label>
-                        <select id="map-lng" class="gis-select"></select>
-                    </div>
-                    <div class="map-field">
-                        <label>Exposure Type</label>
-                        <select id="map-type" class="gis-select"></select>
-                    </div>
-                    <div class="map-field">
-                        <label>State Name</label>
-                        <select id="map-state" class="gis-select"></select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button class="btn-gis secondary"
-                        onclick="document.getElementById('mapping-modal').style.display='none'">Cancel</button>
-                    <button class="btn-gis" style="margin-bottom:0" onclick="applyMapping()">Load Mapped Data</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Manual Entry Modal -->
-        <div id="manual-entry-modal"
-            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; align-items: center; justify-content: center;">
-            <div class="mapping-card">
-                <h2>Manual Data Entry</h2>
-                <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Enter a single case report manually or capture
-                    your current location.</p>
-
-                <div id="manual-fields">
-                    <div class="map-field">
-                        <label>Case ID / Serial</label>
-                        <input type="text" id="manual-id" class="gis-select" placeholder="e.g. ID-101 (Optional)"
-                            style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
-                    </div>
-
-                    <button class="btn-gis" onclick="captureLocation()"
-                        style="background: #10b981; font-size: 0.85rem; padding: 0.5rem; margin-bottom: 1rem;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        Capture Current Device Location
-                    </button>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="map-field">
-                            <label>Latitude <span style="color:red">*</span></label>
-                            <input type="number" id="manual-lat" class="gis-select" step="any"
-                                placeholder="e.g. 22.5726"
-                                style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
-                        </div>
-                        <div class="map-field">
-                            <label>Longitude <span style="color:red">*</span></label>
-                            <input type="number" id="manual-lng" class="gis-select" step="any"
-                                placeholder="e.g. 88.3639"
-                                style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
-                        </div>
-                    </div>
-
-                    <div class="map-field">
-                        <label>Exposure Type <span style="color:red">*</span></label>
-                        <select id="manual-type" class="gis-select">
-                            <option value="Dog">Dog</option>
-                            <option value="Cat">Cat</option>
-                            <option value="Monkey">Monkey</option>
-                            <option value="Fox">Fox</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="map-field">
-                        <label>State Name</label>
-                        <input type="text" id="manual-state" class="gis-select" placeholder="e.g. WEST BENGAL"
+                        <input type="number" id="manual-lng" class="gis-select" step="any" placeholder="e.g. 88.3639"
                             style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button class="btn-gis secondary"
-                        onclick="document.getElementById('manual-entry-modal').style.display='none'">Cancel</button>
-                    <button class="btn-gis" style="margin-bottom:0" onclick="submitManualEntry()">Add Case</button>
+                <div class="map-field">
+                    <label>Exposure Type <span style="color:red">*</span></label>
+                    <select id="manual-type" class="gis-select">
+                        <option value="Dog">Dog</option>
+                        <option value="Cat">Cat</option>
+                        <option value="Monkey">Monkey</option>
+                        <option value="Fox">Fox</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="map-field">
+                    <label>State Name</label>
+                    <input type="text" id="manual-state" class="gis-select" placeholder="e.g. WEST BENGAL"
+                        style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
                 </div>
             </div>
-        </div>
 
-        <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
-            <div class="footer-content">
-                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
-                <div class="disclaimer">GIS module utilizes Leaflet.js and India GeoJSON for spatial analysis
-                    demonstration.</div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn-gis secondary"
+                    onclick="document.getElementById('manual-entry-modal').style.display='none'">Cancel</button>
+                <button class="btn-gis" style="margin-bottom:0" onclick="submitManualEntry()">Add Case</button>
             </div>
-        </footer>
+        </div>
+    </div>
+
+    <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+        <div class="footer-content">
+            <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+            <div class="disclaimer">GIS module utilizes Leaflet.js and India GeoJSON for spatial analysis
+                demonstration.</div>
+        </div>
+    </footer>
     </div>
 
     <!-- Leaflet JS -->
@@ -613,13 +796,16 @@
 
         // Initialize Map
         function initMap() {
-            map = L.map('map').setView([22.5937, 80.9629], 5);
+            map = L.map('map', {
+                preferCanvas: true
+            }).setView([22.5937, 80.9629], 5);
 
-            // Dark Mode Tiles
+            // Dark Mode Tiles with CORS support
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
-                maxZoom: 20
+                maxZoom: 20,
+                crossOrigin: true
             }).addTo(map);
 
             loadIndiaBoundaries();
@@ -1082,6 +1268,240 @@
             map.flyTo([lat, lng], 10);
         }
 
+        // --- Choropleth Module Logic ---
+        let isChoroplethMode = false;
+        let choroplethData = null; // Map of { STATE_NAME: value }
+        let choroLayer = null;
+        let choroLegend = null;
+
+        function setGISMode(mode) {
+            const container = document.getElementById('gis-main-container');
+            const btnClustering = document.getElementById('btn-clustering');
+            const btnChoropleth = document.getElementById('btn-choropleth');
+            const overlay = document.getElementById('choro-overlay');
+
+            // Reset UI
+            btnClustering.classList.remove('active');
+            btnChoropleth.classList.remove('active');
+
+            if (mode === 'choropleth') {
+                isChoroplethMode = true;
+                btnChoropleth.classList.add('active');
+                container.classList.add('choropleth-active');
+                overlay.style.display = 'block';
+                clearMap();
+                if (!choroplethData) generateChoroplethDemo();
+            } else {
+                isChoroplethMode = false;
+                btnClustering.classList.add('active');
+                container.classList.remove('choropleth-active');
+                overlay.style.display = 'none';
+                if (choroLayer) map.removeLayer(choroLayer);
+                if (choroLegend) map.removeControl(choroLegend);
+                renderCases();
+            }
+        }
+
+        function updateMapOverlays() {
+            document.getElementById('choro-main-title').innerText = document.getElementById('choro-title').value;
+            document.getElementById('choro-sub-title').innerText = document.getElementById('choro-subtitle').value;
+        }
+
+        // File Parsing (Excel/CSV)
+        document.getElementById('choro-upload').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                processChoroJSON(json);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function processChoroJSON(json) {
+            // Expect columns: "State" and "Value" (or similar)
+            choroplethData = {};
+            json.forEach(row => {
+                const state = (row.State || row.state || row.STATE || '').toUpperCase().trim();
+                const val = parseFloat(row.Value || row.value || row.VALUE || 0);
+                if (state) choroplethData[state] = val;
+            });
+            applyChoroplethData();
+        }
+
+        function applyChoroplethData() {
+            if (!choroplethData) return;
+            if (choroLayer) map.removeLayer(choroLayer);
+            if (choroLegend) map.removeControl(choroLegend);
+
+            const values = Object.values(choroplethData);
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const theme = document.getElementById('choro-theme').value;
+
+            function style(feature) {
+                const stateName = (feature.properties.STNAME || feature.properties.STNAME_SH).toUpperCase();
+                const val = choroplethData[stateName] || 0;
+                return {
+                    fillColor: getChoroColor(val, min, max, theme),
+                    weight: 1.5,
+                    opacity: 1,
+                    color: 'rgba(255,255,255,0.2)',
+                    fillOpacity: 0.8
+                };
+            }
+
+            choroLayer = L.geoJSON(INDIA_GEOJSON, {
+                style: style,
+                onEachFeature: (feature, layer) => {
+                    const name = feature.properties.STNAME || feature.properties.STNAME_SH;
+                    const val = choroplethData[name.toUpperCase()] || 0;
+                    layer.bindTooltip(`<strong>${name}</strong><br>Value: ${val.toLocaleString()}`, { sticky: true });
+
+                    layer.on({
+                        mouseover: (e) => {
+                            const l = e.target;
+                            l.setStyle({ weight: 3, color: '#fff', fillOpacity: 0.9 });
+                            l.bringToFront();
+                        },
+                        mouseout: (e) => { choroLayer.resetStyle(e.target); }
+                    });
+                }
+            }).addTo(map);
+
+            updateChoroplethLegend(min, max, theme);
+        }
+
+        function getChoroColor(d, min, max, theme) {
+            const range = max - min || 1;
+            const t = (d - min) / range;
+
+            const palettes = {
+                'Oranges': ['#fff5eb', '#fee6ce', '#fdd0a2', '#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#a63603', '#7f2704'],
+                'Blues': ['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#084594'],
+                'Greens': ['#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#005a32'],
+                'Viridis': ['#440154', '#482878', '#3e4989', '#31688e', '#26828e', '#1f9e89', '#35b779', '#6ece58', '#fde725'],
+                'Spectral': ['#d53e4f', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#e6f598', '#abdda4', '#66c2a5', '#3288bd']
+            };
+
+            const colors = palettes[theme];
+            const index = Math.min(Math.floor(t * colors.length), colors.length - 1);
+            return colors[index];
+        }
+
+        function updateChoroplethLegend(min, max, theme) {
+            choroLegend = L.control({ position: 'bottomright' });
+
+            choroLegend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'choropleth-legend');
+                const range = max - min;
+                const grades = [];
+                for (let i = 0; i <= 5; i++) grades.push(min + (range * i / 5));
+
+                div.innerHTML = `<strong>Legend</strong><br>`;
+                for (let i = 0; i < grades.length; i++) {
+                    div.innerHTML +=
+                        '<i style="background:' + getChoroColor(grades[i], min, max, theme) + '"></i> ' +
+                        grades[i].toFixed(1) + (grades[i + 1] ? ' &ndash; ' + grades[i + 1].toFixed(1) + '<br>' : '+');
+                }
+                return div;
+            };
+
+            choroLegend.addTo(map);
+        }
+
+        function generateChoroplethDemo() {
+            document.getElementById('choro-title').value = "Sample Health Index: Public Health Infrastructure";
+            document.getElementById('choro-subtitle').value = "Composite Score (0-100) by State";
+            updateMapOverlays();
+
+            const demoStates = [
+                "ANDHRA PRADESH", "ARUNACHAL PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT",
+                "HARYANA", "HIMACHAL PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA PRADESH",
+                "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB",
+                "RAJASTHAN", "SIKKIM", "TAMIL NADU", "TELANGANA", "TRIPURA", "UTTAR PRADESH",
+                "UTTARAKHAND", "WEST BENGAL", "DELHI", "JAMMU & KASHMIR", "LADAKH"
+            ];
+
+            choroplethData = {};
+            demoStates.forEach(s => {
+                choroplethData[s] = Math.floor(Math.random() * 60) + 40;
+            });
+            applyChoroplethData();
+        }
+
+        function downloadChoroplethTemplate() {
+            const states = [
+                "ANDHRA PRADESH", "ARUNACHAL PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT",
+                "HARYANA", "HIMACHAL PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA PRADESH",
+                "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB",
+                "RAJASTHAN", "SIKKIM", "TAMIL NADU", "TELANGANA", "TRIPURA", "UTTAR PRADESH",
+                "UTTARAKHAND", "WEST BENGAL", "ANDAMAN & NICOBAR", "CHANDIGARH", "DADRA & NAGAR HAVELI AND DAMAN & DIU",
+                "DELHI", "JAMMU & KASHMIR", "LADAKH", "LAKSHADWEEP", "PUDUCHERRY"
+            ];
+
+            let csvContent = "State,Value\n";
+            states.forEach(s => csvContent += `${s},0\n`);
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "EpiSense_Choropleth_Template.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadMapPNG() {
+            const mapElement = document.getElementById('map-container');
+            const loader = document.getElementById('map-loader');
+            loader.innerHTML = "Generating PNG... (Ensuring all layers are captured)";
+            loader.style.display = "block";
+
+            // Leaflet + html2canvas tip: ensure the leaflet-pane doesn't use translate3d
+            // temporarily during capture to avoid offset/missing layers.
+            const mapPane = document.querySelector('.leaflet-map-pane');
+            const oldTransform = mapPane.style.transform;
+
+            html2canvas(mapElement, {
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#1a1a1a',
+                scale: 2, // Higher quality
+                ignoreElements: (element) => {
+                    // Ignore the download button and the loader overlay
+                    return element.id === 'map-loader' || element.classList.contains('btn-gis');
+                },
+                onclone: (clonedDoc) => {
+                    // Force the cloned map to be visible and correctly sized
+                    const clonedMap = clonedDoc.getElementById('map');
+                    if (clonedMap) {
+                        clonedMap.style.height = '650px';
+                        clonedMap.style.width = '100%';
+                    }
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `EpiSense_Map_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                loader.style.display = "none";
+                loader.innerHTML = "Loading India Geometry...";
+            }).catch(err => {
+                console.error("Export error:", err);
+                alert("Failed to generate PNG. Please try again.");
+                loader.style.display = "none";
+            });
+        }
+
         function downloadCurrentDataCSV() {
             if (cases.length === 0) {
                 alert("No data to download.");
@@ -1108,7 +1528,10 @@
             document.body.removeChild(link);
         }
 
-        window.onload = initMap;
+        window.onload = () => {
+            initMap();
+            setGISMode('clustering');
+        };
     </script>
 </body>
 
