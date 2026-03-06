@@ -34,8 +34,20 @@ function getZBeta(p) {
     return Z_MAP[p] || 0.842;
 }
 
-function getZAlpha(c) {
-    // Exact match
+function getZAlpha(c, oneSided = false) {
+    if (oneSided) {
+        // For one-sided, a 95% confidence level means alpha=0.05 on ONE side.
+        // This corresponds to Z = 1.645 (which is the 2-sided 90% Z).
+        const alpha = (100 - c) / 100;
+        // Standard normal quantiles:
+        if (Math.abs(alpha - 0.10) < 0.001) return 1.282; // 90% 1-sided
+        if (Math.abs(alpha - 0.05) < 0.001) return 1.645; // 95% 1-sided
+        if (Math.abs(alpha - 0.025) < 0.001) return 1.96; // 97.5% 1-sided
+        if (Math.abs(alpha - 0.01) < 0.001) return 2.326; // 99% 1-sided
+        return 1.645; // Default fallback to 95% 1-sided
+    }
+
+    // Exact match 2-sided
     if (Z_ALPHA_MAP[c]) return Z_ALPHA_MAP[c];
     // Range approx
     if (c < 95) return 1.645; // 90%
@@ -534,6 +546,384 @@ const MODES = {
                     label1: 'Control (ITT)',
                     label2: 'Treatment (ITT)'
                 }
+            };
+        }
+    },
+    'rct-superiority-binary': {
+        inputs: [
+            { id: 'p1', label: 'Prop. Group 1 (Control) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 30, desc: 'Anticipated outcome in Control.' },
+            { id: 'p2', label: 'Prop. Group 2 (Treatment) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 40, desc: 'Anticipated outcome in Treatment.' },
+            { id: 'margin', label: 'Superiority Margin (\u03B4) %', type: 'range', min: 0, max: 20, step: 0.1, val: 5, desc: 'Margin by which treatment must be superior.' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: '' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Usually 2-sided for superiority.' },
+            { id: 'ratio', label: 'Group Ratio (N2/N1)', type: 'number', val: 1, desc: '' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: '' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.8em; line-height:1.4">
+                N<sub>1</sub> = (Z<sub>α/2</sub>+Z<sub>β</sub>)<sup>2</sup> [P<sub>1</sub>(1-P<sub>1</sub>) + P<sub>2</sub>(1-P<sub>2</sub>)/r] / (P<sub>2</sub> - P<sub>1</sub> - &delta;)<sup>2</sup><br>
+                N<sub>2</sub> = r * N<sub>1</sub>
+            </div>
+        `,
+        formulaSteps: '',
+        interpretation: `
+            <p>Calculates sample size for a Superiority trial with a binary outcome. The treatment (P2) is expected to be superior to the control (P1) by an amount greater than the margin δ.</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Hypothesis & Errors:</strong><br>
+                <strong>Null Hypothesis:</strong> There is no significant difference between novel intervention and Placebo.<br>
+                <strong>Alternative Hypothesis:</strong> There is a significant difference between the novel intervention and placebo.<br>
+                <strong>Type-I Error:</strong> Erroneously concluding superiority of novel intervention when there is no superiority.<br>
+                <strong>Type-II Error:</strong> Not concluding a superiority when there is a superiority.
+            </div>
+        `,
+        calc: (state) => {
+            const P1 = parseFloat(state.p1) / 100;
+            const P2 = parseFloat(state.p2) / 100;
+            const delta = parseFloat(state.margin) / 100;
+            const r = parseFloat(state.ratio) || 1;
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const za = getZAlpha(conf, false); // 2-sided
+            const zb = getZBeta(power);
+
+            const effectSize = (P2 - P1) - delta;
+            if (effectSize <= 0) {
+                return { n: 'Error', display: 'P2 - P1 must be > \u03B4 for Superiority.', visualData: null };
+            }
+
+            const num = Math.pow(za + zb, 2) * (P1 * (1 - P1) + (P2 * (1 - P2)) / r);
+            const den = Math.pow(effectSize, 2);
+
+            let n1 = Math.ceil(num / den);
+            if (state.dropout) n1 = Math.ceil(n1 / 0.9);
+            let n2 = Math.ceil(n1 * r);
+
+            let displayStr = `P1=${(P1 * 100).toFixed(1)}% P2=${(P2 * 100).toFixed(1)}% \u03B4=${(delta * 100).toFixed(1)}%`;
+            if (state.dropout) displayStr += " (Incl. Dropout)";
+
+            return {
+                n: n1 + n2,
+                display: displayStr,
+                visualData: { n1: n1, n2: n2, label1: 'Control', label2: 'Treatment' }
+            };
+        }
+    },
+    'rct-superiority-cont': {
+        inputs: [
+            { id: 'mean1', label: 'Mean Control', type: 'number', val: 100, desc: 'Expected mean of Control.' },
+            { id: 'mean2', label: 'Mean Treatment', type: 'number', val: 110, desc: 'Expected mean of Treatment.' },
+            { id: 'sd', label: 'Pooled SD (\u03C3)', type: 'number', val: 15, desc: 'Assumed equal standard deviation.' },
+            { id: 'margin', label: 'Superiority Margin (\u03B4)', type: 'number', val: 5, desc: 'Margin by which treatment must be superior.' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: '' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Usually 2-sided for superiority.' },
+            { id: 'ratio', label: 'Group Ratio (N2/N1)', type: 'number', val: 1, desc: '' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: '' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.8em; line-height:1.4">
+                N<sub>1</sub> = (Z<sub>α/2</sub>+Z<sub>β</sub>)<sup>2</sup> &sigma;<sup>2</sup>(1 + 1/r) / (&mu;<sub>2</sub> - &mu;<sub>1</sub> - &delta;)<sup>2</sup><br>
+                N<sub>2</sub> = r * N<sub>1</sub>
+            </div>
+        `,
+        formulaSteps: '',
+        interpretation: `
+            <p>Calculates sample size for a Superiority trial with a continuous outcome. The treatment group mean is expected to be greater than the control group mean by an amount exceeding the margin δ.</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Hypothesis & Errors:</strong><br>
+                <strong>Null Hypothesis:</strong> There is no significant difference between novel intervention and Placebo.<br>
+                <strong>Alternative Hypothesis:</strong> There is a significant difference between the novel intervention and placebo.<br>
+                <strong>Type-I Error:</strong> Erroneously concluding superiority of novel intervention when there is no superiority.<br>
+                <strong>Type-II Error:</strong> Not concluding a superiority when there is a superiority.
+            </div>
+        `,
+        calc: (state) => {
+            const m1 = parseFloat(state.mean1);
+            const m2 = parseFloat(state.mean2);
+            const sd = parseFloat(state.sd);
+            const delta = parseFloat(state.margin);
+            const r = parseFloat(state.ratio) || 1;
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const za = getZAlpha(conf, false); // 2-sided
+            const zb = getZBeta(power);
+
+            // Assuming higher mean is better for formula symmetry
+            const effectSize = (m2 - m1) - delta;
+
+            // To handle cases where lower mean is better, we look at absolute diff
+            const absDiff = Math.abs(m2 - m1);
+            const trueEffect = absDiff - delta;
+
+            if (trueEffect <= 0) {
+                return { n: 'Error', display: '|Mean2 - Mean1| must be > \u03B4 for Superiority.', visualData: null };
+            }
+
+            const num = Math.pow(za + zb, 2) * Math.pow(sd, 2) * (1 + 1 / r);
+            const den = Math.pow(trueEffect, 2);
+
+            let n1 = Math.ceil(num / den);
+            if (state.dropout) n1 = Math.ceil(n1 / 0.9);
+            let n2 = Math.ceil(n1 * r);
+
+            let displayStr = `M1=${m1} M2=${m2} SD=${sd} \u03B4=${delta}`;
+            if (state.dropout) displayStr += " (Incl. Dropout)";
+
+            return {
+                n: n1 + n2,
+                display: displayStr,
+                visualData: { n1: n1, n2: n2, label1: 'Control', label2: 'Treatment' }
+            };
+        }
+    },
+    'rct-noninf-binary': {
+        inputs: [
+            { id: 'p1', label: 'Prop. Group 1 (Control) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 80, desc: 'Anticipated success outcome in Control.' },
+            { id: 'p2', label: 'Prop. Group 2 (Treatment) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 80, desc: 'Anticipated success outcome in Treatment.' },
+            { id: 'margin', label: 'Non-Inferiority Margin (\u03B4) %', type: 'range', min: 0, max: 20, step: 0.1, val: 10, desc: 'Maximum acceptable inferior difference.' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: '' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Usually 1-sided for non-inferiority.' },
+            { id: 'ratio', label: 'Group Ratio (N2/N1)', type: 'number', val: 1, desc: '' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: '' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.8em; line-height:1.4">
+                N<sub>1</sub> = (Z<sub>1-α</sub>+Z<sub>β</sub>)<sup>2</sup> [P<sub>1</sub>(1-P<sub>1</sub>) + P<sub>2</sub>(1-P<sub>2</sub>)/r] / (&delta; - (P<sub>1</sub> - P<sub>2</sub>))<sup>2</sup><br>
+                N<sub>2</sub> = r * N<sub>1</sub>
+            </div>
+        `,
+        formulaSteps: '',
+        interpretation: `
+            <p>Calculates sample size for a Non-Inferiority trial with a binary outcome. The treatment (P2) is expected to be no worse than the control (P1) by the margin δ.</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Hypothesis & Errors:</strong><br>
+                <strong>Null Hypothesis:</strong> The novel intervention is not noninferior to reference intervention.<br>
+                <strong>Alternative Hypothesis:</strong> The new intervention is noninferior to reference intervention.<br>
+                <strong>Type-I Error:</strong> Erroneously concluding noninferiority of novel intervention when there is no noninferiority.<br>
+                <strong>Type-II Error:</strong> Not concluding noninferiority when there is noninferiority.
+            </div>
+        `,
+        calc: (state) => {
+            const P1 = parseFloat(state.p1) / 100;
+            const P2 = parseFloat(state.p2) / 100;
+            const delta = parseFloat(state.margin) / 100;
+            const r = parseFloat(state.ratio) || 1;
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const za = getZAlpha(conf, true); // 1-sided
+            const zb = getZBeta(power);
+
+            // True difference should be less than the margin.
+            // Assuming higher P is better (success rates). P1 - P2 is how much worse treatment is.
+            // It must be less than delta.
+            const effectSize = delta - (P1 - P2);
+            if (effectSize <= 0) {
+                return { n: 'Error', display: 'P1 - P2 must be < \u03B4 for Non-Inferiority to be possible.', visualData: null };
+            }
+
+            const num = Math.pow(za + zb, 2) * (P1 * (1 - P1) + (P2 * (1 - P2)) / r);
+            const den = Math.pow(effectSize, 2);
+
+            let n1 = Math.ceil(num / den);
+            if (state.dropout) n1 = Math.ceil(n1 / 0.9);
+            let n2 = Math.ceil(n1 * r);
+
+            let displayStr = `P1=${(P1 * 100).toFixed(1)}% P2=${(P2 * 100).toFixed(1)}% \u03B4=${(delta * 100).toFixed(1)}%`;
+            if (state.dropout) displayStr += " (Incl. Dropout)";
+
+            return {
+                n: n1 + n2,
+                display: displayStr,
+                visualData: { n1: n1, n2: n2, label1: 'Control', label2: 'Treatment' }
+            };
+        }
+    },
+    'rct-noninf-cont': {
+        inputs: [
+            { id: 'mean1', label: 'Mean Control', type: 'number', val: 100, desc: 'Expected mean of Control.' },
+            { id: 'mean2', label: 'Mean Treatment', type: 'number', val: 100, desc: 'Expected mean of Treatment.' },
+            { id: 'sd', label: 'Pooled SD (\u03C3)', type: 'number', val: 15, desc: 'Assumed equal standard deviation.' },
+            { id: 'margin', label: 'Non-Inferiority Margin (\u03B4)', type: 'number', val: 5, desc: 'Maximum acceptable inferior difference.' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: '' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Usually 1-sided for non-inferiority.' },
+            { id: 'ratio', label: 'Group Ratio (N2/N1)', type: 'number', val: 1, desc: '' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: '' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.8em; line-height:1.4">
+                N<sub>1</sub> = (Z<sub>1-α</sub>+Z<sub>β</sub>)<sup>2</sup> &sigma;<sup>2</sup>(1 + 1/r) / (&delta; - (&mu;<sub>1</sub> - &mu;<sub>2</sub>))<sup>2</sup><br>
+                N<sub>2</sub> = r * N<sub>1</sub>
+            </div>
+        `,
+        formulaSteps: '',
+        interpretation: `
+            <p>Calculates sample size for a Non-Inferiority trial with a continuous outcome.</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Hypothesis & Errors:</strong><br>
+                <strong>Null Hypothesis:</strong> The novel intervention is not noninferior to reference intervention.<br>
+                <strong>Alternative Hypothesis:</strong> The new intervention is noninferior to reference intervention.<br>
+                <strong>Type-I Error:</strong> Erroneously concluding noninferiority of novel intervention when there is no noninferiority.<br>
+                <strong>Type-II Error:</strong> Not concluding noninferiority when there is noninferiority.
+            </div>
+        `,
+        calc: (state) => {
+            const m1 = parseFloat(state.mean1);
+            const m2 = parseFloat(state.mean2);
+            const sd = parseFloat(state.sd);
+            const delta = parseFloat(state.margin);
+            const r = parseFloat(state.ratio) || 1;
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const za = getZAlpha(conf, true); // 1-sided
+            const zb = getZBeta(power);
+
+            // Note: formula assumes lower mean difference is worse if higher is better. 
+            // We use absolute difference for generality of the margin.
+            const effectSize = delta - (m1 - m2); // strictly this form if higher is better
+            // If lower is better, effectSize = delta - (m2 - m1). We assume simple |m1-m2|<delta.
+            const absDiff = Math.abs(m1 - m2);
+            const trueEffect = delta - absDiff;
+
+            // Strict mathematical limit is denominator > 0
+            if (trueEffect <= 0) {
+                return { n: 'Error', display: '|Mean1 - Mean2| must be < \u03B4.', visualData: null };
+            }
+
+            const num = Math.pow(za + zb, 2) * Math.pow(sd, 2) * (1 + 1 / r);
+            const den = Math.pow(trueEffect, 2);
+
+            let n1 = Math.ceil(num / den);
+            if (state.dropout) n1 = Math.ceil(n1 / 0.9);
+            let n2 = Math.ceil(n1 * r);
+
+            let displayStr = `M1=${m1} M2=${m2} SD=${sd} \u03B4=${delta}`;
+            if (state.dropout) displayStr += " (Incl. Dropout)";
+
+            return {
+                n: n1 + n2,
+                display: displayStr,
+                visualData: { n1: n1, n2: n2, label1: 'Control', label2: 'Treatment' }
+            };
+        }
+    },
+    'rct-equiv-binary': {
+        inputs: [
+            { id: 'p1', label: 'Prop. Group 1 (Control) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 50, desc: 'Anticipated outcome in Control.' },
+            { id: 'p2', label: 'Prop. Group 2 (Treatment) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 50, desc: 'Anticipated outcome in Treatment.' },
+            { id: 'margin', label: 'Equivalence Margin (\u03B4) %', type: 'range', min: 0, max: 20, step: 0.1, val: 10, desc: 'Acceptable margin of equivalence.' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: '' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Usually 2-sided for equivalence.' },
+            { id: 'ratio', label: 'Group Ratio (N2/N1)', type: 'number', val: 1, desc: '' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: '' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.8em; line-height:1.4">
+                N<sub>1</sub> = (Z<sub>α/2</sub>+Z<sub>β</sub>)<sup>2</sup> [P<sub>1</sub>(1-P<sub>1</sub>) + P<sub>2</sub>(1-P<sub>2</sub>)/r] / (&delta; - |P<sub>1</sub> - P<sub>2</sub>|)<sup>2</sup><br>
+                N<sub>2</sub> = r * N<sub>1</sub>
+            </div>
+        `,
+        formulaSteps: '',
+        interpretation: `
+            <p>Calculates sample size for an Equivalence trial with a binary outcome. The two proportions fall within the equivalence bounds [-δ, +δ].</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Hypothesis & Errors:</strong><br>
+                <strong>Null Hypothesis:</strong> The novel intervention is not equivalent to reference intervention.<br>
+                <strong>Alternative Hypothesis:</strong> The novel intervention is equivalent to reference intervention.<br>
+                <strong>Type-I Error:</strong> Erroneously concluding equivalence of interventions when there is no equivalence.<br>
+                <strong>Type-II Error:</strong> Not concluding equivalence when there is equivalence.
+            </div>
+        `,
+        calc: (state) => {
+            const P1 = parseFloat(state.p1) / 100;
+            const P2 = parseFloat(state.p2) / 100;
+            const delta = parseFloat(state.margin) / 100;
+            const r = parseFloat(state.ratio) || 1;
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const za = getZAlpha(conf, false); // 2-sided
+            const zb = getZBeta(power);
+
+            const effectSize = delta - Math.abs(P1 - P2);
+            if (effectSize <= 0) {
+                return { n: 'Error', display: '|P1 - P2| must be < \u03B4 for Equivalence.', visualData: null };
+            }
+
+            const num = Math.pow(za + zb, 2) * (P1 * (1 - P1) + (P2 * (1 - P2)) / r);
+            const den = Math.pow(effectSize, 2);
+
+            let n1 = Math.ceil(num / den);
+            if (state.dropout) n1 = Math.ceil(n1 / 0.9);
+            let n2 = Math.ceil(n1 * r);
+
+            let displayStr = `P1=${(P1 * 100).toFixed(1)}% P2=${(P2 * 100).toFixed(1)}% \u03B4=${(delta * 100).toFixed(1)}%`;
+            if (state.dropout) displayStr += " (Incl. Dropout)";
+
+            return {
+                n: n1 + n2,
+                display: displayStr,
+                visualData: { n1: n1, n2: n2, label1: 'Control', label2: 'Treatment' }
+            };
+        }
+    },
+    'rct-equiv-cont': {
+        inputs: [
+            { id: 'mean1', label: 'Mean Control', type: 'number', val: 100, desc: 'Expected mean of Control.' },
+            { id: 'mean2', label: 'Mean Treatment', type: 'number', val: 100, desc: 'Expected mean of Treatment.' },
+            { id: 'sd', label: 'Pooled SD (\u03C3)', type: 'number', val: 15, desc: 'Assumed equal standard deviation.' },
+            { id: 'margin', label: 'Equivalence Margin (\u03B4)', type: 'number', val: 5, desc: 'Acceptable margin of equivalence.' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: '' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Usually 2-sided for equivalence.' },
+            { id: 'ratio', label: 'Group Ratio (N2/N1)', type: 'number', val: 1, desc: '' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: '' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.8em; line-height:1.4">
+                N<sub>1</sub> = (Z<sub>α/2</sub>+Z<sub>β</sub>)<sup>2</sup> &sigma;<sup>2</sup>(1 + 1/r) / (&delta; - |&mu;<sub>1</sub> - &mu;<sub>2</sub>|)<sup>2</sup><br>
+                N<sub>2</sub> = r * N<sub>1</sub>
+            </div>
+        `,
+        formulaSteps: '',
+        interpretation: `
+            <p>Calculates sample size for an Equivalence trial with a continuous outcome.</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Hypothesis & Errors:</strong><br>
+                <strong>Null Hypothesis:</strong> The novel intervention is not equivalent to reference intervention.<br>
+                <strong>Alternative Hypothesis:</strong> The novel intervention is equivalent to reference intervention.<br>
+                <strong>Type-I Error:</strong> Erroneously concluding equivalence of interventions when there is no equivalence.<br>
+                <strong>Type-II Error:</strong> Not concluding equivalence when there is equivalence.
+            </div>
+        `,
+        calc: (state) => {
+            const m1 = parseFloat(state.mean1);
+            const m2 = parseFloat(state.mean2);
+            const sd = parseFloat(state.sd);
+            const delta = parseFloat(state.margin);
+            const r = parseFloat(state.ratio) || 1;
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const za = getZAlpha(conf, false); // 2-sided
+            const zb = getZBeta(power);
+
+            const absDiff = Math.abs(m1 - m2);
+            const trueEffect = delta - absDiff;
+
+            if (trueEffect <= 0) {
+                return { n: 'Error', display: '|Mean1 - Mean2| must be < \u03B4.', visualData: null };
+            }
+
+            const num = Math.pow(za + zb, 2) * Math.pow(sd, 2) * (1 + 1 / r);
+            const den = Math.pow(trueEffect, 2);
+
+            let n1 = Math.ceil(num / den);
+            if (state.dropout) n1 = Math.ceil(n1 / 0.9);
+            let n2 = Math.ceil(n1 * r);
+
+            let displayStr = `M1=${m1} M2=${m2} SD=${sd} \u03B4=${delta}`;
+            if (state.dropout) displayStr += " (Incl. Dropout)";
+
+            return {
+                n: n1 + n2,
+                display: displayStr,
+                visualData: { n1: n1, n2: n2, label1: 'Control', label2: 'Treatment' }
             };
         }
     }
