@@ -1,4 +1,4 @@
-const CACHE_NAME = 'episense-v4';
+const CACHE_NAME = 'episense-v5';
 const ASSETS = [
     './',
     'index.html',
@@ -20,7 +20,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('Opened cache v4');
+            console.log('Opened cache v5');
             return cache.addAll(ASSETS);
         })
     );
