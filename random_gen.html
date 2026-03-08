@@ -2320,17 +2320,73 @@
                 window._selectedPSUs = selectedClusters; // For visual highlighting
             } else if (type === 'multistage') {
                 // Math moved to runMultistageTier
-            } else {
-                // Non probability visual approximations
-                for (let i = 0; i < n; i++) selectedIndices.push(i); // e.g., convenience takes first 'n'
-                if (type === 'snowball') {
-                    selectedIndices = [];
-                    while (selectedIndices.length < n) {
-                        let base = Math.floor(Math.random() * N);
-                        if (!selectedIndices.includes(base)) selectedIndices.push(base);
-                        if (selectedIndices.length < n && base + 1 < N && !selectedIndices.includes(base + 1)) selectedIndices.push(base + 1);
+            } else if (type === 'convenience') {
+                // Proximity based: Select the first 'n' units (closest to the researcher/clinic)
+                for (let i = 0; i < n; i++) {
+                    selectedIndices.push(i);
+                    window._idToStratumMap[i] = "Convenience (Proximity)";
+                }
+            } else if (type === 'purposive') {
+                // Expert/Hand-picked: Select units that we designate as 'Expert/Typical'
+                let experts = [];
+                for (let i = 0; i < N; i++) {
+                    if (Math.random() < 0.15) experts.push(i); // 15% are 'experts'
+                }
+                // If not enough experts, fill the rest randomly
+                while (experts.length < n) {
+                    let r = Math.floor(Math.random() * N);
+                    if (!experts.includes(r)) experts.push(r);
+                }
+                // Pick the first 'n' from our expert-favored list
+                selectedIndices = experts.slice(0, n);
+                selectedIndices.forEach(idx => {
+                    window._idToStratumMap[idx] = "Purposive (Expert/Typical)";
+                });
+            } else if (type === 'quota') {
+                // Filling buckets: 50/50 split (e.g., Male/Female)
+                const half = Math.floor(n / 2);
+                const popHalf = Math.floor(N / 2);
+                // Group 1 (Indices 0 to popHalf-1)
+                let g1 = [];
+                while (g1.length < half) {
+                    let r = Math.floor(Math.random() * popHalf);
+                    if (!g1.includes(r)) g1.push(r);
+                }
+                // Group 2 (Indices popHalf to N-1)
+                let g2 = [];
+                while (g2.length < (n - half)) {
+                    let r = popHalf + Math.floor(Math.random() * (N - popHalf));
+                    if (!g2.includes(r)) g2.push(r);
+                }
+                selectedIndices = [...g1, ...g2];
+                g1.forEach(idx => window._idToStratumMap[idx] = "Quota: Group A");
+                g2.forEach(idx => window._idToStratumMap[idx] = "Quota: Group B");
+            } else if (type === 'snowball') {
+                // Chain referral: Start with 1-2 seeds, then pick neighbors
+                let seeds = [Math.floor(Math.random() * N)];
+                selectedIndices = [...seeds];
+                window._idToStratumMap[seeds[0]] = "Snowball (Seed)";
+
+                while (selectedIndices.length < n) {
+                    let last = selectedIndices[selectedIndices.length - 1];
+                    // Pick a "friend" (neighboring index)
+                    let offset = Math.random() < 0.5 ? 1 : -1;
+                    let next = (last + offset + N) % N;
+                    if (!selectedIndices.includes(next)) {
+                        selectedIndices.push(next);
+                        window._idToStratumMap[next] = "Snowball (Referral)";
+                    } else {
+                        // If blocked, jump to a new random seed
+                        let newSeed = Math.floor(Math.random() * N);
+                        if (!selectedIndices.includes(newSeed)) {
+                            selectedIndices.push(newSeed);
+                            window._idToStratumMap[newSeed] = "Snowball (New Seed)";
+                        }
                     }
                 }
+            } else {
+                // Fallback for any other non-probability
+                for (let i = 0; i < n; i++) selectedIndices.push(i);
             }
 
             // Create Visual Bricks
@@ -2447,6 +2503,29 @@
                     } else if (type === 'systematic') {
                         // Alternate subtle colors for systematic intervals
                         brickBg = (groupIdx % 2 === 0) ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.05)';
+                    }
+                } else {
+                    // Non-probability specific visual aids
+                    if (type === 'convenience') {
+                        if (i === 0) {
+                            brickEmoji = '🏥'; // Clinic/Researcher location
+                            brickBg = 'rgba(96, 165, 250, 0.1)';
+                        }
+                    } else if (type === 'purposive') {
+                        // Mark some as 'experts' visually
+                        if (Math.random() < 0.15) {
+                            brickEmoji = '🎓';
+                            brickBg = 'rgba(16, 185, 129, 0.05)';
+                        }
+                    } else if (type === 'quota') {
+                        const popHalf = Math.floor(visualN / 2);
+                        if (i < popHalf) {
+                            brickEmoji = '👨';
+                            brickBg = 'rgba(59, 130, 246, 0.05)';
+                        } else {
+                            brickEmoji = '👩';
+                            brickBg = 'rgba(244, 114, 182, 0.05)';
+                        }
                     }
                 }
 

@@ -12,8 +12,11 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
             --step-active: var(--primary-blue);
@@ -41,16 +44,71 @@
             background: #1a1a1a;
         }
 
-        .choropleth-active .outbreak-control {
+        /* Mode-based Visibility Logic - Using body classes for robustness */
+        body.choropleth-active .clustering-control,
+        body.custom-map-active .clustering-control,
+        body.choropleth-active .outbreak-control,
+        body.custom-map-active .outbreak-control {
             display: none !important;
         }
 
-        .choropleth-control {
+        body.choropleth-active .custom-map-setup {
+            display: none !important;
+        }
+
+        body.choropleth-active .choropleth-control {
+            display: block !important;
+        }
+
+        body.custom-map-active .custom-map-control {
+            display: block !important;
+        }
+
+        /* Default hidden states for mode-specific controls */
+        .choropleth-control,
+        .custom-map-control {
             display: none;
         }
 
-        .choropleth-active .choropleth-control {
-            display: block;
+        /* Algorithm Insights Horizontal Layout */
+        @media (min-width: 1024px) {
+            .gis-instruction-grid {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 1.5rem !important;
+                width: 100%;
+            }
+
+            .gis-instruction-grid>div {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .gis-instruction-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .custom-map-tooltip {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            padding: 2px 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        .custom-map-tooltip.leaflet-tooltip-bottom:before {
+            border-bottom-color: rgba(0, 0, 0, 0.7);
         }
 
         .map-overlay-info {
@@ -290,6 +348,12 @@
             color: white;
             margin-bottom: 0.5rem;
             outline: none;
+            cursor: pointer;
+        }
+
+        .gis-select option {
+            background: #2a2a2a !important;
+            color: white !important;
         }
 
         /* Mapping Modal */
@@ -391,10 +455,26 @@
                 </svg>
                 <span>Choropleth Mapping</span>
             </button>
+            <button id="btn-custom" class="mode-btn" onclick="setGISMode('custom')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15.4 14.7H20L17.7 18l2.3 3.3h-4.6l-2.3-3.3-2.3 3.3H6.2"></path>
+                    <path d="M12 7.7V2m0 5.7L8.7 4.4M12 7.7l3.3-3.3"></path>
+                    <circle cx="12" cy="12" r="9"></circle>
+                </svg>
+                <span>Map As You Like</span>
+            </button>
         </div>
 
         <div id="gis-main-container" class="gis-grid">
             <div class="sidebar">
+
+                <!-- Global Controls -->
+                <div class="control-card">
+                    <h3>Focus Region</h3>
+                    <select id="state-selector" class="gis-select" onchange="focusState(this.value)">
+                        <option value="">Zoom to Entire India</option>
+                    </select>
+                </div>
 
                 <!-- Data Entry (Outbreak Mode) -->
                 <div class="control-card outbreak-control">
@@ -441,10 +521,7 @@
                         Manual Data Entry
                     </button>
 
-                    <h3>Focus Region</h3>
-                    <select id="state-selector" class="gis-select" onchange="focusState(this.value)">
-                        <option value="">Zoom to Entire India</option>
-                    </select>
+
 
                     <div id="data-table-container">
                         <table class="mini-table" id="case-table">
@@ -495,17 +572,19 @@
                     </div>
                 </div>
 
+
+
                 <!-- Choropleth Controls -->
                 <div class="control-card choropleth-control">
                     <h3>Choropleth Designer</h3>
                     <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.2rem;">
-                        Visualize state-wise health parameters across India.
+                        Analyze healthcare disparities and population metrics through geographic scaling.
                     </p>
 
                     <div style="margin-bottom: 1.5rem;">
                         <label style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Map Title</label>
                         <input type="text" id="choro-title" class="gis-select"
-                            placeholder="e.g., Dengue Prevalence 2024" oninput="updateMapOverlays()"
+                            placeholder="e.g., Prevalence of Zoonotic Diseases" oninput="updateMapOverlays()"
                             style="background: rgba(255,255,255,0.05); color: white;">
 
                         <label
@@ -519,17 +598,27 @@
                         <label style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Color Scheme</label>
                         <select id="choro-theme" class="gis-select" onchange="applyChoroplethData()">
                             <option value="Oranges">Warm Oranges</option>
-                            <option value="Blues">Cool Blues</option>
+                            <option value="Blues">Deep Blues</option>
                             <option value="Greens">Forest Greens</option>
-                            <option value="Viridis">Viridis (High Contrast)</option>
-                            <option value="Spectral">Spectral (Multi-color)</option>
+                            <option value="Viridis">High Contrast (Viridis)</option>
+                            <option value="Spectral">Diverging (Spectral)</option>
                         </select>
                     </div>
 
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                        <input type="file" id="choro-upload" hidden accept=".csv,.xlsx">
-                        <button class="btn-gis" onclick="document.getElementById('choro-upload').click()"
-                            style="background: var(--primary-pink); flex: 1; margin-bottom: 0;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Map
+                            Granularity</label>
+                        <select id="choro-granularity" class="gis-select" onchange="changeGranularity()">
+                            <option value="state">State Level</option>
+                            <option value="district">District Level</option>
+                            <option value="subdistrict">Sub-District Level</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.2rem;">
+                        <input type="file" id="choro-upload" hidden accept=".csv,.xlsx,.xls">
+                        <button class="btn-gis" style="flex: 2;"
+                            onclick="document.getElementById('choro-upload').click()">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -540,15 +629,28 @@
                         </button>
                     </div>
 
-                    <button class="btn-gis secondary" onclick="downloadChoroplethTemplate()"
-                        style="font-size: 0.8rem; border-style: dashed; border-color: var(--primary-blue); margin-bottom: 1rem;">
-                        Download Data Template
-                    </button>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <button class="btn-gis secondary" onclick="downloadChoroplethTemplate()"
+                            style="font-size: 0.8rem; border-style: dashed; border-color: var(--primary-blue);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download Data Template
+                        </button>
 
-                    <button class="btn-gis" onclick="generateChoroplethDemo()"
-                        style="background: rgba(255,255,255,0.05); font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);">
-                        ✨ Show Demo Map
-                    </button>
+                        <button class="btn-gis secondary" onclick="generateChoroplethDemo()"
+                            style="font-size: 0.8rem; border-color: var(--primary-pink); color: var(--primary-pink);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Show Demo Map
+                        </button>
+                    </div>
                 </div>
 
                 <div class="control-card outbreak-control">
@@ -558,55 +660,224 @@
                     </div>
                 </div>
 
-                <button class="btn-gis secondary" onclick="resetData()"
-                    style="margin-bottom: 1rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    </svg>
-                    Reset Map & Data
-                </button>
+                <!-- Custom Map Controls -->
+                <div class="control-card custom-map-control choropleth-control">
+                    <h3>Add Spatial Markers</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.2rem;">
+                        Build custom maps with personalized markers overlayed on base layers.
+                    </p>
 
-                <button class="btn-gis secondary" onclick="downloadCurrentDataCSV()"
-                    style="margin-bottom: 0.5rem; border-color: #10b981; color: #10b981;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Download Current Data (CSV)
-                </button>
+                    <div class="custom-map-setup" style="margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Map Title</label>
+                        <input type="text" id="custom-title" class="gis-select" placeholder="e.g., My Custom Health Map"
+                            oninput="updateCustomOverlays()" style="background: rgba(255,255,255,0.05); color: white;">
 
-            </div>
+                        <label
+                            style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem; margin-top: 0.8rem;">Sub-title</label>
+                        <input type="text" id="custom-subtitle" class="gis-select"
+                            placeholder="e.g., Identifying key rural clinics" oninput="updateCustomOverlays()"
+                            style="background: rgba(255,255,255,0.05); color: white;">
+                    </div>
 
-            <div id="map-container" style="position: relative; display: flex; flex-direction: column; gap: 1.5rem;">
-                <!-- Overlays -->
-                <div id="choro-overlay" class="map-overlay-info" style="display: none;">
-                    <h2 id="choro-main-title" class="map-main-title"></h2>
-                    <p id="choro-sub-title" class="map-sub-title"></p>
+                    <div class="custom-map-setup" style="margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Base Map
+                            Granularity</label>
+                        <select id="custom-granularity" class="gis-select" onchange="changeCustomGranularity()">
+                            <option value="national">National (India)</option>
+                            <option value="state">State Boundaries</option>
+                            <option value="district">District Boundaries</option>
+                            <option value="subdistrict">Sub-District Boundaries</option>
+                        </select>
+
+                        <label
+                            style="font-size: 0.85rem; display: block; margin-top: 0.8rem; margin-bottom: 0.5rem;">Base
+                            Map Theme</label>
+                        <select id="custom-theme" class="gis-select" onchange="renderCustomBaseMap()">
+                            <option value="dark">Dark Theme</option>
+                            <option value="blue">Ocean Blue</option>
+                            <option value="light">Light Theme</option>
+                            <option value="minimal">Minimal Outline</option>
+                        </select>
+                    </div>
+
+                    <div class="custom-map-setup"
+                        style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                        <label
+                            style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem; color: var(--primary-blue);">Highlight
+                            Specific State</label>
+                        <select id="custom-state-select" class="gis-select"
+                            style="margin-bottom: 0.5rem; background: rgba(255,255,255,0.05);">
+                            <option value="">Select a State</option>
+                        </select>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <input type="color" id="custom-state-color" value="#ff69b4"
+                                style="flex:1; height: 40px; border: none; border-radius: 8px; cursor: pointer; background: transparent;">
+                            <button class="btn-gis" onclick="applyCustomStateColor()"
+                                style="flex: 3; margin-bottom: 0; background: var(--primary-pink);">Apply Custom
+                                Color</button>
+                        </div>
+                        <button class="btn-gis secondary" onclick="resetCustomStateColors()"
+                            style="margin-bottom: 0; font-size: 0.8rem;">Reset State Colors</button>
+                    </div>
+
+                    <h4 style="color: var(--primary-pink); margin-bottom: 0.5rem;">Add Location</h4>
+                    <div
+                        style="display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px;">
+                        <div>
+                            <label style="font-size: 0.8rem;">Location Name / Label <span
+                                    style="color:red">*</span></label>
+                            <input type="text" id="custom-loc-name" class="gis-select" placeholder="e.g. City Hospital">
+                        </div>
+
+                        <button class="btn-gis" onclick="captureCustomLocation()"
+                            style="background: #10b981; font-size: 0.8rem; padding: 0.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Get Device Location
+                        </button>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div>
+                                <label style="font-size: 0.8rem;">Latitude <span style="color:red">*</span></label>
+                                <input type="number" id="custom-loc-lat" class="gis-select" step="any">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.8rem;">Longitude <span style="color:red">*</span></label>
+                                <input type="number" id="custom-loc-lng" class="gis-select" step="any">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.8rem;">Icon Style</label>
+                            <select id="custom-loc-icon" class="gis-select">
+                                <option value="📍">📍 Default Pin</option>
+                                <option value="🔴">🔴 Red Circle</option>
+                                <option value="🔵">🔵 Blue Circle</option>
+                                <option value="⭐">⭐ Star</option>
+                                <option value="🏥">🏥 Hospital / Clinic</option>
+                                <option value="🏢">🏢 Government Office</option>
+                                <option value="🏫">🏫 Educational Institute</option>
+                                <option value="🏠">🏠 Home / Residence</option>
+                                <option value="🚨">🚨 Emergency / Alert</option>
+                                <option value="💧">💧 Water Source</option>
+                                <option value="🌲">🌲 Park / Nature</option>
+                            </select>
+                        </div>
+
+                        <button class="btn-gis" onclick="addCustomLocation()"
+                            style="margin-top: 0.5rem; margin-bottom: 0;">
+                            + Add to Map
+                        </button>
+                    </div>
+
+                    <div id="custom-locations-list" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">
+                        <p style="text-align: center; color: var(--text-dim); margin: 1rem 0;">No custom locations added
+                            yet.</p>
+                    </div>
+
+                    <button class="btn-gis secondary" onclick="clearCustomLocations()"
+                        style="margin-top: 1rem; margin-bottom: 0; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                        Clear All Locations
+                    </button>
                 </div>
-                <div id="map"></div>
-                <div id="map-loader"
-                    style="display:none; position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; color: white;">
-                    Loading India Geometry...
+
+                <div class="custom-map-control">
+                    <h4 style="color: var(--primary-pink); margin-bottom: 0.5rem;">Bulk Options</h4>
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="file" id="custom-csv-upload" hidden accept=".csv"
+                            onchange="handleCustomCSVUpload(event)">
+                        <button class="btn-gis secondary" onclick="document.getElementById('custom-csv-upload').click()"
+                            style="flex: 1;">
+                            Bulk Upload CSV
+                        </button>
+                    </div>
+
+                    <button class="btn-gis secondary" onclick="downloadCustomCSVTemplate()"
+                        style="margin-bottom: 0.5rem; font-size: 0.8rem; border-style: dashed; border-color: var(--primary-blue);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download CSV Template
+                    </button>
+
+                    <button class="btn-gis secondary" onclick="downloadCustomCSV()"
+                        style="margin-bottom: 0.5rem; border-color: #10b981; color: #10b981;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Custom Points (CSV)
+                    </button>
+
+                    <button class="btn-gis secondary outbreak-control" onclick="resetData()"
+                        style="margin-bottom: 1rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                        Reset Map & Data
+                    </button>
+
+                    <button class="btn-gis secondary" onclick="downloadCurrentDataCSV()"
+                        style="margin-bottom: 0.5rem; border-color: #10b981; color: #10b981;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Current Data (CSV)
+                    </button>
+
+                </div>
+            </div> <!-- End of left sidebar -->
+
+            <div class="main-map-area" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div id="map-container" style="position: relative; display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Overlays -->
+                    <div id="choro-overlay" class="map-overlay-info" style="display: none;">
+                        <h2 id="choro-main-title" class="map-main-title"></h2>
+                        <p id="choro-sub-title" class="map-sub-title"></p>
+                    </div>
+                    <div id="map"></div>
+                    <button class="btn-gis" onclick="downloadMapPNG()"
+                        style="background: var(--primary-blue); margin: 0 auto; width: fit-content; padding: 1rem 2rem; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" style="margin-right: 8px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Map (PNG)
+                    </button>
+                    <div id="map-loader"
+                        style="display:none; position: absolute; top:300px; left:50%; transform:translate(-50%, -50%); z-index:1000; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 12px; color: white;">
+                        Loading India Geometry...
+                    </div>
                 </div>
 
-                <button class="btn-gis" onclick="downloadMapPNG()"
-                    style="background: var(--primary-blue); margin: 0 auto; width: fit-content; padding: 1rem 2rem; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        style="margin-right: 8px;">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Download Map (PNG)
-                </button>
-            </div>
+            </div> <!-- End of main-map-area -->
         </div>
 
-        <!-- Educational Section (Consolidated below Map) -->
-        <div class="control-card" style="padding: 1.5rem; border-color: rgba(96, 165, 250, 0.3); width: 100%;">
+        <!-- Educational Section (Consolidated inside Module Container for Visibility Control) -->
+        <div class="control-card clustering-control"
+            style="padding: 1.5rem; border-color: rgba(96, 165, 250, 0.3); width: 100%; margin-top: 2rem;">
             <h3
                 style="color: var(--primary-blue); margin-bottom: 0.8rem; font-size: 1.2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -614,42 +885,77 @@
                 </svg>
                 Algorithm Insights & Spatial Logic
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem;">
-                <div style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
-                    <p style="margin-bottom: 1rem;">
-                        This module utilizes a <strong>Proximity-Linked Aggregation</strong> (DBSCAN logic) to
-                        identify high-density geographic clusters.
-                    </p>
-                    <div
-                        style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                        <ul style="list-style: none; padding: 0;">
-                            <li style="margin-bottom: 0.8rem;">📍 <strong>Spatial Join:</strong> Pairs points
-                                within threshold distance.</li>
-                            <li style="margin-bottom: 0.8rem;">📏 <strong>Threshold:</strong> Clusters only form
-                                if points overlap in chosen radius.</li>
-                            <li>🔥 <strong>Hotspot:</strong> Confirmed when density reaches the threshold (min.
-                                3 points).</li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="gis-instruction-grid">
+                <!-- Tile 1: Core Logic -->
                 <div
-                    style="padding: 1.2rem; background: rgba(244, 114, 182, 0.05); border-left: 4px solid var(--primary-pink); border-radius: 10px;">
-                    <span
-                        style="font-size: 0.9rem; font-weight: 700; color: var(--primary-pink); display: block; margin-bottom: 0.5rem;">EPIDEMIOLOGICAL
-                        VALUE:</span>
-                    <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
-                        Spatial clustering is vital for identifying <strong>Shared Exposure Points</strong>. By
-                        pinpointing where incidents occur in close temporal and spatial proximity, public health
-                        teams can deploy targeted interventions, such as vector control or sanitation
-                        improvements, effectively breaking the chain of transmission.
+                    style="background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
+                    <h4 style="color: var(--primary-blue); margin-bottom: 1rem; font-size: 1.1rem;">Core Clustering
+                        Logic</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 1rem;">
+                        Utilizes <strong>Proximity-Linked Aggregation</strong> (DBSCAN logic) to identify
+                        high-density clusters.
                     </p>
-                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; font-style: italic;">
-                        Note: Adjust the <strong>Distance Threshold</strong> to vary analysis between
-                        street-level (e.g. 100m) and city-wide (e.g. 5km) trends.
+                    <ul style="list-style: none; padding: 0; font-size: 0.85rem; color: var(--text-dim);">
+                        <li style="margin-bottom: 0.8rem;">📍 <strong>Spatial Join:</strong> Pairs points within
+                            threshold.</li>
+                        <li style="margin-bottom: 0.8rem;">📏 <strong>Threshold:</strong> Clusters only form if
+                            points overlap.</li>
+                        <li>🔥 <strong>Hotspot:</strong> Confirmed when density reaches min. 3 points.</li>
+                    </ul>
+                </div>
+
+                <!-- Tile 2: Technical Execution -->
+                <div
+                    style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.2rem; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column;">
+                    <h4 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.1rem;">Technical
+                        Execution</h4>
+                    <ol style="font-size: 0.85rem; color: var(--text-dim); padding-left: 1.2rem; line-height: 1.6;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Distance Matrix:</strong> Haversine formula
+                            calculation.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Neighbor Search:</strong> K-D Tree style radius
+                            search.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Density Check:</strong> Core point
+                            identification.</li>
+                        <li><strong>Expansion:</strong> Recursive cluster growth.</li>
+                    </ol>
+                </div>
+
+                <!-- Tile 3: Epidemiological Value -->
+                <div
+                    style="padding: 1.2rem; background: rgba(244, 114, 182, 0.05); border-left: 4px solid var(--primary-pink); border-radius: 10px; display: flex; flex-direction: column;">
+                    <span
+                        style="font-size: 0.9rem; font-weight: 700; color: var(--primary-pink); display: block; margin-bottom: 1rem;">EPIDEMIOLOGICAL
+                        VALUE</span>
+                    <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
+                        Spatial clustering identifies <strong>Shared Exposure Points</strong>. By pinpointing
+                        hotspots, health teams can deploy targeted interventions effectively.
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 1rem; font-style: italic;">
+                        Adjust <strong>Distance Threshold</strong> for street vs. city-wide trends.
                     </p>
                 </div>
             </div>
+
         </div>
+    </div>
+
+    <!-- Specific Choropleth Help (Hidden in other modes) -->
+    <div class="choropleth-control"
+        style="padding: 1.5rem; border-left: 4px solid var(--primary-pink); background: rgba(244, 114, 182, 0.05); border-radius: 12px; margin-top: 1.5rem;">
+        <h4 style="color: var(--primary-pink); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            Choropleth Mapping Guide
+        </h4>
+        <p style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;">
+            Upload an Excel/CSV file with a <strong>'Region'</strong> column (State/District/Sub-District name)
+            and a <strong>'Value'</strong> column. The map will automatically scale colors based on your data
+            range.
+        </p>
+    </div>
     </div>
     </div>
 
@@ -729,14 +1035,16 @@
                 </div>
 
                 <div class="map-field">
-                    <label>Exposure Type <span style="color:red">*</span></label>
-                    <select id="manual-type" class="gis-select">
-                        <option value="Dog">Dog</option>
-                        <option value="Cat">Cat</option>
-                        <option value="Monkey">Monkey</option>
-                        <option value="Fox">Fox</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <label>Exposure Type / Event <span style="color:red">*</span></label>
+                    <input type="text" id="manual-type" class="gis-select" list="exposure-types"
+                        placeholder="e.g. Dog, Custom Event"
+                        style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.8rem;">
+                    <datalist id="exposure-types">
+                        <option value="Dog">
+                        <option value="Cat">
+                        <option value="Monkey">
+                        <option value="Fox">
+                    </datalist>
                 </div>
                 <div class="map-field">
                     <label>State Name</label>
@@ -776,6 +1084,7 @@
         let markers = [];
         let clusterLayers = [];
         let rawCSVResults = null;
+
         const stateCentroids = {
             "WEST BENGAL": [22.9868, 87.8550],
             "MAHARASHTRA": [19.7515, 75.7139],
@@ -833,12 +1142,26 @@
 
                 // Populate State Selector
                 const selector = document.getElementById('state-selector');
+                const customSelector = document.getElementById('custom-state-select');
+
+                // Clear existing options except default
+                selector.innerHTML = '<option value="">Zoom to Entire India</option>';
+                if (customSelector) customSelector.innerHTML = '<option value="">Select a State</option>';
+
                 const sortedStates = Object.keys(stateLayers).sort();
                 sortedStates.forEach(s => {
+                    if (!s) return;
                     const opt = document.createElement('option');
                     opt.value = s;
                     opt.innerText = s;
                     selector.appendChild(opt);
+
+                    if (customSelector) {
+                        const optCustom = document.createElement('option');
+                        optCustom.value = s;
+                        optCustom.innerText = s;
+                        customSelector.appendChild(optCustom);
+                    }
                 });
 
                 document.getElementById('map-loader').style.display = 'none';
@@ -985,6 +1308,10 @@
             markers = [];
             clusterLayers.forEach(l => map.removeLayer(l));
             clusterLayers = [];
+            if (choroLayer) map.removeLayer(choroLayer);
+            if (choroLegend) map.removeControl(choroLegend);
+            if (customMapLayer) map.removeLayer(customMapLayer);
+            clearCustomMarkersOnMap();
             document.getElementById('clustering-stats').style.display = 'none';
         }
 
@@ -1268,71 +1595,421 @@
             map.flyTo([lat, lng], 10);
         }
 
-        // --- Choropleth Module Logic ---
+        // --- Global Mode Logic ---
         let isChoroplethMode = false;
-        let choroplethData = null; // Map of { STATE_NAME: value }
+        let isCustomMode = false;
+        let customPoints = [];
+        let customMapLayer = null;
+        let customMarkers = [];
+
+        let choroplethData = null;
         let choroLayer = null;
         let choroLegend = null;
 
         function setGISMode(mode) {
             const container = document.getElementById('gis-main-container');
+            const moduleContainer = document.querySelector('.module-container');
             const btnClustering = document.getElementById('btn-clustering');
             const btnChoropleth = document.getElementById('btn-choropleth');
+            const btnCustom = document.getElementById('btn-custom');
             const overlay = document.getElementById('choro-overlay');
 
             // Reset UI
             btnClustering.classList.remove('active');
             btnChoropleth.classList.remove('active');
+            btnCustom.classList.remove('active');
+
+            // Toggle classes on moduleContainer and body to control educational section visibility
+            document.body.classList.remove('choropleth-active');
+            document.body.classList.remove('custom-map-active');
+            moduleContainer.classList.remove('choropleth-active');
+            moduleContainer.classList.remove('custom-map-active');
+            overlay.style.display = 'none';
+
+            isChoroplethMode = false;
+            isCustomMode = false;
 
             if (mode === 'choropleth') {
                 isChoroplethMode = true;
                 btnChoropleth.classList.add('active');
-                container.classList.add('choropleth-active');
+                document.body.classList.add('choropleth-active');
+                moduleContainer.classList.add('choropleth-active');
                 overlay.style.display = 'block';
                 clearMap();
+                if (customMapLayer) map.removeLayer(customMapLayer);
+                clearCustomMarkersOnMap();
                 if (!choroplethData) generateChoroplethDemo();
-            } else {
-                isChoroplethMode = false;
-                btnClustering.classList.add('active');
-                container.classList.remove('choropleth-active');
-                overlay.style.display = 'none';
+                // Persist markers in choropleth mode
+                renderCustomMarkers();
+
+            } else if (mode === 'custom') {
+                isCustomMode = true;
+                btnCustom.classList.add('active');
+                document.body.classList.add('custom-map-active');
+                moduleContainer.classList.add('custom-map-active');
+                overlay.style.display = 'block';
+                clearMap();
                 if (choroLayer) map.removeLayer(choroLayer);
                 if (choroLegend) map.removeControl(choroLegend);
+                updateCustomOverlays();
+                renderCustomBaseMap();
+                renderCustomMarkers();
+
+            } else {
+                btnClustering.classList.add('active');
+                // Clustering is the default mode, so we don't need a specific active class for visibility
+                // unless we want to hide it in other modes (which we do via .choropleth-active and .custom-map-active)
+                if (choroLayer) map.removeLayer(choroLayer);
+                if (choroLegend) map.removeControl(choroLegend);
+                if (customMapLayer) map.removeLayer(customMapLayer);
+                clearCustomMarkersOnMap();
                 renderCases();
             }
         }
 
+
+
+        // --- Custom Map Module Logic ---
+        function updateCustomOverlays() {
+            document.getElementById('choro-main-title').innerText = document.getElementById('custom-title').value || "Custom Map";
+            document.getElementById('choro-sub-title').innerText = document.getElementById('custom-subtitle').value || "";
+        }
+
+        async function changeCustomGranularity() {
+            const gran = document.getElementById('custom-granularity').value;
+            const loader = document.getElementById('map-loader');
+
+            if (gran === 'district' && !window.INDIA_DISTRICTS_GEOJSON) {
+                loader.innerHTML = "Loading District Geography...";
+                loader.style.display = "block";
+                await loadScript('INDIA/india_districts_data.js');
+                cachedGeoJSONs['district'] = window.INDIA_DISTRICTS_GEOJSON;
+            } else if (gran === 'subdistrict' && !window.INDIAN_SUB_DISTRICTS_GEOJSON) {
+                loader.innerHTML = "Loading Sub-District Geography...";
+                loader.style.display = "block";
+                await loadScript('INDIA/indian_sub_districts_data.js');
+                cachedGeoJSONs['subdistrict'] = window.INDIAN_SUB_DISTRICTS_GEOJSON;
+            }
+            loader.style.display = "none";
+            renderCustomBaseMap();
+        }
+
+        function renderCustomBaseMap() {
+            if (customMapLayer) map.removeLayer(customMapLayer);
+            const gran = document.getElementById('custom-granularity').value;
+            const theme = document.getElementById('custom-theme').value;
+
+            let geoData = null;
+            if (gran === 'state' || gran === 'national') geoData = INDIA_GEOJSON;
+            if (gran === 'district') geoData = window.INDIA_DISTRICTS_GEOJSON;
+            if (gran === 'subdistrict') geoData = window.INDIAN_SUB_DISTRICTS_GEOJSON;
+
+            if (!geoData) return;
+
+            // Generate theme styles
+            let bColor = "#404040";
+            let fColor = "#1a1a1a";
+            let fOpac = 0.2;
+
+            if (theme === 'blue') {
+                bColor = "#38bdf8"; fColor = "#0f172a"; fOpac = 0.6;
+            } else if (theme === 'light') {
+                bColor = "#9ca3af"; fColor = "#f3f4f6"; fOpac = 0.8;
+            } else if (theme === 'minimal') {
+                bColor = "#222222"; fColor = "transparent"; fOpac = 0;
+            }
+
+            let customStateColors = window.customStateColors || {};
+
+            customMapLayer = L.geoJSON(geoData, {
+                style: (feature) => {
+                    let fillCol = fColor;
+                    let fillOp = fOpac;
+
+                    // State Highlighting Logic (Persistent across all granularities)
+                    let propName = feature.properties.STNAME || feature.properties.stname || feature.properties.STNAME_SH;
+                    if (propName && customStateColors[propName]) {
+                        fillCol = customStateColors[propName];
+                        fillOp = 0.85; // Extra opaque for highlighted states
+                    }
+
+                    return {
+                        color: bColor,
+                        weight: gran === 'state' || gran === 'national' ? 1.5 : (gran === 'district' ? 0.8 : 0.4),
+                        fillColor: fillCol,
+                        fillOpacity: fillOp
+                    };
+                }
+            }).addTo(map);
+
+            if (gran === 'national') {
+                map.setView([22.5937, 80.9629], 5);
+            }
+        }
+
+        function addCustomLocation() {
+            const name = document.getElementById('custom-loc-name').value.trim();
+            const lat = parseFloat(document.getElementById('custom-loc-lat').value);
+            const lng = parseFloat(document.getElementById('custom-loc-lng').value);
+            const icon = document.getElementById('custom-loc-icon').value;
+
+            if (!name) return alert("Please enter a location name.");
+            if (isNaN(lat) || isNaN(lng)) return alert("Please enter valid latitude and longitude.");
+
+            customPoints.push({
+                id: Date.now(),
+                name,
+                lat,
+                lng,
+                icon
+            });
+
+            // clear form
+            document.getElementById('custom-loc-name').value = '';
+            document.getElementById('custom-loc-lat').value = '';
+            document.getElementById('custom-loc-lng').value = '';
+
+            renderCustomMarkers();
+            updateCustomLocationList();
+            map.flyTo([lat, lng], 8);
+        }
+
+        // Custom State Coloring Logic
+        window.customStateColors = {};
+
+        function applyCustomStateColor() {
+            const st = document.getElementById('custom-state-select').value;
+            const col = document.getElementById('custom-state-color').value;
+            if (!st) {
+                alert("Please select a state to highlight.");
+                return;
+            }
+            window.customStateColors[st] = col;
+            renderCustomBaseMap();
+        }
+
+        function resetCustomStateColors() {
+            window.customStateColors = {};
+            renderCustomBaseMap();
+        }
+
+        function captureCustomLocation() {
+            if ("geolocation" in navigator) {
+                const btn = event.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "Locating...";
+                btn.disabled = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('custom-loc-lat').value = position.coords.latitude.toFixed(6);
+                        document.getElementById('custom-loc-lng').value = position.coords.longitude.toFixed(6);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    },
+                    (error) => {
+                        alert("Geolocation failed: " + error.message);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        }
+
+        function renderCustomMarkers() {
+            clearCustomMarkersOnMap();
+            customPoints.forEach(pt => {
+                const isEmoji = pt.icon.length <= 2; // Rough check for emoji vs css shape
+
+                let html = pt.icon;
+                if (pt.icon === '🔴') html = '<div style="background: red; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white;"></div>';
+                if (pt.icon === '🔵') html = '<div style="background: #3b82f6; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white;"></div>';
+
+                const markerIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="font-size: 1.5rem; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));">${html}</div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 24],
+                    popupAnchor: [0, -24]
+                });
+
+                const m = L.marker([pt.lat, pt.lng], { icon: markerIcon })
+                    .bindTooltip(pt.name, {
+                        permanent: true,
+                        direction: 'bottom',
+                        className: 'custom-map-tooltip',
+                        offset: [0, 5]
+                    })
+                    .bindPopup(`<strong>${pt.name}</strong>`)
+                    .addTo(map);
+                customMarkers.push(m);
+            });
+        }
+
+        function clearCustomMarkersOnMap() {
+            customMarkers.forEach(m => map.removeLayer(m));
+            customMarkers = [];
+        }
+
+        function clearCustomLocations() {
+            customPoints = [];
+            renderCustomMarkers();
+            updateCustomLocationList();
+        }
+
+        function removeCustomLocation(id) {
+            customPoints = customPoints.filter(p => p.id !== id);
+            renderCustomMarkers();
+            updateCustomLocationList();
+        }
+
+        function updateCustomLocationList() {
+            const listDiv = document.getElementById('custom-locations-list');
+            if (customPoints.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; color: var(--text-dim); margin: 1rem 0;">No custom locations added yet.</p>';
+                return;
+            }
+
+            listDiv.innerHTML = customPoints.map(pt => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.2rem;">${pt.icon}</span>
+                        <div>
+                            <strong>${pt.name}</strong><br>
+                            <span style="color: var(--text-dim); font-size: 0.75rem;">${pt.lat.toFixed(4)}, ${pt.lng.toFixed(4)}</span>
+                        </div>
+                    </div>
+                    <button onclick="removeCustomLocation(${pt.id})" style="background: none; border: none; color: #ef4444; cursor: pointer;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function downloadCustomCSVTemplate() {
+            const csvContent = "Name,Latitude,Longitude,Icon\nCity Hospital,28.6139,77.2090,🏥\nState Assembly,22.5726,88.3639,🏢\nLocal Park,19.0760,72.8777,🌲";
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Custom_Map_Template.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleCustomCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    if (results.errors.length) {
+                        alert("Error parsing CSV. Check console.");
+                        console.error(results.errors);
+                        return;
+                    }
+
+                    results.data.forEach(row => {
+                        const name = row['Name'] || row['name'] || "Unknown Location";
+                        const lat = parseFloat(row['Latitude'] || row['latitude'] || row['Lat'] || row['lat']);
+                        const lng = parseFloat(row['Longitude'] || row['longitude'] || row['Lng'] || row['lng'] || row['Long'] || row['long']);
+                        const icon = row['Icon'] || row['icon'] || "📍";
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            customPoints.push({
+                                id: Date.now() + Math.random(),
+                                name,
+                                lat,
+                                lng,
+                                icon
+                            });
+                        }
+                    });
+
+                    renderCustomMarkers();
+                    updateCustomLocationList();
+
+                    if (customPoints.length > 0) {
+                        // Fit bounds to show all markers
+                        const lats = customPoints.map(p => p.lat);
+                        const lngs = customPoints.map(p => p.lng);
+                        const bounds = L.latLngBounds(L.latLng(Math.max(...lats), Math.max(...lngs)), L.latLng(Math.min(...lats), Math.min(...lngs)));
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                    }
+
+                    // Reset upload input
+                    event.target.value = '';
+                }
+            });
+        }
+        function downloadCustomCSV() {
+            if (customPoints.length === 0) return alert("No custom locations to download.");
+            let csvContent = "Name,Latitude,Longitude,Icon\n";
+            customPoints.forEach(p => {
+                csvContent += `"${p.name}",${p.lat},${p.lng},"${p.icon}"\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Custom_Map_Locations.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+
+
         function updateMapOverlays() {
-            document.getElementById('choro-main-title').innerText = document.getElementById('choro-title').value;
-            document.getElementById('choro-sub-title').innerText = document.getElementById('choro-subtitle').value;
+            const titleEl = document.getElementById('choro-title');
+            const subTitleEl = document.getElementById('choro-subtitle');
+            if (titleEl) document.getElementById('choro-main-title').innerText = titleEl.value;
+            if (subTitleEl) document.getElementById('choro-sub-title').innerText = subTitleEl.value;
         }
 
         // File Parsing (Excel/CSV)
-        document.getElementById('choro-upload').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        const choroUpload = document.getElementById('choro-upload');
+        if (choroUpload) {
+            choroUpload.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet);
-                processChoroJSON(json);
-            };
-            reader.readAsArrayBuffer(file);
-        });
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    processChoroJSON(json);
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
 
         function processChoroJSON(json) {
-            // Expect columns: "State" and "Value" (or similar)
+            // Expect columns: "Region" (or State/District) and "Value" (or similar)
             choroplethData = {};
             json.forEach(row => {
-                const state = (row.State || row.state || row.STATE || '').toUpperCase().trim();
+                const region = (row.Region || row.State || row.state || row.STATE || row.District || row.SubDistrict || '').toString().toUpperCase().trim();
                 const val = parseFloat(row.Value || row.value || row.VALUE || 0);
-                if (state) choroplethData[state] = val;
+                if (region) choroplethData[region] = val;
             });
             applyChoroplethData();
+        }
+
+        function getRegionNameFromFeature(feature) {
+            if (currentGranularity === 'district') return feature.properties.dtname;
+            if (currentGranularity === 'subdistrict') return feature.properties.sdtname;
+            return feature.properties.STNAME || feature.properties.STNAME_SH;
         }
 
         function applyChoroplethData() {
@@ -1340,28 +2017,44 @@
             if (choroLayer) map.removeLayer(choroLayer);
             if (choroLegend) map.removeControl(choroLegend);
 
-            const values = Object.values(choroplethData);
+            let values = Object.values(choroplethData);
+            if (values.length === 0) values = [0]; // fallback
+
             const min = Math.min(...values);
             const max = Math.max(...values);
-            const theme = document.getElementById('choro-theme').value;
+            const themeEl = document.getElementById('choro-theme');
+            const theme = themeEl ? themeEl.value : 'Oranges';
 
             function style(feature) {
-                const stateName = (feature.properties.STNAME || feature.properties.STNAME_SH).toUpperCase();
-                const val = choroplethData[stateName] || 0;
+                const rName = getRegionNameFromFeature(feature) || "Unknown region";
+                const val = choroplethData[rName.toUpperCase()] || 0;
                 return {
                     fillColor: getChoroColor(val, min, max, theme),
-                    weight: 1.5,
+                    weight: currentGranularity === 'state' ? 1.5 : (currentGranularity === 'district' ? 0.8 : 0.4),
                     opacity: 1,
                     color: 'rgba(255,255,255,0.2)',
                     fillOpacity: 0.8
                 };
             }
 
-            choroLayer = L.geoJSON(INDIA_GEOJSON, {
+            let geoJSONData = INDIA_GEOJSON;
+            if (currentGranularity === 'district' && window.INDIA_DISTRICTS_GEOJSON) {
+                geoJSONData = window.INDIA_DISTRICTS_GEOJSON;
+            } else if (currentGranularity === 'subdistrict' && window.INDIAN_SUB_DISTRICTS_GEOJSON) {
+                geoJSONData = window.INDIAN_SUB_DISTRICTS_GEOJSON;
+            }
+
+            choroLayer = L.geoJSON(geoJSONData, {
                 style: style,
                 onEachFeature: (feature, layer) => {
-                    const name = feature.properties.STNAME || feature.properties.STNAME_SH;
+                    const name = getRegionNameFromFeature(feature) || "Unknown Region";
                     const val = choroplethData[name.toUpperCase()] || 0;
+
+                    let popupContent = `<strong>${name}</strong><br>Value: ${val.toLocaleString()}`;
+                    if (currentGranularity === 'district') popupContent = `<strong>${name}</strong><br>State: ${feature.properties.stname}<br>Value: ${val.toLocaleString()}`;
+                    if (currentGranularity === 'subdistrict') popupContent = `<strong>${name}</strong><br>District: ${feature.properties.dtname}<br>State: ${feature.properties.stname}<br>Value: ${val.toLocaleString()}`;
+
+                    layer.bindPopup(popupContent);
                     layer.bindTooltip(`<strong>${name}</strong><br>Value: ${val.toLocaleString()}`, { sticky: true });
 
                     layer.on({
@@ -1370,7 +2063,11 @@
                             l.setStyle({ weight: 3, color: '#fff', fillOpacity: 0.9 });
                             l.bringToFront();
                         },
-                        mouseout: (e) => { choroLayer.resetStyle(e.target); }
+                        mouseout: (e) => { choroLayer.resetStyle(e.target); },
+                        click: (e) => {
+                            // Automatically open popup and zoom in a little bit
+                            map.setView(e.latlng, map.getZoom() < 7 ? 7 : map.getZoom());
+                        }
                     });
                 }
             }).addTo(map);
@@ -1400,6 +2097,12 @@
 
             choroLegend.onAdd = function (map) {
                 const div = L.DomUtil.create('div', 'choropleth-legend');
+
+                // Handle edge case where all values are the same (e.g. 0)
+                if (min === max || isNaN(min) || isNaN(max)) {
+                    max = min + 5; // create an arbitrary range just for display
+                }
+
                 const range = max - min;
                 const grades = [];
                 for (let i = 0; i <= 5; i++) grades.push(min + (range * i / 5));
@@ -1416,44 +2119,126 @@
             choroLegend.addTo(map);
         }
 
+        // Granularity Support 
+        let currentGranularity = 'state'; // 'state', 'district', 'subdistrict'
+        let cachedGeoJSONs = {
+            'state': null // Populated initially in loadIndiaBoundaries (actually, we use INDIA_GEOJSON natively)
+        };
+
+        async function changeGranularity() {
+            const granEl = document.getElementById('choro-granularity');
+            const gran = granEl ? granEl.value : 'state';
+            if (currentGranularity === gran) return;
+
+            currentGranularity = gran;
+            const loader = document.getElementById('map-loader');
+
+            // Need to load script dynamically if not loaded
+            if (gran === 'district' && !window.INDIA_DISTRICTS_GEOJSON) {
+                loader.innerHTML = "Loading District Geography (Large File)...";
+                loader.style.display = "block";
+                await loadScript('INDIA/india_districts_data.js');
+                cachedGeoJSONs['district'] = window.INDIA_DISTRICTS_GEOJSON;
+            } else if (gran === 'subdistrict' && !window.INDIAN_SUB_DISTRICTS_GEOJSON) {
+                loader.innerHTML = "Loading Sub-District Geography (Large File)...";
+                loader.style.display = "block";
+                await loadScript('INDIA/indian_sub_districts_data.js');
+                cachedGeoJSONs['subdistrict'] = window.INDIAN_SUB_DISTRICTS_GEOJSON;
+            }
+
+            loader.style.display = "none";
+
+            // Auto-generate fresh demo data when switching granularities
+            generateChoroplethDemo();
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
         function generateChoroplethDemo() {
-            document.getElementById('choro-title').value = "Sample Health Index: Public Health Infrastructure";
-            document.getElementById('choro-subtitle').value = "Composite Score (0-100) by State";
+            const titleEl = document.getElementById('choro-title');
+            const subTitleEl = document.getElementById('choro-subtitle');
+            if (titleEl) titleEl.value = "Sample Health Index: Public Health Infrastructure";
+
+            let granTitle = "State";
+            if (currentGranularity === 'district') granTitle = "District";
+            if (currentGranularity === 'subdistrict') granTitle = "Sub-District";
+
+            if (subTitleEl) subTitleEl.value = `Composite Score (0-100) by ${granTitle}`;
             updateMapOverlays();
 
-            const demoStates = [
-                "ANDHRA PRADESH", "ARUNACHAL PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT",
-                "HARYANA", "HIMACHAL PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA PRADESH",
-                "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB",
-                "RAJASTHAN", "SIKKIM", "TAMIL NADU", "TELANGANA", "TRIPURA", "UTTAR PRADESH",
-                "UTTARAKHAND", "WEST BENGAL", "DELHI", "JAMMU & KASHMIR", "LADAKH"
-            ];
-
             choroplethData = {};
-            demoStates.forEach(s => {
-                choroplethData[s] = Math.floor(Math.random() * 60) + 40;
-            });
+
+            if (currentGranularity === 'state') {
+                const demoStates = [
+                    "ANDHRA PRADESH", "ARUNACHAL PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT",
+                    "HARYANA", "HIMACHAL PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA PRADESH",
+                    "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB",
+                    "RAJASTHAN", "SIKKIM", "TAMIL NADU", "TELANGANA", "TRIPURA", "UTTAR PRADESH",
+                    "UTTARAKHAND", "WEST BENGAL", "DELHI", "JAMMU & KASHMIR", "LADAKH"
+                ];
+                demoStates.forEach(s => {
+                    choroplethData[s] = Math.floor(Math.random() * 60) + 40;
+                });
+            } else if (currentGranularity === 'district' && window.INDIA_DISTRICTS_GEOJSON) {
+                window.INDIA_DISTRICTS_GEOJSON.features.forEach(f => {
+                    const name = f.properties.dtname;
+                    if (name) choroplethData[name.toUpperCase()] = Math.floor(Math.random() * 60) + 40;
+                });
+            } else if (currentGranularity === 'subdistrict' && window.INDIAN_SUB_DISTRICTS_GEOJSON) {
+                window.INDIAN_SUB_DISTRICTS_GEOJSON.features.forEach(f => {
+                    const name = f.properties.sdtname;
+                    if (name) choroplethData[name.toUpperCase()] = Math.floor(Math.random() * 60) + 40;
+                });
+            }
+
             applyChoroplethData();
         }
 
         function downloadChoroplethTemplate() {
-            const states = [
-                "ANDHRA PRADESH", "ARUNACHAL PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT",
-                "HARYANA", "HIMACHAL PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA PRADESH",
-                "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB",
-                "RAJASTHAN", "SIKKIM", "TAMIL NADU", "TELANGANA", "TRIPURA", "UTTAR PRADESH",
-                "UTTARAKHAND", "WEST BENGAL", "ANDAMAN & NICOBAR", "CHANDIGARH", "DADRA & NAGAR HAVELI AND DAMAN & DIU",
-                "DELHI", "JAMMU & KASHMIR", "LADAKH", "LAKSHADWEEP", "PUDUCHERRY"
-            ];
+            let csvContent = "";
+            let filename = "EpiSense_Choropleth_Template.csv";
 
-            let csvContent = "State,Value\n";
-            states.forEach(s => csvContent += `${s},0\n`);
+            if (currentGranularity === 'state') {
+                const states = [
+                    "ANDHRA PRADESH", "ARUNACHAL PRADESH", "ASSAM", "BIHAR", "CHHATTISGARH", "GOA", "GUJARAT",
+                    "HARYANA", "HIMACHAL PRADESH", "JHARKHAND", "KARNATAKA", "KERALA", "MADHYA PRADESH",
+                    "MAHARASHTRA", "MANIPUR", "MEGHALAYA", "MIZORAM", "NAGALAND", "ODISHA", "PUNJAB",
+                    "RAJASTHAN", "SIKKIM", "TAMIL NADU", "TELANGANA", "TRIPURA", "UTTAR PRADESH",
+                    "UTTARAKHAND", "WEST BENGAL", "ANDAMAN & NICOBAR", "CHANDIGARH", "DADRA & NAGAR HAVELI AND DAMAN & DIU",
+                    "DELHI", "JAMMU & KASHMIR", "LADAKH", "LAKSHADWEEP", "PUDUCHERRY"
+                ];
+                csvContent = "Region,Value\n";
+                states.forEach(s => csvContent += `${s},0\n`);
+            } else if (currentGranularity === 'district' && window.INDIA_DISTRICTS_GEOJSON) {
+                csvContent = "Region,Value\n";
+                window.INDIA_DISTRICTS_GEOJSON.features.forEach(f => {
+                    if (f.properties.dtname) csvContent += `${f.properties.dtname},0\n`;
+                });
+                filename = "EpiSense_Choropleth_District_Template.csv";
+            } else if (currentGranularity === 'subdistrict' && window.INDIAN_SUB_DISTRICTS_GEOJSON) {
+                csvContent = "Region,Value\n";
+                window.INDIAN_SUB_DISTRICTS_GEOJSON.features.forEach(f => {
+                    if (f.properties.sdtname) csvContent += `${f.properties.sdtname},0\n`;
+                });
+                filename = "EpiSense_Choropleth_SubDistrict_Template.csv";
+            } else {
+                alert("Please switch to the desired granularity and wait for map to load before downloading template.");
+                return;
+            }
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            link.setAttribute("download", "EpiSense_Choropleth_Template.csv");
+            link.setAttribute("download", filename);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
