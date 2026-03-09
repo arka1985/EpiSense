@@ -1,4 +1,4 @@
-const CACHE_NAME = 'episense-v5';
+const CACHE_NAME = 'episense-v6';
 const ASSETS = [
     './',
     'index.html',
@@ -20,7 +20,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('Opened cache v5');
+            console.log('Opened cache v6');
             return cache.addAll(ASSETS);
         })
     );
@@ -44,10 +44,28 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+
+    // For navigation requests (HTML pages), use a Network First strategy
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                return caches.match(event.request);
+            })
+        );
+        return;
+    }
+
+    // For other assets, use Stale-While-Revalidate
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            // Cache hit - return response, otherwise fetch from network
-            return response || fetch(event.request);
+        caches.match(event.request).then((cachedResponse) => {
+            const fetchPromise = fetch(event.request).then((networkResponse) => {
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, networkResponse.clone());
+                });
+                return networkResponse;
+            });
+            return cachedResponse || fetchPromise;
         })
     );
 });
