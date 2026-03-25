@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualitative Research - EpiSense</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="icon" href="logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+    <style>
+        .module-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        .viz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .theory-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.2rem;
+            border-radius: 12px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .theory-box strong {
+            color: #60a5fa;
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 1.1rem;
+        }
+
+        .input-area {
+            width: 100%;
+            min-height: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-white);
+            font-family: inherit;
+            font-size: 1.1rem;
+            resize: vertical;
+            margin-bottom: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .input-area:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+        }
+
+        .output-canvas {
+            width: 100%;
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: #f8fafc;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            box-sizing: border-box;
+            cursor: text;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-white);
+            padding: 0.6rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #60a5fa, #f472b6);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::selection {
+            background: rgba(96, 165, 250, 0.4);
+            color: inherit;
+        }
+        
+        .coded-segment::selection {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 2fr 1.3fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="icon-primary" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem;">
+            <h1 style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Qualitative Research & Analysis
+            </h1>
+            <p class="subtitle" style="margin: 0; max-width: 800px;">Understand the basics of qualitative methodology and use our interactive tool to code field notes and interview transcripts.</p>
+        </header>
+
+        <!-- Theory Section -->
+        <div class="viz-card">
+            <h3 style="color: var(--text-white); margin-bottom: 0.5rem; font-size: 1.4rem;">What is Qualitative Research?</h3>
+            <p style="color: var(--text-dim); line-height: 1.6; margin-bottom: 2rem;">
+                Qualitative research is a fundamental scientific methodology emphasizing the collection and analysis of non-numerical data—such as text, video, or audio—to understand concepts, opinions, or human experiences. Rather than focusing on "how many", qualitative research seeks to answer the "how" and "why" behind phenomena. It relies heavily on textual coding and thematic induction.
+            </p>
+
+            <h3 style="color: var(--text-white); margin-bottom: 1rem; font-size: 1.2rem;">Core Qualitative Methodologies</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="theory-box"><strong>Phenomenology</strong> Explores and describes the "lived experience" of individuals regarding a specific phenomenon.</div>
+                <div class="theory-box"><strong>Grounded Theory</strong> Aims to inductively develop a unifying theory directly derived from the collected data.</div>
+                <div class="theory-box"><strong>Ethnography</strong> Involves immersing the researcher within the participants' natural social environment to observe culture.</div>
+                <div class="theory-box"><strong>Case Study</strong> An in-depth, multifaceted exploration of a specific entity, community, or bounded system in its real-life context.</div>
+                <div class="theory-box"><strong>Narrative Research</strong> Analyzes the personal stories people tell to understand how they construct meaning in their lives.</div>
+            </div>
+        </div>
+
+        <!-- Tool: Step 1 (Input) -->
+        <div class="viz-card" id="input-step">
+            <h3 style="color: var(--text-white); margin-bottom: 1rem; font-size: 1.3rem;">Step 1: Data Input</h3>
+            <p style="color: var(--text-dim); margin-bottom: 1rem;">Paste your raw data below (e.g. an interview transcript or observation field notes).</p>
+            <textarea id="raw-text" class="input-area" placeholder="Enter your qualitative transcript here...">Group Discussion Transcript (Qualitative Research Sample)
+
+Moderator: Thank you all for joining. Today we will discuss your experiences working in high-temperature environments. Please feel free to share openly.
+
+Participant 1: During summer, especially in the afternoon, the heat becomes very difficult to manage. I often feel exhausted and dehydrated.
+
+Participant 2: Yes, I agree. Around peak hours, I sometimes feel dizzy, and it affects my concentration while working.
+
+Participant 3: For me, the biggest issue is the lack of proper cooling areas. We don’t always get enough breaks to recover from the heat.
+
+Moderator: That’s important. How do you usually cope with these conditions?
+
+Participant 1: I try to drink water frequently, but sometimes it's not enough.
+
+Participant 2: We also try to take short breaks in shaded areas, but those are limited.
+
+Participant 3: I think better scheduling, like avoiding heavy work during peak heat hours, would really help.
+
+Moderator: That’s a useful suggestion. Do you feel your workplace provides enough support to manage heat stress?
+
+Participant 1: Not really. There is awareness, but not enough practical measures.
+
+Participant 2: Yes, more structured guidelines and monitoring would help.
+
+Participant 3: Training and awareness programs could also improve how workers handle heat stress.
+
+Moderator: Thank you all for your valuable insights. This will help us understand workplace challenges better.
+
+[Note: This is an example placeholder. You can clear this text and paste your own transcript.]</textarea>
+            <button onclick="startCoding()" class="tab-btn active">Begin Coding Analysis</button>
+        </div>
+
+        <!-- Tool: Step 2 & 3 (Workspace) -->
+        <div id="workspace-step" style="display: none;" class="workspace-grid">
+            <div class="viz-card" style="position: relative;" id="coding-area-container">
+                <h3 style="color: var(--text-white); margin-bottom: 0.5rem; font-size: 1.3rem;">Step 2: Interactive Coding</h3>
+                <p style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.95rem;">Highlight any portion of the text using your mouse. A popup will appear allowing you to assign a 'Code' (a thematic tag) to the selection.</p>
+                <div id="transcript-display" class="output-canvas"></div>
+                
+                <!-- Floating Tooltip -->
+                <div id="code-tooltip" style="display: none; position: absolute; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 25px rgba(0,0,0,0.8); z-index: 10; min-width: 250px;">
+                    <div style="margin-bottom: 0.8rem; color: white; font-weight: 600;">Assign Code</div>
+                    
+                    <div id="quick-select-codes" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <!-- Dynamically populated buttons -->
+                    </div>
+
+                    <input type="text" id="new-code-name" placeholder="E.g. Financial Stress..." style="padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); outline: none; margin-bottom: 1rem; width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); color: white;">
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button onclick="closeTooltip()" class="tab-btn" style="padding: 0.5rem 1rem;">Cancel</button>
+                        <button onclick="applyCode()" class="tab-btn active" style="padding: 0.5rem 1rem;">Tag Snippet</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- Word Cloud Section -->
+                <div class="viz-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap:wrap; gap:10px;">
+                        <h3 style="color: var(--text-white); margin: 0; font-size: 1.3rem;">Transcript Word Cloud</h3>
+                        <button onclick="downloadWordCloud()" class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-color: rgba(96, 165, 250, 0.5); color: #60a5fa; display:flex; align-items:center; gap:0.4rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Save PNG
+                        </button>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1rem;">
+                        <canvas id="wordCloudCanvas" width="400" height="250" style="width: 100%; height: 250px; cursor: default;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Themes Sidebar -->
+                <div class="viz-card">
+                    <h3 style="color: var(--text-white); margin-bottom: 1rem; font-size: 1.3rem;">Extracted Themes</h3>
+                    <div id="themes-list" style="max-height: 250px; overflow-y: auto; padding-right: 0.5rem;">
+                        <p style="color: var(--text-dim); font-size: 0.9rem; font-style: italic;">No codes added yet. Select text to begin.</p>
+                    </div>
+                </div>
+                
+                <!-- Chart Section -->
+                <div class="viz-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap:wrap; gap:10px;">
+                        <h3 style="color: var(--text-white); margin: 0; font-size: 1.3rem;">Code Frequency</h3>
+                        <button onclick="downloadChart()" class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-color: rgba(244, 114, 182, 0.5); color: #f472b6; display:flex; align-items:center; gap:0.4rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Save PNG
+                        </button>
+                    </div>
+                    <canvas id="frequencyChart"></canvas>
+                </div>
+                
+                <button onclick="downloadAnalysis()" class="tab-btn active" style="width: 100%; display: flex; justify-content: center; gap: 0.5rem; align-items: center; padding: 1rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Export Themes to Word
+                </button>
+            </div>
+        </div>
+
+        <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+            <div class="footer-content">
+                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+                <div class="disclaimer">For educational and research methodology training purposes only.</div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const rawText = document.getElementById('raw-text');
+        const displayArea = document.getElementById('transcript-display');
+        const tooltip = document.getElementById('code-tooltip');
+        const codeInput = document.getElementById('new-code-name');
+
+        const codedSegments = [];
+        const codeColors = {};
+        const colors = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e'];
+        let chartInst = null;
+        let currentRange = null;
+
+        const stopWords = new Set(["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "so", "very", "can", "will", "just", "should", "now"]);
+
+        function startCoding() {
+            const text = rawText.value.trim();
+            if (!text) {
+                alert("Please paste some transcript data first.");
+                return;
+            }
+            displayArea.textContent = text;
+            document.getElementById('input-step').style.display = 'none';
+            document.getElementById('workspace-step').style.display = 'grid'; 
+            
+            // Draw Word Cloud based on transcript
+            renderWordCloud(text);
+        }
+
+        function renderWordCloud(text) {
+            const words = text.toLowerCase().match(/[a-z]+/g) || [];
+            const counts = {};
+            words.forEach(w => {
+                if (!stopWords.has(w) && w.length > 2) {
+                    counts[w] = (counts[w] || 0) + 1;
+                }
+            });
+
+            const list = Object.keys(counts).map(w => [w, counts[w]]);
+            list.sort((a,b) => b[1] - a[1]);
+            const topWords = list.slice(0, 50);
+
+            if (topWords.length === 0) return;
+
+            const maxFreq = topWords[0][1];
+
+            WordCloud(document.getElementById('wordCloudCanvas'), {
+                list: topWords,
+                fontFamily: 'Outfit, sans-serif',
+                weightFactor: function (size) {
+                    return Math.max(14, (size / maxFreq) * 60); // Scale sizes nicely
+                },
+                color: function() {
+                    return colors[Math.floor(Math.random() * colors.length)];
+                },
+                backgroundColor: 'transparent',
+                rotateRatio: 0.4,
+                rotationSteps: 2,
+                shape: 'circle'
+            });
+        }
+
+        // Handle text selection
+        displayArea.addEventListener('mouseup', function(e) {
+            const selection = window.getSelection();
+            if (!selection.isCollapsed && selection.toString().trim().length > 0) {
+                
+                // Ignore if clicking inside tooltip
+                if (tooltip.contains(selection.anchorNode)) return;
+
+                if (displayArea.contains(selection.anchorNode)) {
+                    currentRange = selection.getRangeAt(0);
+                    const rect = currentRange.getBoundingClientRect();
+                    const containerRect = document.getElementById('coding-area-container').getBoundingClientRect();
+                    
+                    tooltip.style.display = 'block';
+                    
+                    // Populate quick selects
+                    updateQuickSelect();
+
+                    // Position tooltip responsively
+                    let leftPos = rect.left - containerRect.left + (rect.width / 2) - 125;
+                    if (leftPos < 10) leftPos = 10;
+                    
+                    tooltip.style.left = leftPos + 'px';
+                    tooltip.style.top = (rect.bottom - containerRect.top + 10) + 'px';
+                    
+                    codeInput.value = '';
+                    codeInput.focus();
+                }
+            }
+        });
+
+        document.addEventListener('mousedown', function(e) {
+            // Hide tooltip if clicked outside entirely
+            if (tooltip.style.display === 'block' && !tooltip.contains(e.target) && !displayArea.contains(e.target)) {
+                closeTooltip();
+            }
+        });
+
+        function updateQuickSelect() {
+            const qs = document.getElementById('quick-select-codes');
+            qs.innerHTML = '';
+            const existing = Object.keys(codeColors);
+            
+            if (existing.length > 0) {
+                const title = document.createElement('div');
+                title.style.width = '100%';
+                title.style.color = '#94a3b8';
+                title.style.fontSize = '0.8rem';
+                title.style.marginBottom = '4px';
+                title.textContent = 'Existing Theme Quick Select:';
+                qs.appendChild(title);
+
+                existing.forEach(code => {
+                    const btn = document.createElement('button');
+                    btn.textContent = code;
+                    btn.style.background = codeColors[code];
+                    btn.style.color = 'white';
+                    btn.style.border = 'none';
+                    btn.style.borderRadius = '4px';
+                    btn.style.padding = '0.3rem 0.6rem';
+                    btn.style.cursor = 'pointer';
+                    btn.style.fontSize = '0.85rem';
+                    btn.style.fontWeight = '600';
+                    btn.onclick = (event) => {
+                        event.preventDefault(); // prevent form issues
+                        codeInput.value = code;
+                        applyCode();
+                    };
+                    qs.appendChild(btn);
+                });
+            }
+        }
+
+        function closeTooltip() {
+            tooltip.style.display = 'none';
+            window.getSelection().removeAllRanges();
+            currentRange = null;
+        }
+
+        function getColorForCode(name) {
+            const normalized = name;
+            if (!codeColors[normalized]) {
+                codeColors[normalized] = colors[Object.keys(codeColors).length % colors.length];
+            }
+            return codeColors[normalized];
+        }
+
+        function applyCode() {
+            const codeName = codeInput.value.trim();
+            if (!codeName || !currentRange) return;
+
+            const selectedText = currentRange.toString();
+            
+            if(!selectedText.trim()) {
+                closeTooltip();
+                return;
+            }
+
+            try {
+                const span = document.createElement('span');
+                span.className = 'coded-segment';
+                span.style.backgroundColor = getColorForCode(codeName);
+                span.style.color = '#fff';
+                span.style.borderRadius = '3px';
+                span.style.padding = '0 2px';
+                span.title = `Code: ${codeName}`;
+                
+                const content = currentRange.extractContents();
+                span.appendChild(content);
+                currentRange.insertNode(span);
+                
+                codedSegments.push({ code: codeName, text: selectedText.trim() });
+                
+                updateThemeList();
+                updateChart();
+            } catch (e) {
+                alert("Please select text cleanly within a single block without overlapping existing codes.");
+            }
+            
+            closeTooltip();
+        }
+
+        function updateThemeList() {
+            const list = document.getElementById('themes-list');
+            if (codedSegments.length === 0) return;
+            list.innerHTML = '';
+            
+            const grouped = {};
+            codedSegments.forEach(seg => {
+                const n = seg.code;
+                if(!grouped[n]) grouped[n] = [];
+                grouped[n].push(seg.text);
+            });
+            
+            for (let code in grouped) {
+                const color = getColorForCode(code);
+                let html = `<div style="margin-bottom: 1.5rem;">
+                    <div style="background: ${color}; color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95rem; margin-bottom: 0.8rem;">${code} <span style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 20px; font-size: 0.8rem; margin-left: 5px;">${grouped[code].length}</span></div>`;
+                
+                grouped[code].forEach(text => {
+                    html += `<div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-left: 3px solid ${color}; margin-bottom: 0.5rem; font-size: 0.95rem; color: #cbd5e1; border-radius: 0 6px 6px 0; line-height: 1.5;">"${text}"</div>`;
+                });
+                
+                html += `</div>`;
+                list.innerHTML += html;
+            }
+        }
+
+        function updateChart() {
+            const counts = {};
+            codedSegments.forEach(s => counts[s.code] = (counts[s.code] || 0) + 1);
+            
+            const labels = Object.keys(counts);
+            labels.sort((a,b) => counts[b] - counts[a]);
+            
+            const data = labels.map(l => counts[l]);
+            const bgColors = labels.map(l => getColorForCode(l));
+            
+            const ctx = document.getElementById('frequencyChart').getContext('2d');
+            
+            // Set canvas background to dark solid immediately for exportability
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.restore();
+
+            if (chartInst) {
+                chartInst.data.labels = labels;
+                chartInst.data.datasets[0].data = data;
+                chartInst.data.datasets[0].backgroundColor = bgColors;
+                chartInst.update();
+            } else {
+                
+                // We add a custom plugin to draw background color for exports
+                const customGlobalBg = {
+                    id: 'customGlobalBg',
+                    beforeDraw: (chart) => {
+                        const ctx = chart.canvas.getContext('2d');
+                        ctx.save();
+                        ctx.globalCompositeOperation = 'destination-over';
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(0, 0, chart.width, chart.height);
+                        ctx.restore();
+                    }
+                };
+
+                chartInst = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Snippets Coded',
+                            data: data,
+                            backgroundColor: bgColors,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                        }
+                    },
+                    plugins: [customGlobalBg]
+                });
+            }
+        }
+
+        // --- Export Functions --- //
+
+        function downloadAnalysis() {
+            if (codedSegments.length === 0) {
+                alert("Please code some text before exporting.");
+                return;
+            }
+            let html = `<h1 style="font-family: Arial, sans-serif; color: #333;">Qualitative Thematic Analysis Report</h1><hr/>`;
+            const grouped = {};
+            codedSegments.forEach(seg => {
+                if(!grouped[seg.code]) grouped[seg.code] = [];
+                grouped[seg.code].push(seg.text);
+            });
+            for (let code in grouped) {
+                html += `<h3 style="font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 10px;">Theme Code: <b>${code}</b> (Frequency: ${grouped[code].length})</h3><ul>`;
+                grouped[code].forEach(text => {
+                    html += `<li style="font-family: Arial, sans-serif; margin-bottom: 10px;"><i>"${text}"</i></li>`;
+                });
+                html += `</ul>`;
+            }
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Thematic Analysis</title></head><body>";
+            const footer = "</body></html>";
+            const blob = new Blob(['\ufeff', header + html + footer], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Qualitative_Thematic_Analysis.doc';
+            link.click();
+        }
+
+        function downloadWordCloud() {
+            const canvas = document.getElementById('wordCloudCanvas');
+            // Since wordcloud2 draws with transparent BG, we can create a temporary canvas to overlay it on a dark background
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            ctx.drawImage(canvas, 0, 0);
+
+            const link = document.createElement('a');
+            link.download = 'Transcript_WordCloud.png';
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadChart() {
+            if (!chartInst) return alert("Please code some text first!");
+            const link = document.createElement('a');
+            link.download = 'Theme_Frequencies.png';
+            link.href = document.getElementById('frequencyChart').toDataURL('image/png');
+            link.click();
+        }
+
+        codeInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') applyCode();
+        });
+    </script>
+</body>
+
+</html>

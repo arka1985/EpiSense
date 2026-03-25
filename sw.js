@@ -3,7 +3,7 @@ const ASSETS = [
     './',
     'index.html',
     'main.css',
-    'random_gen.html',
+    'research_design_suite.html',
     'data_collection.html',
     'math_modeling.html',
     'ml_basics.html',
@@ -15,7 +15,9 @@ const ASSETS = [
     'icons/icon-512.png',
     'logo.png',
     'logo.svg',
-    'translation.html'
+    'translation.html',
+    'qualitative_research.html',
+    'referencing.html'
 ];
 
 self.addEventListener('install', (event) => {

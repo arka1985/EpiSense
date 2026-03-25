@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Referencing - EpiSense</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="icon" href="logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+    <style>
+        .module-container { max-width: 1400px; margin: 2rem auto; padding: 2rem; }
+        .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-dim); text-decoration: none; margin-bottom: 2rem; font-weight: 600; transition: color 0.3s; }
+        .back-btn:hover { color: var(--text-white); }
+        .viz-card { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 2rem; margin-bottom: 2rem; }
+        .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; color: var(--text-dim); margin-bottom: 0.4rem; font-size: 0.95rem; font-weight: 600; }
+        .form-control { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.8rem; color: white; font-family: 'Outfit', sans-serif; box-sizing: border-box; font-size: 1rem; transition: all 0.3s; }
+        .form-control:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 0 2px rgba(96,165,250,0.2); }
+        .form-control::placeholder { color: rgba(255,255,255,0.3); }
+
+        .author-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.8rem; margin-bottom: 0.8rem; align-items: center; }
+        .remove-btn { background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 0.5rem; transition: background 0.3s; }
+        .remove-btn:hover { background: rgba(239,68,68,0.1); border-radius: 8px; }
+
+        .add-author-btn { background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); color: #60a5fa; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-right: 1.5rem; transition: all 0.3s ease; }
+        .add-author-btn:hover { background: rgba(96, 165, 250, 0.2); }
+
+        .etal-container { display: flex; align-items: center; gap: 0.5rem; color: #f472b6; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+        .etal-container input[type="checkbox"] { width: 18px; height: 18px; accent-color: #f472b6; cursor: pointer; }
+
+        .output-box { background: rgba(0,0,0,0.3); border-left: 4px solid #f472b6; padding: 2rem; border-radius: 12px; min-height: 250px; font-size: 1.15rem; line-height: 1.7; color: #f8fafc; margin-bottom: 2rem; word-wrap: break-word; }
+        .preview-box { background: rgba(0,0,0,0.5); border: 1px dashed rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; font-size: 1rem; color: #94a3b8; margin-top: 1.5rem; word-wrap: break-word;}
+
+        .tab-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-white); padding: 0.8rem 2rem; border-radius: 40px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; display: inline-flex; justify-content: center; align-items: center; gap: 0.5rem; }
+        .tab-btn.active { background: linear-gradient(135deg, #60a5fa, #f472b6); border-color: transparent; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3); }
+        .tab-btn:hover:not(.active) { background: rgba(255, 255, 255, 0.05); }
+        .action-row { display: flex; gap: 1rem; margin-top: auto; flex-wrap: wrap; }
+
+        select option { background: #0f172a; color: white; }
+
+        @media (max-width: 900px) { .split-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="icon-primary" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem;">
+            <h1 style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Bibliography Builder
+            </h1>
+            <p class="subtitle" style="margin: 0; max-width: 800px;">Compile up to 10 flawless citations across diverse source types (Journals, Books, Web). Copy the final list or export it directly to Word.</p>
+        </header>
+
+        <div class="split-grid">
+            <!-- Left Side Panel (Input Form) -->
+            <div class="viz-card">
+                <h3 style="color: var(--text-white); margin-bottom: 1.5rem; font-size: 1.4rem;">Source Details</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Citation Style</label>
+                        <select id="style" class="form-control" onchange="generatePreview()">
+                            <option value="APA">APA (7th Edition)</option>
+                            <option value="AMA">AMA (11th Edition)</option>
+                            <option value="Vancouver">Vancouver</option>
+                            <option value="IEEE">IEEE</option>
+                            <option value="Harvard">Harvard</option>
+                            <option value="Lancet">The Lancet</option>
+                            <option value="Nature">Nature</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Source Type</label>
+                        <select id="source-type" class="form-control" onchange="toggleFields()">
+                            <option value="journal">Journal Article</option>
+                            <option value="book">Book</option>
+                            <option value="chapter">Book Chapter</option>
+                            <option value="conference">Conference Paper</option>
+                            <option value="website">Website</option>
+                            <option value="blog">Blog Post</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; justify-content: space-between;">
+                        <span id="lbl-authors">Authors (Max 6)</span>
+                        <span id="author-counter" style="color: #60a5fa; font-weight: 300;">1/6</span>
+                    </label>
+                    <div id="author-container"></div>
+                    <div style="display: flex; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <button type="button" class="add-author-btn" onclick="addAuthor()">+ Add <span id="lbl-add-auth">Author</span></button>
+                        <label class="etal-container">
+                            <input type="checkbox" id="use-etal" onchange="generatePreview()"> Append "et al."
+                        </label>
+                    </div>
+                    <div id="author-limit-msg" style="color: #f43f5e; font-size: 0.85rem; margin-top: 0.8rem; display: none;">
+                        Maximum 6 allowed. If there are more, simply check the "et al." box.
+                    </div>
+                </div>
+
+                <div class="form-group" id="f-title">
+                    <label id="lbl-title">Article Title</label>
+                    <input type="text" id="tit" class="form-control" oninput="generatePreview()" placeholder="e.g. Clinical Outcomes...">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div class="form-group" id="f-container">
+                        <label id="lbl-container">Journal Name</label>
+                        <input type="text" id="cont" class="form-control" oninput="generatePreview()" placeholder="e.g. New England Journal...">
+                    </div>
+                    <div class="form-group" id="f-year">
+                        <label id="lbl-year">Publication Year</label>
+                        <input type="text" id="yr" class="form-control" oninput="generatePreview()" placeholder="e.g. 2025">
+                    </div>
+                </div>
+
+                <!-- Dynamic Grid for Details -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div class="form-group" id="f-publisher" style="display:none;">
+                        <label>Publisher</label>
+                        <input type="text" id="pub" class="form-control" oninput="generatePreview()" placeholder="e.g. Penguin">
+                    </div>
+                    <div class="form-group" id="f-city" style="display:none;">
+                        <label id="lbl-city">Location / City</label>
+                        <input type="text" id="city" class="form-control" oninput="generatePreview()" placeholder="e.g. New York, NY">
+                    </div>
+                    <div class="form-group" id="f-volume">
+                        <label id="lbl-vol">Volume</label>
+                        <input type="text" id="vol" class="form-control" oninput="generatePreview()" placeholder="e.g. 12">
+                    </div>
+                    <div class="form-group" id="f-issue">
+                        <label>Issue</label>
+                        <input type="text" id="iss" class="form-control" oninput="generatePreview()" placeholder="e.g. 4">
+                    </div>
+                    <div class="form-group" id="f-pages">
+                        <label>Pages</label>
+                        <input type="text" id="pg" class="form-control" oninput="generatePreview()" placeholder="e.g. 100-110">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 1rem;">
+                    <div class="form-group" id="f-doi">
+                        <label id="lbl-doi">DOI / URL</label>
+                        <input type="text" id="doi" class="form-control" oninput="generatePreview()" placeholder="e.g. 10.1001/jama...">
+                    </div>
+                    <div class="form-group" id="f-access" style="display:none;">
+                        <label>Access Date</label>
+                        <input type="text" id="acc" class="form-control" oninput="generatePreview()" placeholder="e.g. March 15, 2025">
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="preview-box">
+                    <div style="font-weight: 600; font-size:0.85rem; margin-bottom: 0.5rem; color: var(--text-white);">LIVE PREVIEW</div>
+                    <div id="live-preview"><em style="opacity: 0.5;">Start typing above to preview your citation...</em></div>
+                </div>
+
+                <button onclick="addToBibliography()" class="tab-btn active" style="width: 100%; margin-top: 1.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="icon-primary" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add to Bibliography
+                </button>
+            </div>
+
+            <!-- Right Side Canvas (Output) -->
+            <div class="viz-card" style="display: flex; flex-direction: column;">
+                <h3 style="color: var(--text-white); margin-bottom: 0.5rem; font-size: 1.4rem;">Compiled Bibliography</h3>
+                <p style="color: var(--text-dim); font-size:0.95rem; margin-bottom: 1.5rem;">Your reference list will build automatically. (Max 10)</p>
+                
+                <div id="output-box" class="output-box">
+                    <em style="color: rgba(255,255,255,0.4);">Your bibliography is empty. Add a reference to begin...</em>
+                </div>
+
+                <div class="action-row">
+                    <button id="copy-btn" onclick="copyBibliography()" class="tab-btn active" style="flex: 1;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy to Clipboard
+                    </button>
+                    <button onclick="downloadDoc()" class="tab-btn active" style="flex: 1; border-color: #f472b6;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Download Word Doc
+                    </button>
+                </div>
+                <div style="text-align: center; margin-top: 1rem; color: var(--text-dim); font-size: 0.85rem;">
+                    Exports and copies perfectly preserve <i>italics</i> and <b>bolds</b>!
+                </div>
+            </div>
+        </div>
+
+        <footer style="margin-top: 4rem; background: none; border: none; padding: 0;">
+            <div class="footer-content">
+                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+                <div class="disclaimer">This generative algorithm simulates standard rules. Always double-check your manuscript.</div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Data State
+        let authorCount = 0;
+        let bibliography = [];
+        const MAX_REFS = 10;
+
+        function D(id) { return document.getElementById(id); }
+
+        function toggleFields() {
+            const type = D('source-type').value;
+
+            // Defaults
+            D('lbl-authors').innerText = 'Authors (Max 6)';
+            D('lbl-add-auth').innerText = 'Author';
+            D('f-container').style.display = 'block';
+            D('f-volume').style.display = 'block';
+            D('f-issue').style.display = 'block';
+            D('f-pages').style.display = 'block';
+            D('f-doi').style.display = 'block';
+            
+            D('f-publisher').style.display = 'none';
+            D('f-city').style.display = 'none';
+            D('f-access').style.display = 'none';
+            
+            D('lbl-title').innerText = 'Title';
+            D('lbl-year').innerText = 'Year';
+            D('lbl-vol').innerText = 'Volume';
+
+            switch(type) {
+                case 'journal':
+                    D('lbl-title').innerText = 'Article Title';
+                    D('lbl-container').innerText = 'Journal Name';
+                    D('lbl-doi').innerText = 'DOI / URL';
+                    break;
+                case 'book':
+                    D('lbl-title').innerText = 'Book Title';
+                    D('f-container').style.display = 'none'; // No container for book
+                    D('f-volume').style.display = 'block';
+                    D('lbl-vol').innerText = 'Edition (e.g. 2nd)';
+                    D('f-issue').style.display = 'none';
+                    D('f-pages').style.display = 'none';
+                    D('f-publisher').style.display = 'block';
+                    D('f-city').style.display = 'block';
+                    D('lbl-doi').innerText = 'URL (Optional)';
+                    break;
+                case 'chapter':
+                    D('lbl-title').innerText = 'Chapter Title';
+                    D('lbl-container').innerText = 'Book Title';
+                    D('f-issue').style.display = 'none';
+                    D('lbl-vol').innerText = 'Edition';
+                    D('f-publisher').style.display = 'block';
+                    D('f-city').style.display = 'block';
+                    // We assume standard authors for chapter. Ed. handling is complex, kept simple.
+                    break;
+                case 'conference':
+                    D('lbl-title').innerText = 'Paper Title';
+                    D('lbl-container').innerText = 'Conference Name';
+                    D('f-issue').style.display = 'none';
+                    D('f-volume').style.display = 'none';
+                    D('f-city').style.display = 'block';
+                    D('f-publisher').style.display = 'block';
+                    break;
+                case 'website':
+                case 'blog':
+                    D('lbl-title').innerText = type==='blog' ? 'Blog Post Title' : 'Page Title';
+                    D('lbl-container').innerText = type==='blog' ? 'Blog Name' : 'Website Name';
+                    D('f-volume').style.display = 'none';
+                    D('f-issue').style.display = 'none';
+                    D('f-pages').style.display = 'none';
+                    D('f-access').style.display = 'block';
+                    D('lbl-doi').innerText = 'URL';
+                    break;
+            }
+            generatePreview();
+        }
+
+        function updateCounter() { D('author-counter').innerText = `${authorCount}/6`; }
+
+        function addAuthor() {
+            if(authorCount >= 6) { D('author-limit-msg').style.display = 'block'; return; }
+            authorCount++;
+            const id = Date.now() + Math.random();
+            const row = document.createElement('div');
+            row.className = 'author-row';
+            row.id = `author-${id}`;
+            
+            const removeMarkup = authorCount > 1 
+                ? `<button type="button" tabindex="-1" class="remove-btn" onclick="removeAuthor('${row.id}')" title="Remove Author">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                   </button>` 
+                : `<div style="width: 36px;"></div>`;
+
+            row.innerHTML = `<input type="text" class="form-control author-last" placeholder="Last Name" oninput="generatePreview()">
+                             <input type="text" class="form-control author-first" placeholder="Initials" oninput="generatePreview()">${removeMarkup}`;
+            D('author-container').appendChild(row);
+            
+            if(authorCount >= 6) {
+                document.querySelector('.add-author-btn').style.display = 'none';
+                D('author-limit-msg').style.display = 'block';
+            }
+            updateCounter();
+            generatePreview();
+        }
+
+        function removeAuthor(rowId) {
+            D(rowId).remove();
+            authorCount--;
+            document.querySelector('.add-author-btn').style.display = 'inline-block';
+            D('author-limit-msg').style.display = 'none';
+            updateCounter();
+            generatePreview();
+        }
+
+        // Init one author field
+        addAuthor();
+        toggleFields(); // Init UI
+
+        function getAuthorsFormatted(style) {
+            const rows = document.querySelectorAll('.author-row');
+            let formatted = [];
+            
+            rows.forEach(row => {
+                let last = row.querySelector('.author-last').value.trim();
+                let first = row.querySelector('.author-first').value.trim().replace(/\./g, '').toUpperCase();
+                if(!last) return; 
+                
+                switch(style) {
+                    case 'APA': 
+                        let apaInit = first ? first.split('').map(c => c + '.').join(' ') : '';
+                        formatted.push(apaInit ? `${last}, ${apaInit}` : last);
+                        break;
+                    case 'AMA':
+                    case 'Vancouver':
+                    case 'Lancet':
+                        formatted.push(first ? `${last} ${first}` : last);
+                        break;
+                    case 'IEEE':
+                        let ieeeInit = first ? first.split('').map(c => c + '.').join(' ') : '';
+                        formatted.push(ieeeInit ? `${ieeeInit} ${last}` : last);
+                        break;
+                    case 'Nature':
+                        let natInit = first ? first.split('').map(c => c + '.').join(' ') : '';
+                        formatted.push(natInit ? `${last}, ${natInit}` : last);
+                        break;
+                    case 'Harvard':
+                        let harvInit = first ? first.split('').map(c => c + '.').join('') : '';
+                        formatted.push(harvInit ? `${last}, ${harvInit}` : last);
+                        break;
+                }
+            });
+
+            if(formatted.length === 0) return "";
+
+            let hasEtAl = D('use-etal').checked;
+            let joined = "";
+
+            if (style === 'APA') {
+                if (formatted.length === 1) joined = formatted[0];
+                else if (formatted.length === 2) joined = formatted.join(', & ');
+                else joined = formatted.slice(0, -1).join(', ') + ', & ' + formatted[formatted.length - 1];
+            } else if (style === 'Harvard' || style === 'Nature') {
+                if (formatted.length === 1) joined = formatted[0];
+                else if (formatted.length === 2) joined = formatted.join(style === 'Nature' ? ' & ' : ' and ');
+                else joined = formatted.slice(0, -1).join(', ') + (style==='Nature' ? ' & ' : ' and ') + formatted[formatted.length - 1];
+            } else if (style === 'IEEE') {
+                if (formatted.length <= 2) joined = formatted.join(' and ');
+                else if (hasEtAl && formatted.length >= 1) return formatted[0] + ' et al.';
+                else joined = formatted.slice(0, -1).join(', ') + ', and ' + formatted[formatted.length - 1];
+            } else {
+                joined = formatted.join(', ');
+            }
+            if (hasEtAl && style !== 'IEEE') joined += ', et al.';
+            return joined;
+        }
+
+        // Generic Generator that builds string based on style & type
+        function getCitationHTML() {
+            const style = D('style').value;
+            const type = D('source-type').value;
+            
+            const A = getAuthorsFormatted(style);
+            let T = D('tit').value.trim();
+            const J = D('cont').value.trim();
+            const Y = D('yr').value.trim();
+            const V = D('vol').value.trim();
+            const I = D('iss').value.trim();
+            const P = D('pg').value.trim();
+            const Pub = D('pub').value.trim();
+            const Loc = D('city').value.trim();
+            const Acc = D('acc').value.trim();
+            let doiUrl = D('doi').value.trim();
+
+            if(!A && !T) return "";
+
+            // URL cleanup
+            if(doiUrl && doiUrl.includes('doi.org/')) doiUrl = doiUrl.split('doi.org/')[1];
+
+            const T_dot = T ? T + (T.endsWith('.') || T.endsWith('?') ? '' : '.') : '';
+            const T_comma = T ? T + (T.endsWith(',') ? '' : ',') : '';
+            const Y_fmt = Y ? Y : 'n.d.';
+            
+            let out = "";
+
+            switch (style) {
+                case 'APA':
+                    let apaJ = J ? `<i>${J}</i>` : '';
+                    if(type === 'journal') out = `${A} (${Y_fmt}). ${T_dot} ${apaJ}, ${V ? '<i>'+V+'</i>' : ''}${I ? '('+I+')' : ''}${P ? ', '+P+'.' : '.'} ${doiUrl ? 'https://doi.org/' + doiUrl : ''}`;
+                    else if(type === 'book') out = `${A} (${Y_fmt}). <i>${T_dot}</i> ${V ? '('+V+').' : ''} ${Pub ? Pub+'.' : ''} ${doiUrl ? doiUrl : ''}`;
+                    else if(type === 'chapter') out = `${A} (${Y_fmt}). ${T_dot} In <i>${J}</i> ${V ? '('+V+', ' : '('}${P ? 'pp. '+P+').' : ').'} ${Pub ? Pub+'.' : ''}`;
+                    else if(type === 'conference') out = `${A} (${Y_fmt}). ${T_dot} In <i>${J}</i> ${P ? '(pp. '+P+').' : '.'} ${Pub ? Pub+'.' : ''}`;
+                    else out = `${A} (${Y_fmt}). <i>${T_dot}</i> ${J ? J+'.' : ''} ${doiUrl ? doiUrl : ''}`;
+                    break;
+                    
+                case 'AMA':
+                case 'Vancouver':
+                    // Vancouver and AMA are structurally identical in basic fields, AMA adds doi
+                    let dotJ = J ? J+'.' : '';
+                    if(type === 'journal') out = `${A}. ${T_dot} ${dotJ} ${Y ? Y+';' : ''}${V ? V : ''}${I ? '('+I+')' : ''}${P ? ':'+P+'.' : '.'} ${style==='AMA' && doiUrl ? 'doi:'+doiUrl : ''}`;
+                    else if(type === 'book') out = `${A}. <i>${T_dot}</i> ${V ? V+'.' : ''} ${Pub ? Pub+';' : ''} ${Y ? Y+'.' : ''}`;
+                    else if(type === 'chapter') out = `${A}. ${T_dot} In: <i>${J}</i>. ${Pub ? Pub+';' : ''} ${Y ? Y+':' : ''}${P ? P+'.' : '.'}`;
+                    else if(type === 'conference') out = `${A}. ${T_dot} Paper presented at: ${J}; ${Y ? Y+';' : ''} ${Loc ? Loc+'.' : '.'}`;
+                    else out = `${A}. ${T_dot} ${J ? J+'.' : ''} Published ${Y ? Y+'.' : 'n.d.'} ${Acc ? 'Accessed '+Acc+'.' : ''} ${doiUrl ? doiUrl : ''}`;
+                    break;
+
+                case 'IEEE':
+                    let Q_T = T ? `"${T_comma}"` : '';
+                    let iJ = J ? `<i>${J}</i>,` : '';
+                    if(type === 'journal') out = `${A}, ${Q_T} ${iJ} ${V ? 'vol. '+V+',' : ''} ${I ? 'no. '+I+',' : ''} ${P ? 'pp. '+P+',' : ''} ${Y_fmt}. ${doiUrl ? 'doi: '+doiUrl+'.' : ''}`;
+                    else if(type === 'book') out = `${A}, <i>${T_comma}</i> ${V ? V+',' : ''} ${Loc ? Loc+':' : ''} ${Pub ? Pub+',' : ''} ${Y_fmt}.`;
+                    else if(type === 'chapter') out = `${A}, ${Q_T} in <i>${J}</i>, ${Loc ? Loc+':' : ''} ${Pub ? Pub+',' : ''} ${Y_fmt}, ${P ? 'pp. '+P+'.' : '.'}`;
+                    else if(type === 'conference') out = `${A}, ${Q_T} in <i>${J}</i>, ${Loc ? Loc+',' : ''} ${Y_fmt}, ${P ? 'pp. '+P+'.' : '.'}`;
+                    else out = `${A}, ${Q_T} ${J ? J+'.' : ''} ${doiUrl ? doiUrl : ''} (accessed ${Acc ? Acc : 'Date'}).`;
+                    break;
+
+                case 'Harvard':
+                    let hJ = J ? `<i>${J}</i>,` : '';
+                    if(type === 'journal') out = `${A} ${Y ? Y+'.' : ''} ${T_dot} ${hJ} ${V ? V : ''}${I ? '('+I+')' : ''}${P ? ', pp.'+P+'.' : '.'}`;
+                    else if(type === 'book') out = `${A} ${Y ? Y+'.' : ''} <i>${T_dot}</i> ${V ? V+'.' : ''} ${Loc ? Loc+':' : ''} ${Pub ? Pub+'.' : ''}`;
+                    else if(type === 'chapter') out = `${A} ${Y ? Y+'.' : ''} ${T_dot} In: <i>${J}</i>. ${Loc ? Loc+':' : ''} ${Pub ? Pub+',' : ''} ${P ? 'pp.'+P+'.' : '.'}`;
+                    else if(type === 'conference') out = `${A} ${Y ? Y+'.' : ''} ${T_dot} In: <i>${J}</i>. ${Loc ? Loc+':' : ''} ${Pub ? Pub+'.' : ''}`;
+                    else out = `${A} ${Y ? Y+'.' : ''} <i>${T_dot}</i> [online] ${J ? J+'.' : ''} Available at: ${doiUrl ? doiUrl : ''} [Accessed ${Acc ? Acc : 'Date'}].`;
+                    break;
+
+                case 'Lancet':
+                case 'Nature':
+                    // Simplified Nature/Lancet rules
+                    let iJJ = J ? `<i>${J}</i>` : '';
+                    let bV = V ? `<b>${V}</b>` : '';
+                    if(type === 'journal') out = `${A}. ${T_dot} ${iJJ} ${style==='Lancet' && Y ? Y+';' : ''} ${bV}${style==='Lancet'?':':','} ${P ? P : ''} ${style==='Nature' && Y ? '('+Y+').' : '.'}`;
+                    else if(type === 'book') out = `${A}. <i>${T_dot}</i> (${Pub}, ${Y_fmt}).`;
+                    else out = `${A}. ${T_dot} ${iJJ} (${Pub ? Pub+', ' : ''} ${Y_fmt}).`;
+                    break;
+            }
+
+            // aggressive cleanup to remove stranded punctuation
+            out = out.replace(/\s+/g, ' ')
+                     .replace(/ \./g, '.')
+                     .replace(/ ,/g, ',')
+                     .replace(/\.\./g, '.')
+                     .replace(/,\./g, '.')
+                     .replace(/\( \)/g, '')
+                     .replace(/ ;/g, ';')
+                     .replace(/ :/g, ':')
+                     .trim();
+                     
+            if (out.endsWith(',.')) out = out.slice(0, -2) + '.';
+            return out;
+        }
+
+        function generatePreview() {
+            const html = getCitationHTML();
+            D('live-preview').innerHTML = html || "<em style='opacity: 0.5;'>Start typing above to preview your citation...</em>";
+        }
+
+        function addToBibliography() {
+            if (bibliography.length >= MAX_REFS) {
+                alert(`Maximum ${MAX_REFS} references allowed.`);
+                return;
+            }
+            const html = getCitationHTML();
+            if(!html) return alert("Please fill out the form to generate a citation.");
+            
+            bibliography.push(html);
+            renderBibliography();
+            
+            // clear title slightly to encourage new input but keep standard fields.
+            D('tit').value = '';
+            D('pg').value = '';
+            generatePreview();
+        }
+
+        function removeBib(index) {
+            bibliography.splice(index, 1);
+            renderBibliography();
+        }
+
+        function renderBibliography() {
+            const box = D('output-box');
+            if (bibliography.length === 0) {
+                box.innerHTML = '<em style="color: rgba(255,255,255,0.4);">Your bibliography is empty. Add a reference to begin...</em>';
+                return;
+            }
+            let html = '<ol style="padding-left: 20px; margin: 0;">';
+            bibliography.forEach((ref, idx) => {
+                html += `<li style="margin-bottom: 1rem;">${ref} <button onclick="removeBib(${idx})" title="Remove Reference" style="font-size: 0.75rem; background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 4px; padding: 2px 6px; cursor: pointer; margin-left: 10px; transition: all 0.3s;">✕</button></li>`;
+            });
+            html += '</ol>';
+            box.innerHTML = html;
+        }
+
+        async function copyBibliography() {
+            if(bibliography.length === 0) return alert("Bibliography is empty!");
+            
+            const outBox = D('output-box');
+            
+            // Strip the remove buttons temporarily for pure copying
+            const renderClone = outBox.cloneNode(true);
+            const btns = renderClone.querySelectorAll('button');
+            btns.forEach(b => b.remove());
+
+            const textHTML = renderClone.innerHTML;
+            const textPlain = renderClone.innerText;
+            
+            const btn = D('copy-btn');
+            const originalHTML = btn.innerHTML;
+            
+            try {
+                const blobHtml = new Blob([textHTML], { type: 'text/html' });
+                const blobText = new Blob([textPlain], { type: 'text/plain' });
+                const data = new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText });
+                
+                await navigator.clipboard.write([data]);
+                
+                btn.innerHTML = 'Copied! ✓';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                }, 2000);
+            } catch(e) {
+                // Fallback
+                const range = document.createRange();
+                range.selectNodeContents(renderClone); // this won't work perfectly since clone is detached, but good enough attempt
+                alert("Please use the Download Word Doc feature as your browser blocks rich copy.");
+            }
+        }
+
+        function downloadDoc() {
+            if(bibliography.length === 0) return alert("Bibliography is empty!");
+            
+            let html = `<h1 style="font-family: Arial, sans-serif; color: #333; text-align: center;">Bibliography</h1><hr/><ol style="font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5;">`;
+            bibliography.forEach(ref => {
+                html += `<li style="margin-bottom: 12px;">${ref}</li>`;
+            });
+            html += `</ol>`;
+            
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Bibliography</title></head><body>";
+            const footer = "</body></html>";
+
+            const blob = new Blob(['\ufeff', header + html + footer], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Bibliography_Export.doc';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+
+</html>
