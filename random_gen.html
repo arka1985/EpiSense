@@ -860,14 +860,159 @@
             color: var(--text-dim);
             margin-bottom: 0.5rem;
         }
+
+        /* PRISMA 2020 Enhanced Styles */
+        .prisma-lab {
+            margin-top: 3rem;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .prisma-builder-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .prisma-inputs {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .prisma-input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .prisma-input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+
+        .prisma-input-group input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.6rem;
+            color: white;
+            font-family: inherit;
+        }
+
+        /* The Diagram Layout */
+        .prisma-stage-label {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            text-align: center;
+            font-weight: 900;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            padding: 1rem 0;
+            border-right: 1px dashed rgba(255, 255, 255, 0.1);
+            margin-right: 1rem;
+        }
+
+        .prisma-2020-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+            padding: 1rem;
+        }
+
+        .prisma-row {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            position: relative;
+        }
+
+        .prisma-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.8rem 1.2rem;
+            width: 200px;
+            text-align: center;
+            font-size: 0.8rem;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .prisma-box strong {
+            display: block;
+            color: var(--primary-blue);
+            margin-bottom: 4px;
+        }
+
+        .prisma-box.exclusion {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+            width: 180px;
+        }
+
+        .prisma-box.included {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+            border-width: 2px;
+        }
+
+        .prisma-arrow-v {
+            height: 20px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .prisma-arrow-v::after {
+            content: '▼';
+            position: absolute;
+            bottom: -8px;
+            left: -5px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .prisma-line-h {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            top: 50%;
+            z-index: -1;
+        }
     </style>
 </head>
 
 <body>
-    <div class="background-blobs">
-        <div class="blob blob-blue"></div>
-        <div class="blob blob-pink"></div>
-    </div>
+    <script>
+        // EPISENSE V2.3 - ABSOLUTE CACHE FLUSH
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => { for(let r of regs) r.unregister(); });
+            if (window.caches) { caches.keys().then(ns => { for(let n of ns) caches.delete(n); }); }
+        }
+    </script>
+    <style>
+        /* Force visualization containers to be visible and correctly sized */
+        #prisma-2020-ui { height: 850px !important; min-height: 850px !important; display: block !important; visibility: visible !important; opacity: 1 !important; }
+        #forest-svg-wrap { min-height: 450px !important; display: block !important; visibility: visible !important; opacity: 1 !important; }
+        #funnel-plot-svg { min-height: 400px !important; display: block !important; visibility: visible !important; opacity: 1 !important; }
+        .prisma-lab { width: 100% !important; min-height: 900px !important; }
+        #epi-viz-outer { display: block !important; width: 100% !important; min-height: 1200px !important; padding-bottom: 5rem; }
+    </style>
 
     <div class="module-container">
         <a href="index.html" class="back-btn">
@@ -884,8 +1029,8 @@
                 style="font-size: 2.2rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; font-weight: 800;">
                 Research Design Tools <br><span
                     style="font-size: 1.2rem; font-weight: 400; color: var(--text-dim); -webkit-text-fill-color: var(--text-dim);">Methodology
-                    Training Suite</span>
-            </h1>
+                    Training Suite &bull; <span style="color:var(--primary-blue);">V2.3 FINAL</span></span>
+                </h1>
         </header>
 
         <!-- Navigation Grid -->
@@ -1255,9 +1400,9 @@
                 </div>
 
                 <div class="category-tab" style="margin-bottom: 2rem;">
-                    <div class="tab-item active" onclick="toggleEpiCategory('obs', this)">Observational Studies
-                    </div>
+                    <div class="tab-item active" onclick="toggleEpiCategory('obs', this)">Observational Studies</div>
                     <div class="tab-item" onclick="toggleEpiCategory('exp', this)">Experimental Studies</div>
+                    <div class="tab-item" onclick="toggleEpiCategory('sys', this)">Systematic Review & Meta-analysis</div>
                 </div>
 
                 <div id="epi-research-grid"
@@ -3057,6 +3202,30 @@
                     risk: "Medium",
                     color: "#f59e0b"
                 }
+            ],
+            sys: [
+                {
+                    title: "Systematic Review",
+                    icon: "📚",
+                    type: "Evidence Synthesis",
+                    desc: "A rigorous, pre-planned synthesis of all available evidence on a focused clinical question — identifying, appraising, and summarising high-quality studies.",
+                    analogy: "🩺 Think of a senior cardiologist who, before recommending a new drug, doesn't rely on one trial — they gather EVERY published study, grade its quality, and decide based on the total weight of evidence.",
+                    example: "A Cochrane review asking: <em>\"Does lowering LDL cholesterol reduce heart attacks in diabetic patients?\"</em> — identifying 89 RCTs, screening them, and summarising the best 12 to guide clinical guidelines.",
+                    bias: "Publication Bias (negative trials go unpublished), Search Bias.",
+                    risk: "Very Low",
+                    color: "#f59e0b"
+                },
+                {
+                    title: "Meta-analysis",
+                    icon: "📈",
+                    type: "Quantitative Synthesis",
+                    desc: "A statistical technique that mathematically combines results from multiple independent studies to calculate a single, more precise Pooled Effect Size.",
+                    analogy: "🫀 Imagine three cardiologists each ran a small trial on a blood pressure drug — one with 200 patients, one with 350, one with 150. A meta-analysis pools all 700 patients to give one definitive answer, weighting larger trials more.",
+                    example: "A meta-analysis of 3 landmark trials (EMPEROR-Preserved, DELIVER, SOLOIST-WHF) showed SGLT2 inhibitors reduce Heart Failure hospitalisation by <strong>~20%</strong> (HR 0.80, 95% CI 0.73–0.87).",
+                    bias: "Heterogeneity (I² > 50% is a red flag), Data Extraction Error.",
+                    risk: "Very Low",
+                    color: "#3b82f6"
+                }
             ]
         };
 
@@ -3064,6 +3233,11 @@
             updateMethodActive('#path-epi-research .tab-item', btn || document.querySelector('#path-epi-research .tab-item.active'));
             const grid = document.getElementById('epi-research-grid');
             grid.innerHTML = '';
+            
+            // Clear extras from other categories
+            const prevOuter = document.getElementById('epi-viz-outer');
+            if (prevOuter) prevOuter.innerHTML = '';
+            if (prevOuter) prevOuter.style.minHeight = '0';
 
             epiStudyData[cat].forEach(study => {
                 const card = document.createElement('div');
@@ -3084,27 +3258,653 @@
                     
                     <div style="display: flex; flex-direction: column; gap: 0.8rem;">
                         <div style="background: rgba(255,255,255,0.02); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--primary-blue); font-weight: 800; margin-bottom: 4px;">Analogy</div>
-                            <div style="font-size: 0.85rem; color: var(--text-white); font-style: italic;">"${study.analogy}"</div>
+                            <div style="font-size: 0.75rem; color: var(--primary-pink); font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;">The Clinical Analogy</div>
+                            <div style="font-size: 0.85rem; font-style: italic; color: var(--text-dim); line-height: 1.4;">"${study.analogy}"</div>
                         </div>
-
-                        <div style="background: rgba(16, 185, 129, 0.05); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.1);">
-                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #10b981; font-weight: 800; margin-bottom: 4px;">Public Health Example</div>
-                            <div style="font-size: 0.85rem; color: var(--text-white); line-height: 1.4;">${study.example}</div>
+                        <div style="background: rgba(255,255,255,0.02); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: 0.75rem; color: var(--primary-blue); font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;">Real-World Example</div>
+                            <div style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.4;">${study.example}</div>
                         </div>
                     </div>
 
-                    <div>
-                        <div style="font-size: 0.7rem; text-transform: uppercase; color: #ef4444; font-weight: 800; margin-bottom: 4px;">Key Challenge</div>
-                        <div style="font-size: 0.85rem; color: var(--text-dim);">${study.bias}</div>
-                    </div>
-                    <div class="bias-indicator">
-                        <div class="bias-dot" style="background: ${riskColor}"></div>
-                        Bias Risk: <span style="font-weight: bold; color: ${riskColor}">${study.risk}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.75rem; color: var(--text-dim);">Risk of Bias:</span>
+                            <div style="padding: 2px 8px; border-radius: 12px; background: ${riskColor}15; color: ${riskColor}; font-size: 0.7rem; font-weight: 800;">${study.risk}</div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                            <div class="bias-dot" style="background: ${study.color}"></div>
+                            Key Bias: ${study.bias}
+                        </div>
                     </div>
                 `;
                 grid.appendChild(card);
             });
+
+            // Special Visualizations for Systematic Review
+            if (cat === 'sys') {
+                renderSystematicReviewExtras(grid);
+            }
+        }
+
+        /* ═══════════════════════════════════════════════
+           PRISMA 2020 — Publication-Ready SVG Builder
+           ═══════════════════════════════════════════════ */
+        let prismaOpts = { showPrev: false, showOther: false };
+        let prismaState = {
+            // DB & Registers track
+            db_n: 2450, reg_n: 50,
+            dup_removed: 820, auto_removed: 120, other_removed: 0,
+            screened: 1560, screened_excl: 1480,
+            sought: 80, not_retrieved: 5,
+            eligibility: 75, excl_r1: 30, excl_r2: 22, excl_r3: 16,
+            // Other Methods track
+            om_websites: 18, om_org: 4, om_citation: 6,
+            om_sought: 28, om_not_retrieved: 2,
+            om_eligibility: 26, om_excl_r1: 10, om_excl_r2: 5, om_excl_r3: 3,
+            // Previous Studies track
+            prev_included: 0,
+            // Included
+            new_studies: 7, new_reports: 7,
+            total_studies: 7, total_reports: 7
+        };
+
+        function resetPrismaDefault() {
+            prismaState = { db_n:2450,reg_n:50,dup_removed:820,auto_removed:120,other_removed:0,screened:1560,screened_excl:1480,sought:80,not_retrieved:5,eligibility:75,excl_r1:30,excl_r2:22,excl_r3:16,om_websites:18,om_org:4,om_citation:6,om_sought:28,om_not_retrieved:2,om_eligibility:26,om_excl_r1:10,om_excl_r2:5,om_excl_r3:3,prev_included:0,new_studies:7,new_reports:7,total_studies:7,total_reports:7 };
+            syncInputs(); updatePrismaDiagram();
+        }
+
+        function loadPrismaMedicalDemo() {
+            prismaOpts.showOther = true; prismaOpts.showPrev = false;
+            document.getElementById('opt-other').checked = true;
+            document.getElementById('opt-prev').checked = false;
+            prismaState = { db_n:3120,reg_n:12,dup_removed:1150,auto_removed:45,other_removed:32,screened:1937,screened_excl:1812,sought:125,not_retrieved:2,eligibility:123,excl_r1:55,excl_r2:36,excl_r3:20,om_websites:18,om_org:4,om_citation:6,om_sought:28,om_not_retrieved:2,om_eligibility:26,om_excl_r1:10,om_excl_r2:5,om_excl_r3:3,prev_included:0,new_studies:12,new_reports:14,total_studies:12,total_reports:14 };
+            syncInputs(); updatePrismaDiagram(); renderForestPlot('medical');
+            toggleOtherInputs();
+        }
+
+        function syncInputs() {
+            Object.keys(prismaState).forEach(k => { const el = document.getElementById('pi-'+k); if(el) el.value = prismaState[k]; });
+        }
+
+        function toggleOtherInputs() {
+            const el = document.getElementById('other-inputs-section');
+            if(el) el.style.display = prismaOpts.showOther ? '' : 'none';
+        }
+
+        function buildPRISMASVG() {
+            const S = prismaState, O = prismaOpts;
+            const showP = O.showPrev, showM = O.showOther;
+
+            // Layout: white background publication figure
+            const TAB = 32; // stage label tab width
+            const PAD = 10;
+            const BOX_H = 52; // standard box height
+            const BOX_H_SM = 44;
+            const ARROW = 18; // arrow gap
+
+            // Column widths
+            const prevW = showP ? 155 : 0;
+            const prevGap = showP ? 12 : 0;
+            const mainW = 260;
+            const mainExclW = 170;
+            const mainExclGap = 14;
+            const otherW = showM ? 200 : 0;
+            const otherExclW = showM ? 155 : 0;
+            const otherGap = showM ? 14 : 0;
+
+            const W = TAB + PAD + prevW + prevGap + mainW + mainExclGap + mainExclW + (showM ? (otherGap + otherW + mainExclGap + otherExclW) : 0) + PAD + 10;
+            const H = 840;
+
+            // X positions
+            const xPrev = TAB + PAD;
+            const xMain = xPrev + prevW + prevGap;
+            const xMainExcl = xMain + mainW + mainExclGap;
+            const xOther = xMainExcl + mainExclW + otherGap;
+            const xOtherExcl = xOther + otherW + mainExclGap;
+
+            // Y row centres (Identification stage: y 10-200, Screening: 210-620, Included: 640-820)
+            const Y = {
+                idHeader: 20,
+                idMainBox: 68,
+                idExclBox: 68,
+                idPrevBox: 88,
+                idOtherBox: 68,
+                screenHeader: 230,
+                screened: 265,
+                screenExcl: 265,
+                sought: 338,
+                notRetrieved: 338,
+                eligibility: 413,
+                eligExcl: 413,
+                inclHeader: 565,
+                inclNew: 600,
+                inclTotal: 686,
+                tabIdTop: 10, tabIdBot: 218,
+                tabScTop: 218, tabScBot: 560,
+                tabInclTop: 560, tabInclBot: 840
+            };
+
+            // Helpers
+            const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const F = 'font-family="Arial,Helvetica,sans-serif"';
+
+            const rect = (x, y, w, h, fill='#f0f0f0', stroke='#333', sw=1, rx=2) =>
+                `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" rx="${rx}"/>`;
+
+            const centredText = (x, y, w, lines, fontSize=10, bold=false, color='#222') => {
+                const cy = y + (Array.isArray(lines) ? (lines.length * (fontSize+3)) : (fontSize+3)) / 2;
+                const lns = Array.isArray(lines) ? lines : [lines];
+                const totalH = lns.length * (fontSize + 3);
+                const startY = y + (h => (h - totalH)/2 + fontSize)(typeof w === 'number' ? 0 : 0);
+                return lns.map((l,i) =>
+                    `<text x="${x + w/2}" y="${y + (typeof w === 'object' ? w.h : BOX_H)/2 - (lns.length-1)*(fontSize+2)/2 + i*(fontSize+3)}" text-anchor="middle" dominant-baseline="middle" ${F} font-size="${fontSize}" fill="${color}" font-weight="${bold?'bold':'normal'}">${esc(l)}</text>`
+                ).join('');
+            };
+
+            const box = (x, y, w, h, lines, opts={}) => {
+                const bg = opts.bg || '#f0f0f0', stroke = opts.stroke || '#555', sw=opts.sw||1, bold=opts.bold||false, fs=opts.fs||10, color=opts.color||'#1a1a1a';
+                const lns = Array.isArray(lines)?lines:[lines];
+                const total = lns.length * (fs+3) - 3;
+                const textY = y + (h - total)/2 + fs;
+                const texts = lns.map((l,i) =>
+                    `<text x="${x+w/2}" y="${textY + i*(fs+3)}" text-anchor="middle" ${F} font-size="${fs}" fill="${color}" font-weight="${bold?'bold':'normal'}">${esc(l)}</text>`
+                ).join('');
+                return `${rect(x,y,w,h,bg,stroke,sw,3)}${texts}`;
+            };
+
+            const arrow = (x1,y1,x2,y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#444" stroke-width="1.2" marker-end="url(#arr)"/>`;
+            const arrowH = (x1,y,x2) => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#444" stroke-width="1.2" marker-end="url(#arr)"/>`;
+
+            // Stage section label (vertical rotated)
+            const stageLabel = (x, y1, y2, label, color) =>
+                `${rect(x, y1, TAB-2, y2-y1, color, color, 0, 4)}` +
+                `<text x="${x + (TAB-2)/2}" y="${(y1+y2)/2}" text-anchor="middle" dominant-baseline="middle" ${F} font-size="11" font-weight="bold" fill="white" transform="rotate(-90, ${x+(TAB-2)/2}, ${(y1+y2)/2})">${label}</text>`;
+
+            // Column header banners
+            const colHeader = (x, y, w, label, bg, color) =>
+                `${rect(x, y, w, 26, bg, bg, 0, 3)}<text x="${x+w/2}" y="${y+13}" text-anchor="middle" dominant-baseline="middle" ${F} font-size="10" font-weight="bold" fill="${color}">${esc(label)}</text>`;
+
+            // ---- Build SVG ----
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="background:white; font-family:Arial,Helvetica,sans-serif;">
+<defs>
+  <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+    <polygon points="0 0, 7 3.5, 0 7" fill="#444"/>
+  </marker>
+</defs>
+<rect width="${W}" height="${H}" fill="white"/>
+`;
+
+            // Stage labels
+            svg += stageLabel(0, Y.tabIdTop, Y.tabIdBot, 'Identification', '#7eb6d9');
+            svg += stageLabel(0, Y.tabScTop, Y.tabScBot, 'Screening', '#7eb6d9');
+            svg += stageLabel(0, Y.tabInclTop, Y.tabInclBot, 'Included', '#7eb6d9');
+
+            // ─── IDENTIFICATION STAGE ───
+            // Column headers
+            if (showP) {
+                svg += colHeader(xPrev, 12, prevW, 'Previous studies', '#d0d0d0', '#333');
+            }
+            svg += colHeader(xMain, 12, mainW + mainExclGap + mainExclW, 'Identification of new studies via databases and registers', '#f5c842', '#333');
+            if (showM) {
+                svg += colHeader(xOther, 12, otherW + mainExclGap + otherExclW, 'Identification of new studies via other methods', '#d0d0d0', '#333');
+            }
+
+            // Previous studies box
+            if (showP) {
+                svg += box(xPrev, 44, prevW, 68, ['Studies included in', 'previous version of', 'review (k = '+S.prev_included+')', 'Reports of included', 'studies (k = '+S.prev_included+')'], {bg:'#e8e8e8', fs:9, color:'#222'});
+            }
+
+            // Main: Records Identified
+            svg += box(xMain, 44, mainW, BOX_H, ['Records identified from:','Databases (k = '+S.db_n+')','Registers (k = '+S.reg_n+')'], {bg:'#fff',fs:10});
+
+            // Records removed box (right of main identified)
+            svg += box(xMainExcl, 44, mainExclW, 62, ['Records removed before','screening:','Duplicate records (k = '+S.dup_removed+')','Ineligible by automation','tools (k = '+S.auto_removed+')','Removed for other','reasons (k = '+S.other_removed+')'], {bg:'#fff', fs:9, color:'#333'});
+
+            // Arrow: main identified → records removed
+            svg += arrowH(xMain+mainW, 75, xMainExcl);
+
+            // Other methods: Records identified
+            if (showM) {
+                svg += box(xOther, 44, otherW, BOX_H, ['Records identified from:','Websites (k = '+S.om_websites+')','Organisations (k = '+S.om_org+')','Citation searching (k = '+S.om_citation+')'], {bg:'#fff',fs:9,color:'#333'});
+            }
+
+            // ─── SCREENING STAGE ───
+            const screenY1 = Y.tabScTop + 4; // first row inside screening
+
+            // Arrows down to screened
+            svg += arrow(xMain+mainW/2, 44+BOX_H, xMain+mainW/2, screenY1+20);
+
+            svg += box(xMain, screenY1+20, mainW, BOX_H_SM, ['Records screened','(k = '+S.screened+')'], {bg:'#fff',fs:10,bold:false});
+            svg += arrowH(xMain+mainW, screenY1+20+BOX_H_SM/2, xMainExcl);
+            svg += box(xMainExcl, screenY1+20, mainExclW, BOX_H_SM, ['Records excluded*','(k = '+S.screened_excl+')'], {bg:'#fff',fs:10});
+
+            const row2Y = screenY1 + 20 + BOX_H_SM + ARROW;
+            svg += arrow(xMain+mainW/2, screenY1+20+BOX_H_SM, xMain+mainW/2, row2Y);
+            svg += box(xMain, row2Y, mainW, BOX_H_SM, ['Reports sought for retrieval','(k = '+S.sought+')'], {bg:'#fff',fs:10});
+            svg += arrowH(xMain+mainW, row2Y+BOX_H_SM/2, xMainExcl);
+            svg += box(xMainExcl, row2Y, mainExclW, BOX_H_SM, ['Reports not retrieved','(k = '+S.not_retrieved+')'], {bg:'#fff',fs:10});
+
+            const row3Y = row2Y + BOX_H_SM + ARROW;
+            svg += arrow(xMain+mainW/2, row2Y+BOX_H_SM, xMain+mainW/2, row3Y);
+            svg += box(xMain, row3Y, mainW, BOX_H_SM, ['Reports assessed for eligibility','(k = '+S.eligibility+')'], {bg:'#fff',fs:10});
+            const exclH = 68;
+            svg += arrowH(xMain+mainW, row3Y+BOX_H_SM/2, xMainExcl);
+            svg += box(xMainExcl, row3Y, mainExclW, exclH, ['Reports excluded:','Reason 1 (k = '+S.excl_r1+')','Reason 2 (k = '+S.excl_r2+')','Reason 3 (k = '+S.excl_r3+')'], {bg:'#fff',fs:9,color:'#333'});
+
+            // Other methods screening
+            if (showM) {
+                svg += arrow(xOther+otherW/2, 44+BOX_H, xOther+otherW/2, row2Y);
+                svg += box(xOther, row2Y, otherW, BOX_H_SM, ['Reports sought for retrieval','(k = '+S.om_sought+')'], {bg:'#fff',fs:9,color:'#333'});
+                svg += arrowH(xOther+otherW, row2Y+BOX_H_SM/2, xOtherExcl);
+                svg += box(xOtherExcl, row2Y, otherExclW, BOX_H_SM, ['Reports not retrieved','(k = '+S.om_not_retrieved+')'], {bg:'#fff',fs:9,color:'#333'});
+
+                svg += arrow(xOther+otherW/2, row2Y+BOX_H_SM, xOther+otherW/2, row3Y);
+                svg += box(xOther, row3Y, otherW, BOX_H_SM, ['Reports assessed for eligibility','(k = '+S.om_eligibility+')'], {bg:'#fff',fs:9,color:'#333'});
+                svg += arrowH(xOther+otherW, row3Y+BOX_H_SM/2, xOtherExcl);
+                svg += box(xOtherExcl, row3Y, otherExclW, exclH, ['Reports excluded:','Reason 1 (k = '+S.om_excl_r1+')','Reason 2 (k = '+S.om_excl_r2+')','Reason 3 (k = '+S.om_excl_r3+')'], {bg:'#fff',fs:9,color:'#333'});
+            }
+
+            // ─── INCLUDED STAGE ───
+            const inclY1 = Y.tabInclTop + 10;
+            svg += arrow(xMain+mainW/2, row3Y+BOX_H_SM, xMain+mainW/2, inclY1);
+
+            const inclBoxH = 60;
+            svg += box(xMain, inclY1, mainW + (showM ? mainExclGap + mainExclW + otherGap + otherW : 0), inclBoxH,
+                ['New studies included in review (k = '+S.new_studies+')','Reports of new included studies (k = '+S.new_reports+')'], {bg:'#fff',fs:10,sw:1.5,stroke:'#333'});
+
+            // Arrow from other methods down to new studies if visible
+            if (showM) {
+                svg += arrow(xOther+otherW/2, row3Y+exclH, xOther+otherW/2, inclY1+inclBoxH/2);
+                svg += arrowH(xOther+otherW/2, inclY1+inclBoxH/2, xMain+mainW + (showM ? mainExclGap + mainExclW + otherGap + otherW : 0));
+            }
+
+            // Total included
+            const totalY = inclY1 + inclBoxH + ARROW;
+            svg += arrow(xMain+mainW/2, inclY1+inclBoxH, xMain+mainW/2, totalY);
+            // Arrow from previous studies
+            if (showP) {
+                svg += `<line x1="${xPrev+prevW/2}" y1="${44+68}" x2="${xPrev+prevW/2}" y2="${totalY+inclBoxH/2}" stroke="#444" stroke-width="1.2" stroke-dasharray="4,3"/>`;
+                svg += arrowH(xPrev+prevW/2, totalY+inclBoxH/2, xMain);
+            }
+            svg += box(xMain, totalY, mainW + (showM ? mainExclGap+mainExclW+otherGap+otherW : 0), inclBoxH+4,
+                ['Total studies included in review (k = '+S.total_studies+')','Reports of total included studies (k = '+S.total_reports+')'], {bg:'#e8f0e8',stroke:'#2d7a2d',sw:1.5,fs:10,bold:true,color:'#1a3a1a'});
+
+            svg += '</svg>';
+            return { svg, W, H };
+        }
+
+        function updatePrismaDiagram() {
+            const container = document.getElementById('prisma-2020-ui');
+            if (!container) return;
+            const { svg, W, H } = buildPRISMASVG();
+            container.innerHTML = `<div style="overflow:auto; max-width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:white;">${svg}</div>`;
+            // Sync all inputs
+            syncInputs();
+        }
+
+        function downloadPRISMA(fmt) {
+            const { svg, W, H } = buildPRISMASVG();
+            if (fmt === 'svg') {
+                const blob = new Blob([svg], {type:'image/svg+xml'});
+                const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='PRISMA_2020_flowchart.svg'; a.click();
+            } else {
+                // PNG via canvas
+                const img = new Image();
+                const blob = new Blob([svg], {type:'image/svg+xml'});
+                const url = URL.createObjectURL(blob);
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width=W*2; canvas.height=H*2;
+                    const ctx = canvas.getContext('2d');
+                    ctx.scale(2,2); ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(b => {
+                        const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='PRISMA_2020_flowchart.png'; a.click();
+                    }, 'image/png');
+                    URL.revokeObjectURL(url);
+                };
+                img.src = url;
+            }
+        }
+
+        function renderSystematicReviewExtras(container) {
+            console.log("Initializing Systematic Review Extras...");
+            let outer = document.getElementById('epi-viz-outer');
+            if (!outer) {
+                outer = document.createElement('div');
+                outer.id = 'epi-viz-outer';
+                container.parentNode.appendChild(outer);
+            }
+            outer.innerHTML = '';
+            outer.style.cssText = "width: 100%; margin-top: 2rem; display: block !important; min-height: 1200px;";
+
+            const vizContainer = document.createElement('div');
+            vizContainer.id = 'sys-viz-inner';
+            vizContainer.style.cssText = "display: flex; flex-direction: column; gap: 4rem; padding-top: 2rem; border-top: 2px solid rgba(255,255,255,0.1); width: 100%; min-height: 1200px;";
+            outer.appendChild(vizContainer);
+
+            // Force immediate render
+            setTimeout(() => {
+                console.log("Triggering SVG renders...");
+                updatePrismaDiagram();
+                renderForestPlot('medical');
+                renderFunnelPlot('symmetric');
+            }, 400);
+
+            // ── Input helper
+            const inp = (k, label) => `<div style="margin-bottom:0.65rem;"><label style="display:block;font-size:0.7rem;color:#94a3b8;margin-bottom:2px;">${label}</label><input type="number" id="pi-${k}" oninput="prismaState.${k}=parseInt(this.value)||0;updatePrismaDiagram();" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:0.35rem 0.5rem;color:white;font-size:0.82rem;box-sizing:border-box;"></div>`;
+
+            // 1. PRISMA 2020 Builder
+            const prismaSection = document.createElement('div');
+            prismaSection.className = 'prisma-lab';
+            prismaSection.innerHTML = `
+                <div style="text-align:center; margin-bottom:1.5rem;">
+                    <h3 style="color:var(--primary-pink); margin-bottom:0.3rem; font-size:1.3rem;">📋 Interactive PRISMA 2020 Flow Builder</h3>
+                    <p style="color:var(--text-dim); font-size:0.82rem; max-width:620px; margin:0 auto;">Enter your study numbers — the PRISMA 2020 diagram updates live. Download as PNG (print-ready 300 DPI) or SVG for editing in Illustrator/Inkscape.</p>
+                </div>
+
+                <!-- Controls row -->
+                <div style="display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap; margin-bottom:1.2rem; align-items:center;">
+                    <button onclick="loadPrismaMedicalDemo()" style="background:linear-gradient(135deg,#3b82f6,#6366f1);color:white;border:none;border-radius:8px;padding:0.5rem 1.2rem;cursor:pointer;font-size:0.78rem;font-weight:700;">🫀 Load SGLT2 / HFpEF Demo</button>
+                    <button onclick="resetPrismaDefault()" style="background:rgba(255,255,255,0.07);color:#94a3b8;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:0.5rem 1rem;cursor:pointer;font-size:0.78rem;">↺ Reset</button>
+                    <div style="width:1px;height:24px;background:rgba(255,255,255,0.1);"></div>
+                    <button onclick="downloadPRISMA('png')" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:0.5rem 1rem;cursor:pointer;font-size:0.78rem;font-weight:700;">⬇ Download PNG</button>
+                    <button onclick="downloadPRISMA('svg')" style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:0.5rem 1rem;cursor:pointer;font-size:0.78rem;">⬇ Download SVG</button>
+                </div>
+
+                <!-- Optional tracks toggles -->
+                <div style="display:flex; gap:1.5rem; justify-content:center; margin-bottom:1.2rem;">
+                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.82rem; color:#94a3b8;">
+                        <input type="checkbox" id="opt-prev" onchange="prismaOpts.showPrev=this.checked; updatePrismaDiagram();" style="accent-color:#f472b6; width:15px; height:15px;">
+                        Include <strong style="color:#e2e8f0;">Previous Studies</strong> track (optional)
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.82rem; color:#94a3b8;">
+                        <input type="checkbox" id="opt-other" onchange="prismaOpts.showOther=this.checked; toggleOtherInputs(); updatePrismaDiagram();" style="accent-color:#f59e0b; width:15px; height:15px;">
+                        Include <strong style="color:#e2e8f0;">Other Methods</strong> track (optional)
+                    </label>
+                </div>
+
+                <!-- Builder grid: form + SVG preview -->
+                <div style="display:grid; grid-template-columns:240px 1fr; gap:1.5rem; align-items:start;">
+                    <!-- INPUT FORM -->
+                    <div style="background:rgba(0,0,0,0.25); border-radius:12px; padding:1rem; border:1px solid rgba(255,255,255,0.07); max-height:680px; overflow-y:auto;">
+                        <div style="font-size:0.65rem;font-weight:800;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.7rem;padding-bottom:4px;border-bottom:1px solid rgba(96,165,250,0.2);">🗄️ Databases &amp; Registers</div>
+                        ${inp('db_n','Records from Databases')}
+                        ${inp('reg_n','Records from Registers')}
+                        ${inp('dup_removed','Duplicate Records Removed')}
+                        ${inp('auto_removed','Removed by Automation Tools')}
+                        ${inp('other_removed','Removed for Other Reasons')}
+                        <div style="font-size:0.65rem;font-weight:800;color:#c084fc;text-transform:uppercase;letter-spacing:1px;margin:0.9rem 0 0.6rem;padding-bottom:4px;border-bottom:1px solid rgba(192,132,252,0.2);">🔍 Screening</div>
+                        ${inp('screened','Records Screened')}
+                        ${inp('screened_excl','Records Excluded (Title/Abstract)')}
+                        ${inp('sought','Reports Sought for Retrieval')}
+                        ${inp('not_retrieved','Reports Not Retrieved')}
+                        ${inp('eligibility','Assessed for Eligibility')}
+                        ${inp('excl_r1','Excluded — Reason 1')}
+                        ${inp('excl_r2','Excluded — Reason 2')}
+                        ${inp('excl_r3','Excluded — Reason 3')}
+                        <div style="font-size:0.65rem;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:1px;margin:0.9rem 0 0.6rem;padding-bottom:4px;border-bottom:1px solid rgba(16,185,129,0.2);">✅ Included</div>
+                        ${inp('new_studies','New Studies Included')}
+                        ${inp('new_reports','Reports of New Included Studies')}
+                        ${inp('total_studies','Total Studies Included')}
+                        ${inp('total_reports','Reports of Total Included Studies')}
+                        <!-- Other Methods (hidden by default) -->
+                        <div id="other-inputs-section" style="display:none;">
+                            <div style="font-size:0.65rem;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin:0.9rem 0 0.6rem;padding-bottom:4px;border-bottom:1px solid rgba(245,158,11,0.2);">🌐 Other Methods Track</div>
+                            ${inp('om_websites','Records from Websites')}
+                            ${inp('om_org','Records from Organisations')}
+                            ${inp('om_citation','Records from Citation Searching')}
+                            ${inp('om_sought','Reports Sought (Other)')}
+                            ${inp('om_not_retrieved','Not Retrieved (Other)')}
+                            ${inp('om_eligibility','Assessed for Eligibility (Other)')}
+                            ${inp('om_excl_r1','Excluded R1 (Other)')}
+                            ${inp('om_excl_r2','Excluded R2 (Other)')}
+                            ${inp('om_excl_r3','Excluded R3 (Other)')}
+                        </div>
+                    </div>
+                    <!-- SVG PREVIEW -->
+                    <div id="prisma-2020-ui" style="overflow:auto; background:white; border-radius:12px; height:850px !important; min-height:850px; border:4px solid #3b82f6; box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-shrink: 0;"></div>
+                </div>
+                <p style="color:#475569; font-size:0.72rem; text-align:center; margin-top:0.8rem;">PRISMA 2020 • Page et al., BMJ 2021;372:n71 • CC BY 4.0</p>
+            `;
+            vizContainer.appendChild(prismaSection);
+            // Height and visibility managed by global <style> block
+            setTimeout(updatePrismaDiagram, 100);
+
+            // 2. Forest Plot
+            const forestSection = document.createElement('div');
+            forestSection.innerHTML = `
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:2rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+                        <h3 style="color:var(--primary-blue); margin:0; font-size:1.1rem;">🌲 Meta-analysis: Forest Plot</h3>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <button onclick="renderForestPlot('general')" id="fp-btn-general" style="background:var(--primary-blue);color:white;border:none;border-radius:8px;padding:0.35rem 0.9rem;cursor:pointer;font-size:0.75rem;font-weight:700;">General</button>
+                            <button onclick="renderForestPlot('medical')" id="fp-btn-medical" style="background:rgba(255,255,255,0.07);color:var(--text-dim);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.35rem 0.9rem;cursor:pointer;font-size:0.75rem;">🫀 SGLT2 / HFpEF</button>
+                        </div>
+                    </div>
+                    <p style="color:var(--text-dim); font-size:0.8rem; margin-bottom:1rem;" id="forest-context-desc">Hypothetical drug trials — click SGLT2/HFpEF for real cardiovascular data.</p>
+                    <div id="forest-svg-wrap" style="width:100%; min-height:420px; overflow-x:auto; background:rgba(0,0,0,0.3); border-radius:12px; padding:1rem; border:2px solid rgba(96,165,250,0.2); flex-shrink: 0;"></div>
+                    <div style="margin-top:1.5rem; padding:1.2rem; background:rgba(96,165,250,0.1); border-left:4px solid var(--primary-blue); border-radius:8px;">
+                        <h4 style="color:var(--primary-blue); font-size:0.85rem; margin:0 0 0.5rem;">📖 How to Read a Forest Plot</h4>
+                        <ul style="font-size:0.82rem; color:var(--text-dim); margin:0; padding-left:1.2rem; line-height:1.9;">
+                            <li><strong style="color:white;">■ Squares</strong> = Each study's point estimate (HR/OR). <strong>Size reflects weight</strong> — larger studies get bigger squares.</li>
+                            <li><strong style="color:white;">── Horizontal lines</strong> = 95% Confidence Interval. Shorter line = more precise estimate.</li>
+                            <li><strong style="color:white;">Vertical dashed line</strong> = Line of Null Effect (HR = 1.0). Squares to the <em>left</em> favour the intervention.</li>
+                            <li><strong style="color:white;">◆ Diamond</strong> = Pooled effect (meta-analysis result). Its <em>width</em> = 95% CI. If it doesn't cross 1.0 → statistically significant.</li>
+                            <li><strong style="color:white;">I²</strong> = Heterogeneity: &lt;25% low, 25–50% moderate, &gt;50% high. High I² = studies are very different.</li>
+                            <li><strong style="color:#10b981;">Clinical read (SGLT2 example):</strong> Pooled HR 0.80 (95% CI 0.73–0.87) means SGLT2 inhibitors reduce CV death/HHF by <strong>~20%</strong>. Diamond is entirely left of 1.0 → highly significant (p&lt;0.001).</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            vizContainer.appendChild(forestSection);
+            setTimeout(() => renderForestPlot('medical'), 250);
+            if (window.ResizeObserver) {
+                new ResizeObserver(() => { const w = document.getElementById('forest-svg-wrap'); if (w && w.offsetWidth > 100) renderForestPlot(window._fpMode || 'general'); }).observe(document.getElementById('forest-svg-wrap') || document.body);
+            }
+
+            // 3. Funnel Plot
+            const funnelSection = document.createElement('div');
+            funnelSection.innerHTML = `
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:2rem;">
+                    <h3 style="color:var(--primary-green); margin-bottom:0.3rem; font-size:1.1rem; text-align:center;">🔍 Funnel Plot: Detecting Publication Bias</h3>
+                    <p style="color:var(--text-dim); font-size:0.82rem; text-align:center; margin-bottom:1.2rem;">Switch between scenarios to see how bias distorts the funnel shape.</p>
+                    <div style="display:flex; gap:0.5rem; justify-content:center; margin-bottom:1.5rem; flex-wrap:wrap;">
+                        <button onclick="renderFunnelPlot('symmetric')" id="fn-btn-symmetric" style="background:var(--primary-green);color:white;border:none;border-radius:8px;padding:0.4rem 1rem;cursor:pointer;font-size:0.78rem;font-weight:700;">✅ No Bias (Ideal)</button>
+                        <button onclick="renderFunnelPlot('biased')" id="fn-btn-biased" style="background:rgba(255,255,255,0.07);color:var(--text-dim);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.4rem 1rem;cursor:pointer;font-size:0.78rem;">⚠️ Publication Bias</button>
+                        <button onclick="renderFunnelPlot('outlier')" id="fn-btn-outlier" style="background:rgba(255,255,255,0.07);color:var(--text-dim);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.4rem 1rem;cursor:pointer;font-size:0.78rem;">🔴 Outlier Study</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start;">
+                        <div id="funnel-plot-svg" style="background:rgba(0,0,0,0.3); border-radius:12px; border:2px solid rgba(16,185,129,0.2); overflow:hidden; min-height:350px; flex-shrink: 0;"></div>
+                        <div id="funnel-explanation" style="padding:0.3rem;"></div>
+                    </div>
+                </div>
+            `;
+            vizContainer.appendChild(funnelSection);
+            setTimeout(() => renderFunnelPlot('symmetric'), 300);
+        }
+
+        function renderForestPlot(mode) {
+            console.log("Rendering Forest Plot Mode:", mode);
+            const wrap = document.getElementById('forest-svg-wrap');
+            const desc = document.getElementById('forest-context-desc');
+            if (!wrap) return;
+
+            // Style the mode buttons
+            ['general','medical'].forEach(m => {
+                const btn = document.getElementById('fp-btn-' + m);
+                if (btn) { btn.style.background = m === mode ? 'var(--primary-blue)' : 'rgba(255,255,255,0.07)'; btn.style.color = m === mode ? 'white' : 'var(--text-dim)'; btn.style.border = m === mode ? 'none' : '1px solid rgba(255,255,255,0.1)'; }
+            });
+
+            let studies, pooled, title;
+            if (mode === 'medical') {
+                desc.innerHTML = '<strong style="color:#60a5fa;">SGLT2 Inhibitors vs Placebo in HFpEF</strong> — Outcome: CV Death or HF Hospitalisation';
+                studies = [
+                    { name: 'EMPEROR-Preserved', ref: 'Anker et al. 2021 NEJM', hr: 0.79, lo: 0.69, hi: 0.90, w: 42 },
+                    { name: 'DELIVER', ref: 'Solomon et al. 2022 NEJM', hr: 0.82, lo: 0.73, hi: 0.92, w: 48 },
+                    { name: 'SOLOIST-WHF', ref: 'Bhatt et al. 2021 NEJM', hr: 0.67, lo: 0.52, hi: 0.85, w: 10 }
+                ];
+                pooled = { hr: 0.80, lo: 0.73, hi: 0.87, i2: 18 };
+            } else {
+                desc.innerHTML = 'Hypothetical antihypertensive drug trials — <em>for illustration only</em>';
+                studies = [
+                    { name: 'Trial Alpha', ref: 'Smith et al. 2018', hr: 0.73, lo: 0.55, hi: 0.94, w: 15 },
+                    { name: 'Trial Beta', ref: 'Jones et al. 2019', hr: 0.61, lo: 0.44, hi: 0.83, w: 22 },
+                    { name: 'Trial Gamma', ref: 'Patel et al. 2020', hr: 1.05, lo: 0.88, hi: 1.24, w: 30 },
+                    { name: 'Trial Delta', ref: 'García et al. 2021', hr: 0.88, lo: 0.78, hi: 0.99, w: 33 }
+                ];
+                pooled = { hr: 0.86, lo: 0.79, hi: 0.93, i2: 34 };
+            }
+
+            const W = Math.max(wrap.offsetWidth, 500);
+            const rowH = 44, pad = { l: 180, r: 120, t: 44, b: 80 };
+            const plotW = W - pad.l - pad.r;
+            const totalH = pad.t + studies.length * rowH + 70 + pad.b;
+            const xMin = 0.3, xMax = 2.0;
+            const xScale = v => pad.l + ((Math.log(v) - Math.log(xMin)) / (Math.log(xMax) - Math.log(xMin))) * plotW;
+
+            const nullX = xScale(1.0);
+            let rows = '';
+
+            studies.forEach((s, i) => {
+                const y = pad.t + i * rowH + rowH / 2;
+                const cx = xScale(s.hr), lx = xScale(s.lo), rx = xScale(s.hi);
+                const sq = 5 + (s.w / 100) * 14;
+
+                rows += `
+                    <line x1="${nullX}" y1="${y - 14}" x2="${nullX}" y2="${y + 14}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+                    <text x="${pad.l - 8}" y="${y}" text-anchor="end" fill="#ffffff" font-size="11" dominant-baseline="middle">${s.name}</text>
+                    <text x="${pad.l - 8}" y="${y + 13}" text-anchor="end" fill="#94a3b8" font-size="9" dominant-baseline="middle">${s.ref}</text>
+                    <line x1="${lx}" y1="${y}" x2="${rx}" y2="${y}" stroke="#60a5fa" stroke-width="2"/>
+                    <line x1="${lx}" y1="${y - 5}" x2="${lx}" y2="${y + 5}" stroke="#60a5fa" stroke-width="2"/>
+                    <line x1="${rx}" y1="${y - 5}" x2="${rx}" y2="${y + 5}" stroke="#60a5fa" stroke-width="2"/>
+                    <rect x="${cx - sq/2}" y="${y - sq/2}" width="${sq}" height="${sq}" fill="#f472b6" rx="2" style="filter:drop-shadow(0 0 8px rgba(244,114,182,0.8));"/>
+                    <text x="${W - pad.r + 8}" y="${y}" fill="#f472b6" font-size="11" dominant-baseline="middle" font-weight="700">${s.hr.toFixed(2)} (${s.lo.toFixed(2)}–${s.hi.toFixed(2)})</text>
+                    <text x="${pad.l - 8}" y="${y - rowH/2 + 4}" text-anchor="end" fill="rgba(255,255,255,0.3)" font-size="8">${s.w}%</text>
+                `;
+            });
+
+            // Pooled diamond — centred on pooled HR, spans from lo to hi
+            const poolY = pad.t + studies.length * rowH + 30;
+            const dCx = xScale(pooled.hr);
+            const dLx = xScale(pooled.lo);
+            const dRx = xScale(pooled.hi);
+            const dH = 12;
+
+            // Build x tick marks on log scale
+            const ticks = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2.0];
+            const tickMarks = ticks.map(t => {
+                const tx = xScale(t);
+                return `<line x1="${tx}" y1="${pad.t - 6}" x2="${tx}" y2="${totalH - pad.b + 5}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                         <text x="${tx}" y="${totalH - pad.b + 18}" text-anchor="middle" fill="#cbd5e1" font-size="10">${t}</text>`;
+            }).join('');
+
+            wrap.innerHTML = `
+                <svg width="${W}" height="${totalH}" style="display:block;">
+                    <!-- Null line -->
+                    <line x1="${nullX}" y1="${pad.t - 10}" x2="${nullX}" y2="${poolY + 20}" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-dasharray="4,3"/>
+                    <!-- Favours labels -->
+                    <text x="${nullX - 10}" y="${pad.t - 14}" text-anchor="end" fill="#94a3b8" font-size="10">◀ Favours Intervention</text>
+                    <text x="${nullX + 10}" y="${pad.t - 14}" fill="#94a3b8" font-size="10">Favours Control ▶</text>
+                    <!-- Column headers -->
+                    <text x="${pad.l - 8}" y="${pad.t - 14}" text-anchor="end" fill="#60a5fa" font-size="11" font-weight="700">Study</text>
+                    <text x="${W - pad.r + 8}" y="${pad.t - 14}" fill="#f472b6" font-size="11" font-weight="700">HR (95% CI)</text>
+                    ${tickMarks}
+                    ${rows}
+                    <!-- Divider line above pooled -->
+                    <line x1="${pad.l}" y1="${poolY - 14}" x2="${W - pad.r}" y2="${poolY - 14}" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                    <!-- Pooled CI line -->
+                    <line x1="${dLx}" y1="${poolY}" x2="${dRx}" y2="${poolY}" stroke="#10b981" stroke-width="2"/>
+                    <!-- Diamond (◆) -->
+                    <polygon points="${dLx},${poolY} ${dCx},${poolY - dH} ${dRx},${poolY} ${dCx},${poolY + dH}" fill="#10b981" style="filter:drop-shadow(0 0 10px rgba(16,185,129,0.8));"/>
+                    <text x="${pad.l - 8}" y="${poolY}" text-anchor="end" fill="#10b981" font-size="12" dominant-baseline="middle" font-weight="800">Pooled Effect (RE)</text>
+                    <text x="${W - pad.r + 8}" y="${poolY}" fill="#10b981" font-size="12" dominant-baseline="middle" font-weight="800">HR ${pooled.hr.toFixed(2)} (${pooled.lo}–${pooled.hi})</text>
+                    <!-- I2 label -->
+                    <text x="${W/2}" y="${totalH - 12}" text-anchor="middle" fill="#ffffff" font-size="11">I² = ${pooled.i2}% (${pooled.i2 < 25 ? 'Low' : pooled.i2 < 50 ? 'Moderate' : 'High'} Heterogeneity) &nbsp;|&nbsp; HR = Hazard Ratio &nbsp;|&nbsp; RE = Random Effects Model</text>
+                </svg>`;
+        }
+
+        function renderFunnelPlot(mode) {
+            const svgEl = document.getElementById('funnel-plot-svg');
+            const expEl = document.getElementById('funnel-explanation');
+            if (!svgEl) return;
+
+            // Update button styles
+            ['symmetric','biased','outlier'].forEach(m => {
+                const b = document.getElementById('fn-btn-' + m);
+                if (b) { b.style.background = m === mode ? 'var(--primary-green)' : 'rgba(255,255,255,0.07)'; b.style.color = m === mode ? 'white' : 'var(--text-dim)'; b.style.border = m === mode ? 'none' : '1px solid rgba(255,255,255,0.1)'; }
+            });
+
+            const W = svgEl.offsetWidth || 400, H = 320;
+            const midX = W / 2;
+            const topY = 40, botY = H - 30;
+            const maxSE = 0.6, minSE = 0.05;
+            const centerOR = 0.85;
+
+            // Study data per mode
+            let studies = [];
+            const seed = [0.1,0.3,0.55,0.7,0.85,0.2,0.6,0.4,0.15,0.5,0.9,0.35,0.65,0.8,0.25];
+            if (mode === 'symmetric') {
+                seed.forEach((s, i) => {
+                    const se = 0.08 + s * 0.5;
+                    const logOR = Math.log(centerOR) + (((i % 2 === 0 ? 1 : -1)) * se * (0.3 + s * 0.4));
+                    studies.push({ or: Math.exp(logOR), se });
+                });
+                expEl.innerHTML = `<div style="background:rgba(16,185,129,0.08);border-left:3px solid #10b981;border-radius:8px;padding:1rem;"><h4 style="color:#10b981;margin:0 0 0.6rem;font-size:0.9rem;">✅ Symmetrical Funnel — No Bias</h4><p style="color:var(--text-dim);font-size:0.82rem;line-height:1.7;margin:0;">Studies are scattered <strong style="color:white;">symmetrically</strong> on both sides around the true effect (vertical line). Large studies (low SE, near top) are tightly clustered. Small studies (high SE, bottom) scatter widely but equally on both sides. This pattern suggests <strong style="color:white;">all studies were published</strong>, regardless of whether their results were positive or negative.<br><br><em>📚 Clinical example: In the SGLT2 inhibitor meta-analysis, the funnel plot was near-symmetric, strengthening confidence in the pooled result.</em></p></div>`;
+            } else if (mode === 'biased') {
+                seed.forEach((s, i) => {
+                    const se = 0.08 + s * 0.5;
+                    const bias = se > 0.3 ? 0.25 : 0; // Small studies shifted right (missing negative)
+                    const logOR = Math.log(centerOR) + (0.1 + s * 0.3) - bias;
+                    studies.push({ or: Math.exp(logOR), se });
+                });
+                expEl.innerHTML = `<div style="background:rgba(239,68,68,0.08);border-left:3px solid #ef4444;border-radius:8px;padding:1rem;"><h4 style="color:#ef4444;margin:0 0 0.6rem;font-size:0.9rem;">⚠️ Asymmetrical Funnel — Publication Bias Likely</h4><p style="color:var(--text-dim);font-size:0.82rem;line-height:1.7;margin:0;">Notice the <strong style="color:white;">gap at the bottom-left</strong> — small studies with <em>negative or null results</em> are missing. This happens because journals preferentially publish <strong style="color:#ef4444;">positive results</strong>. Small negative trials end up in a "file drawer" (Rosenthal's file-drawer problem).<br><br>This inflates the pooled effect, making a drug appear more effective than it really is.<br><br><em>📚 Clinical example: Early antidepressant meta-analyses showed this pattern — once unpublished trials were included via FOIA requests, the pooled benefit shrank significantly.</em></p></div>`;
+            } else {
+                seed.forEach((s, i) => {
+                    const se = 0.08 + s * 0.5;
+                    const logOR = Math.log(centerOR) + (((i % 2 === 0 ? 1 : -1)) * se * (0.3 + s * 0.4));
+                    studies.push({ or: Math.exp(logOR), se });
+                });
+                studies.push({ or: 2.1, se: 0.08 }); // Outlier
+                expEl.innerHTML = `<div style="background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:1rem;"><h4 style="color:#f59e0b;margin:0 0 0.6rem;font-size:0.9rem;">🔴 Outlier Study Detected</h4><p style="color:var(--text-dim);font-size:0.82rem;line-height:1.7;margin:0;">An <strong style="color:white;">outlier study</strong> (top-right, highlighted in red) lies far outside the funnel. This large study shows a markedly different effect size, which could indicate: <strong>different patient population</strong>, <strong>methodological errors</strong>, or an <strong>undisclosed conflict of interest</strong>.<br><br>Sensitivity analysis (removing the outlier) should be performed to check how much it influences the pooled estimate.<br><br><em>📚 Clinical example: The ENHANCE trial on ezetimibe was questioned as a potential outlier in early LDL-lowering meta-analyses.</em></p></div>`;
+            }
+
+            // Map OR/SE to x/y
+            const xScale = or => midX + (Math.log(or) / Math.log(2.5)) * (W * 0.38);
+            const yScale = se => topY + ((se - minSE) / (maxSE - minSE)) * (botY - topY);
+
+            const funnelLeft = se => midX - (se / maxSE) * (W * 0.38);
+            const funnelRight = se => midX + (se / maxSE) * (W * 0.38);
+            const fL = funnelLeft(maxSE), fR = funnelRight(maxSE);
+
+            const dots = studies.map((s, i) => {
+                const x = xScale(s.or), y = yScale(s.se);
+                const isOutlier = mode === 'outlier' && i === studies.length - 1;
+                const col = isOutlier ? '#ef4444' : (mode === 'biased' && s.se > 0.3 && s.or < 0.7 ? 'rgba(239,68,68,0.3)' : '#60a5fa');
+                const r = isOutlier ? 7 : 4;
+                return `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" style="opacity:0.8; filter:drop-shadow(0 0 4px ${col});"/>`;
+            }).join('');
+
+            // Axis labels for SE
+            const seLabels = [0.0, 0.2, 0.4, 0.6].map(v => {
+                const y = yScale(v);
+                return `<text x="22" y="${y}" fill="#64748b" font-size="9" dominant-baseline="middle">${v.toFixed(1)}</text><line x1="28" y1="${y}" x2="34" y2="${y}" stroke="#64748b" stroke-width="1"/>`;
+            }).join('');
+
+            svgEl.innerHTML = `<svg width="${W}" height="${H}" style="display:block;">
+                <!-- Funnel boundary -->
+                <polygon points="${midX},${topY} ${fL},${botY} ${fR},${botY}" fill="rgba(16,185,129,0.2)" stroke="rgba(16,185,129,0.6)" stroke-dasharray="5,4" stroke-width="1.5" fill-rule="nonzero"/>
+                <!-- Null line -->
+                <line x1="${midX}" y1="${topY - 10}" x2="${midX}" y2="${botY + 5}" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-dasharray="4,3"/>
+                <!-- Axis labels -->
+                <text x="${midX}" y="${H - 8}" text-anchor="middle" fill="#ffffff" font-size="10">Effect Size (log OR / HR)</text>
+                <text x="10" y="${H/2}" fill="#cbd5e1" font-size="9" transform="rotate(-90,10,${H/2})">Standard Error (SE) — proxy for study size</text>
+                <text x="${midX - 60}" y="${topY - 14}" fill="#94a3b8" font-size="9">← Small SE = Large Precise Studies</text>
+                <text x="${midX + 5}" y="${botY + 20}" fill="#94a3b8" font-size="9">Large SE = Small Imprecise Studies →</text>
+                ${seLabels}
+                ${dots}
+                <text x="${midX}" y="${topY - 3}" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="9">True Effect</text>
+            </svg>`;
         }
 
         // --- 6. Bias Types Logic ---

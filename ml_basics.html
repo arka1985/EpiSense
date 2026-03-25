@@ -753,6 +753,13 @@
                     <p>Build and train real ML models with clinical markers.</p>
                 </div>
             </div>
+            <div class="path-btn" id="btn-path-ethics" onclick="switchPath('ethics')">
+                <div class="path-icon">⚖️</div>
+                <div class="path-text">
+                    <h3>Ethical AI and Visual Understanding of ML</h3>
+                    <p>Interactive demos on clinical AI ethics, regression, and model transparency.</p>
+                </div>
+            </div>
         </div>
 
         <div id="path-fundamentals" class="module-path-section active">
@@ -1184,6 +1191,227 @@
                 </div>
             </div>
         </div> <!-- End path-fundamentals (Correctly contains all theory content) -->
+
+        <!-- Path: Ethical AI Lab -->
+        <div id="path-ethics" class="module-path-section">
+            <header style="text-align: left; margin-bottom: 2rem;">
+                <h1 style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                    Ethical AI and Visual Understanding of ML</h1>
+                <p class="subtitle" style="margin: 0;">Hands-on demonstrations of where clinical AI fails, misleads, and discriminates.</p>
+            </header>
+
+            <div class="concept-grid">
+                <!-- 1. Linear Regression -->
+                <a href="ETHICAL_AI/medical_mlu_linear.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">📈</div>
+                        <span class="tile-tag">MLU 1</span>
+                    </div>
+                    <div class="tile-title">Linear Regression</div>
+                    <p class="tile-desc">Predicting continuous health markers like SBP from BMI and Age.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Chronic Disease Progression Modeling.
+                    </div>
+                </a>
+
+                <!-- 2. Logistic Regression -->
+                <a href="ETHICAL_AI/medical_mlu_logistic.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🎯</div>
+                        <span class="tile-tag">MLU 2</span>
+                    </div>
+                    <div class="tile-title">Logistic Regression</div>
+                    <p class="tile-desc">Visualizing probability thresholds for binary risk (e.g., Diabetes).</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Diagnostic Risk Stratification.
+                    </div>
+                </a>
+
+                <!-- 3. Decision Trees -->
+                <a href="ETHICAL_AI/medical_mlu_dt.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🌳</div>
+                        <span class="tile-tag">MLU 3</span>
+                    </div>
+                    <div class="tile-title">Decision Trees</div>
+                    <p class="tile-desc">Interactive logic flows for cancer triage and diagnostic rules.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Emergency Room Triage Protocols.
+                    </div>
+                </a>
+
+                <!-- 4. Random Forest -->
+                <a href="ETHICAL_AI/medical_mlu_rf.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🌲</div>
+                        <span class="tile-tag">MLU 4</span>
+                    </div>
+                    <div class="tile-title">Random Forest</div>
+                    <p class="tile-desc">The "Consensus Board" - aggregating multiple diverse tree models.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Multidisciplinary Tumour Boards.
+                    </div>
+                </a>
+
+                <!-- 5. ROC & AUC -->
+                <a href="ETHICAL_AI/medical_mlu_roc.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">📊</div>
+                        <span class="tile-tag">MLU 5</span>
+                    </div>
+                    <div class="tile-title">ROC & AUC</div>
+                    <p class="tile-desc">Mastering the trade-off between Sensitivity and Specificity.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Screening Test Accuracy Benchmarking.
+                    </div>
+                </a>
+
+                <!-- 6. Precision & Recall -->
+                <a href="ETHICAL_AI/medical_mlu_precision.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🔍</div>
+                        <span class="tile-tag">MLU 6</span>
+                    </div>
+                    <div class="tile-title">Precision & Recall</div>
+                    <p class="tile-desc">Understanding "Missing a Diagnosis" vs "False Alarms".</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Rare Disease Screening Optimization.
+                    </div>
+                </a>
+
+                <!-- 7. Bias-Variance -->
+                <a href="ETHICAL_AI/medical_mlu_bias.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🎯</div>
+                        <span class="tile-tag">MLU 7</span>
+                    </div>
+                    <div class="tile-title">Bias-Variance Trade-off</div>
+                    <p class="tile-desc">Visualizing the danger of Over-diagnosis vs Under-diagnosis.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Model Generalizability in Health Data.
+                    </div>
+                </a>
+
+                <!-- 8. Train/Test/Split -->
+                <a href="ETHICAL_AI/medical_mlu_cv.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🔄</div>
+                        <span class="tile-tag">MLU 8</span>
+                    </div>
+                    <div class="tile-title">Cross-Validation (K-Fold)</div>
+                    <p class="tile-desc">How rotating data ensures clinical reliability and robustness.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Ensuring Trial Results Apply to All Patients.
+                    </div>
+                </a>
+
+                <!-- 9. Double Descent -->
+                <a href="ETHICAL_AI/medical_mlu_dd.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🧠</div>
+                        <span class="tile-tag">MLU 9</span>
+                    </div>
+                    <div class="tile-title">Neural Net Complexity</div>
+                    <p class="tile-desc">Why larger models sometimes perform better (Double Descent).</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Precision Medicine & Genomic Transformers.
+                    </div>
+                </a>
+
+                <!-- 10. Deep Learning -->
+                <a href="ETHICAL_AI/medical_mlu_dl.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🔬</div>
+                        <span class="tile-tag">MLU 10</span>
+                    </div>
+                    <div class="tile-title">Deep Learning</div>
+                    <p class="tile-desc">Train a multi-layer neural network epoch-by-epoch. Watch train vs validation loss curves and detect overfitting live.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Medical Imaging · Histopathology · ECG Analysis
+                    </div>
+                </a>
+
+                <!-- 11. Transformer Attention -->
+                <a href="ETHICAL_AI/medical_mlu_transformer.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🔭</div>
+                        <span class="tile-tag">MLU 11</span>
+                    </div>
+                    <div class="tile-title">Transformer Attention</div>
+                    <p class="tile-desc">Explore self-attention on a clinical note. Click any token to see which terms the model focuses on for diagnosis.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Clinical NLP · EHR Summarisation · Radiology Reports
+                    </div>
+                </a>
+
+                <!-- 12. Reinforcement Learning -->
+                <a href="ETHICAL_AI/medical_mlu_rl.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🤖</div>
+                        <span class="tile-tag">MLU 12</span>
+                    </div>
+                    <div class="tile-title">Reinforcement Learning</div>
+                    <p class="tile-desc">Train a Q-learning agent to optimise sepsis vasopressor dosing. Watch cumulative reward grow as the agent learns.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        ICU Treatment Protocols · Sepsis Management · Drug Dosing
+                    </div>
+                </a>
+
+                <!-- 13. K-Means Clustering -->
+                <a href="ETHICAL_AI/medical_mlu_kmeans.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🧩</div>
+                        <span class="tile-tag">MLU 13</span>
+                    </div>
+                    <div class="tile-title">K-Means Clustering</div>
+                    <p class="tile-desc">Discover hidden patient subgroups without labels. Watch centroids migrate and find the optimal K using the Elbow method.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Patient Phenotyping · Disease Subtyping · Risk Stratification
+                    </div>
+                </a>
+
+                <!-- 14. Hierarchical Clustering -->
+                <a href="ETHICAL_AI/medical_mlu_hclust.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">🌳</div>
+                        <span class="tile-tag">MLU 14</span>
+                    </div>
+                    <div class="tile-title">Hierarchical Clustering</div>
+                    <p class="tile-desc">Build a taxonomy of patient data. Drag the cut threshold to define clusters and explore different linkage strategies.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Gene Expression Analysis · Biomarker Discovery · Taxonomy
+                    </div>
+                </a>
+
+                <!-- 15. PCA Dimensionality -->
+                <a href="ETHICAL_AI/medical_mlu_pca.html" class="concept-tile" style="text-decoration: none;">
+                    <div class="tile-header">
+                        <div class="tile-icon">💎</div>
+                        <span class="tile-tag">MLU 15</span>
+                    </div>
+                    <div class="tile-title">PCA Dimensionality</div>
+                    <p class="tile-desc">Simplify high-dimensional clinical data. Project many variables onto Principal Components while preserving variance.</p>
+                    <div class="example-box">
+                        <span class="example-label">Clinical Use</span>
+                        Biomarker Compression · Visualising High-Dim Data · EHR Noise Reduction
+                    </div>
+                </a>
+            </div>
+        </div>
 
         <div id="path-pipeline" class="module-path-section">
 
@@ -2285,7 +2513,14 @@
         function var_blue() { return getComputedStyle(document.body).getPropertyValue('--primary-blue').trim() || '#3b82f6'; }
 
         window.onload = () => {
-            switchPath('fundamentals');
+            const hash = window.location.hash.replace('#', '');
+            if (hash === 'path-ethics') {
+                switchPath('ethics');
+            } else if (hash === 'path-pipeline') {
+                switchPath('pipeline');
+            } else {
+                switchPath('fundamentals');
+            }
             goToStep(1);
         };
     </script>

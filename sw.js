@@ -1,4 +1,4 @@
-const CACHE_NAME = 'episense-v6';
+const CACHE_NAME = 'episense-v31';
 const ASSETS = [
     './',
     'index.html',
@@ -14,7 +14,8 @@ const ASSETS = [
     'icons/icon-192.png',
     'icons/icon-512.png',
     'logo.png',
-    'logo.svg'
+    'logo.svg',
+    'translation.html'
 ];
 
 self.addEventListener('install', (event) => {

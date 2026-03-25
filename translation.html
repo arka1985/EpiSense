@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Translation - EpiSense</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css?v=1.1">
+    <!-- Cache Busting Version: 1.1.2 -->
+    <style>
+        .module-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-white);
+        }
+
+        .viz-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-area {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-white);
+            font-family: inherit;
+            font-size: 1.1rem;
+            resize: vertical;
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-area:focus {
+            outline: none;
+            border-color: rgba(96, 165, 250, 0.5);
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+        }
+
+        .output-canvas {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(96, 165, 250, 0.05);
+            border-left: 4px solid #60a5fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: #f8fafc;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .neon-glow {
+            border-radius: 50%;
+            animation: neon-pulse 1.5s infinite alternate;
+            background: rgba(0,0,0,0.5);
+            padding: 2px;
+        }
+
+        @keyframes neon-pulse {
+            from {
+                box-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+            }
+            to {
+                box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
+            }
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #60a5fa;
+            padding: 0 1.5rem;
+            height: 48px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+        
+        .download-btn:hover {
+            background: linear-gradient(135deg, #60a5fa, #f472b6);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .module-container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2.2rem !important;
+            }
+        }
+
+        /* Tabs Styling */
+        .tab-box {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+            background: none;
+            border: none;
+            outline: none;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-blue);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -0.6rem;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #60a5fa, #f472b6);
+            border-radius: 4px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* STT Specific Styling */
+        .stt-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .stt-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-white);
+        }
+
+        .stt-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .stt-btn.recording {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ef4444;
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .neon-pink-pulse {
+            animation: neon-pink-glow 1.5s infinite alternate;
+        }
+
+        @keyframes neon-pink-glow {
+            from {
+                box-shadow: 0 0 2px #f472b6, 0 0 5px #f472b6;
+                border-color: #f472b6;
+            }
+            to {
+                box-shadow: 0 0 5px #f472b6, 0 0 10px #f472b6, 0 0 15px #f472b6;
+                border-color: #f472b6;
+            }
+        }
+
+        .stt-lang-select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.7rem 1.2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .chrome-notice {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .roadmap-card {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 1.2rem;
+            border-radius: 16px;
+            margin-top: 2rem;
+        }
+
+        /* Bhashini Plugin Container - Circular Neon Halo (Restored) */
+        .bhashini-plugin-container {
+            width: 45px;
+            height: 45px;
+            background: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px #0ff, inset 0 0 6px #0ff;
+            position: relative;
+            /* overflow: visible !important to show dropdown */
+            overflow: visible !important;
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            flex-shrink: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #bhashini-plugin-utility, div[id^="bhashini"] {
+            z-index: 99999 !important;
+            position: relative !important;
+            top: 0 !important;
+            right: 0 !important;
+        }
+
+        .stt-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 850px) {
+            .stt-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stt-col-label {
+            display: block;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="background-blobs">
+        <div class="blob blob-blue"></div>
+        <div class="blob blob-pink"></div>
+    </div>
+
+    <div class="module-container">
+        <a href="index.html" class="back-btn bhashini-skip-translation">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <header style="text-align: left; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+            <div class="bhashini-skip-translation">
+                <h1
+                    style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                    Language Translation for Research</h1>
+                <p class="subtitle" style="margin: 0; max-width: 600px;">Translate consent forms, research data collection tools, and information sheets to Indian languages.</p>
+            </div>
+            <div class="bhashini-plugin-container neon-glow"></div>
+        </header>
+
+        <div class="tab-box bhashini-skip-translation">
+            <button class="tab-btn active" onclick="switchTranslationTab('doc', this)">Document Translation</button>
+            <button class="tab-btn" onclick="switchTranslationTab('stt', this)">Speech-to-Text & Transcription</button>
+        </div>
+
+        <!-- Document Translation Tab -->
+        <div id="doc-translation-tab" class="tab-content active">
+            <div class="viz-card">
+            <h3 class="bhashini-skip-translation" style="color: var(--text-white); margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="icon-primary" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                Input Text (English)
+            </h3>
+            <textarea id="input-text" class="input-area bhashini-skip-translation" placeholder="Paste your research document text here..." style="box-sizing: border-box;"></textarea>
+            
+
+            
+            <div class="bhashini-skip-translation" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h3 style="color: var(--text-white); margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="icon-primary" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    Translation Canvas
+                </h3>
+                <button onclick="downloadWordDoc()" class="download-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download as Document
+                </button>
+            </div>
+            <p class="bhashini-skip-translation" style="color: var(--text-dim); font-size: 0.95rem; margin-bottom: 1rem;">Select your desired Indian language from the Bhashini widget at the top right to translate the text below.</p>
+            <div id="output-canvas" class="output-canvas" style="box-sizing: border-box;"></div>
+            </div>
+        </div>
+
+        <!-- Speech-to-Text Tab -->
+        <div id="stt-tab" class="tab-content bhashini-skip-translation">
+            <div class="chrome-notice bhashini-skip-translation">
+                <span style="font-size: 1.5rem;">🌐</span>
+                <div>
+                    <strong>Browser Requirement:</strong> This module uses the Web Speech API, which is most reliably supported in <strong>Google Chrome</strong>. Please ensure you are using Chrome for the best experience.
+                </div>
+            </div>
+
+            <div class="viz-card">
+                <div class="stt-controls bhashini-skip-translation">
+                    <select id="stt-language" class="stt-lang-select">
+                        <option value="en-IN" selected>English (India)</option>
+                        <option value="hi-IN">Hindi (हिन्दी)</option>
+                        <option value="bn-IN">Bengali (বাংলা)</option>
+                        <option value="ta-IN">Tamil (தமிழ்)</option>
+                        <option value="te-IN">Telugu (తెలుగు)</option>
+                        <option value="mr-IN">Marathi (मराठी)</option>
+                        <option value="gu-IN">Gujarati (ગુજરાતી)</option>
+                        <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+                        <option value="ml-IN">Malayalam (മലയാളം)</option>
+                        <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+                    </select>
+
+                    <button id="stt-start" class="stt-btn" style="border-color: #10b981; color: #10b981;">
+                        <span class="icon">🎤</span> Start Recording
+                    </button>
+                    <button id="stt-stop" class="stt-btn" disabled style="opacity: 0.5;">
+                        <span class="icon">⏹</span> Stop
+                    </button>
+                    <button id="stt-clear" class="stt-btn">
+                        <span class="icon">🗑</span> Clear
+                    </button>
+                </div>
+
+                <div class="stt-actions" style="margin-top: 1.5rem; justify-content: center; background: rgba(16, 185, 129, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px dashed #10b981; display: flex; align-items: center; gap: 1rem;">
+                    <button id="stt-translate-btn" class="stt-btn bhashini-skip-translation neon-pink-pulse" style="border-color: #f472b6; color: #f472b6; margin: 0; box-shadow: 0 0 10px rgba(244, 114, 182, 0.2);">
+                        <span class="icon">🌐</span> Translate to English
+                    </button>
+                    <div style="text-align: left; color: var(--text-dim); font-size: 0.85rem; border-left: 1px solid rgba(16, 185, 129, 0.2); padding-left: 1rem;">
+                        <strong style="color: #10b981;">💡 Pro-Tip:</strong> To transcribe recorded audio, simply play it from any device or speaker 
+                        near your microphone while <strong>Start Recording</strong> is active.
+                    </div>
+                </div>
+
+                <div class="stt-grid bhashini-skip-translation">
+                    <div>
+                        <label class="stt-col-label"><span>🎙️</span> Original Transcript</label>
+                        <textarea id="stt-output" class="input-area" style="min-height: 400px; background: rgba(0,0,0,0.3); margin-bottom: 0; border: 1px solid #3b82f6;" placeholder="Your speech or audio transcript will appear here..."></textarea>
+                        <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 1.25rem;">
+                            <button id="stt-save" class="download-btn bhashini-skip-translation" style="border-color: #10b981; color: #10b981; min-width: 170px;">
+                                💾 Save Locally
+                            </button>
+                            <button id="stt-export" class="download-btn bhashini-skip-translation" style="min-width: 170px;">
+                                ⬇ Export Original (.txt)
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="stt-col-label"><span style="color: #f472b6;">🌍</span> English Translation</label>
+                        <textarea id="stt-translation" class="input-area" style="min-height: 400px; background: rgba(96, 165, 250, 0.05); border-color: rgba(244, 114, 182, 0.3); margin-bottom: 0;" placeholder="English translation will appear here..."></textarea>
+                        <div style="display: flex; gap: 1rem; justify-content: space-between; margin-top: 1.25rem;">
+                            <button id="stt-export-trans" class="download-btn bhashini-skip-translation" style="border-color: #f472b6; color: #f472b6; min-width: 170px;">
+                                ⬇ Export Translation (.txt)
+                            </button>
+                            <button id="stt-download-doc" class="download-btn bhashini-skip-translation" style="background: linear-gradient(135deg, #60a5fa, #f472b6); color: white; border: none; min-width: 170px;">
+                                📄 Download Dual-Doc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="roadmap-card bhashini-skip-translation">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🚀</span> Future Roadmap
+                    </h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+                        Upcoming updates will include support for more Indian regional dialects and the integration of advanced 
+                        <strong>Large Speech Models (e.g., Bhashini ULCA)</strong> for superior transcription accuracy in complex medical and research terminologies.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bhashini-skip-translation" style="margin-top: 4rem; background: none; border: none; padding: 0;">
+            <div class="footer-content">
+                <div class="dev-label">Developed By Dr. Arkaprabha Sau</div>
+                <div class="dev-creds">
+                    MBBS, MD (Gold Medalist), DPH, Dip. Geriatric Medicine, CCEBDM<br>
+                    PhD (Computer Science & Engineering)
+                </div>
+                <div class="disclaimer" style="margin-top: 1.5rem; padding: 1rem; background: rgba(96, 165, 250, 0.05); border-radius: 12px; border: 1px solid rgba(96, 165, 250, 0.1); color: var(--text-white);">
+                    <strong>Acknowledgment:</strong> Translation services are powered by the <a href="https://bhashini.gov.in" target="_blank" style="color: #60a5fa; text-decoration: none;">Digital India Bhashini Division</a>. We extend our sincere gratitude for their AI-driven language translation tools.
+                </div>
+                <div class="disclaimer" style="margin-top: 1rem;">For educational and research purposes only. Please review translations for clinical accuracy.</div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://translation-plugin.bhashini.co.in/v3/website_translation_utility.js?v=1.3.1" language-icon-color="#0ff"></script>
+    <script>
+        // EPISENSE V1.6-FINAL - ISOLATE Bhashini to Doc Tab Only
+        (function() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    for(let reg of regs) reg.unregister();
+                });
+            }
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                const sttBtn = document.getElementById('stt-translate-btn');
+                if (sttBtn) {
+                    const cleanBtn = sttBtn.cloneNode(true);
+                    cleanBtn.onclick = null;
+                    sttBtn.parentNode.replaceChild(cleanBtn, sttBtn);
+                    initNuclearHandlers();
+                }
+                
+                // Initial visibility check
+                updateBhashiniVisibility('doc');
+                console.info("EpiSense STT v2.1 (Live MyMemory API) Initialized");
+            });
+        })();
+
+        function updateBhashiniVisibility(tabId) {
+             // More aggressive selector for Bhashini v3 widget
+             const bWidget = document.getElementById('bhashini-plugin-utility') || 
+                             document.querySelector('.bhashini-plugin-container') ||
+                             document.querySelector('div[id^="bhashini"]');
+                             
+             if (bWidget) {
+                 if (tabId === 'stt') {
+                     bWidget.style.display = 'none';
+                     bWidget.style.pointerEvents = 'none';
+                 } else {
+                     bWidget.style.display = 'flex';
+                     bWidget.style.pointerEvents = 'auto';
+                     bWidget.style.zIndex = '99999';
+                     bWidget.style.visibility = 'visible';
+                     bWidget.style.opacity = '1';
+                 }
+             }
+        }
+        
+        console.log("EpiSense Translation module v1.6 ISOLATED Loaded");
+        
+        const inputText = document.getElementById('input-text');
+        const outputCanvas = document.getElementById('output-canvas');
+
+        function updateOutput() {
+            outputCanvas.innerHTML = '';
+            const text = inputText.value;
+            if (!text.trim()) {
+                const placeholder = document.createElement('span');
+                placeholder.innerHTML = 'Your text will appear here. <br><br>Select a language from the Bhashini widget at the top right to translate the contents of this canvas.';
+                outputCanvas.appendChild(placeholder);
+                return;
+            }
+            
+            // Create paragraphs so Bhashini mutation observer cleanly intercepts text nodes
+            const paragraphs = text.split('\n');
+            paragraphs.forEach(pText => {
+                const p = document.createElement('p');
+                p.textContent = pText || '\u00A0';
+                p.style.margin = '0 0 0.5rem 0';
+                outputCanvas.appendChild(p);
+            });
+        }
+
+        // Sync input text to output canvas immediately
+        inputText.addEventListener('input', updateOutput);
+
+        // Initialize with default placeholder text
+        updateOutput();
+
+        // Export function to save as .doc file
+        function downloadWordDoc() {
+            // Retrieve only the translated English/Indian text from the output canvas
+            const outputHTML = document.getElementById('output-canvas').innerHTML;
+            
+            // Build the string formatting for Microsoft Word
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>EpiSense Translation</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + outputHTML + footer;
+
+            // Ensure proper font rendering (especially important for UTF-8 Indian languages) using BOM
+            const blob = new Blob(['\ufeff', sourceHTML], {
+                type: 'application/msword'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            // .doc handles HTML structures flawlessly in MS Word
+            link.download = 'Research_Translation.doc';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+
+
+        // --- Tab Management ---
+        function switchTranslationTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(tabId + '-translation-tab') ? document.getElementById(tabId + '-translation-tab').classList.add('active') : document.getElementById(tabId + '-tab').classList.add('active');
+            
+            // v1.6 - Hide/Show Bhashini widget based on tab
+            updateBhashiniVisibility(tabId);
+        }
+
+        // --- Speech-to-Text Logic ---
+        let recognition;
+        let isRecording = false;
+        const sttOutput = document.getElementById('stt-output');
+        const sttTranslation = document.getElementById('stt-translation');
+        const sttStartBtn = document.getElementById('stt-start');
+        const sttStopBtn = document.getElementById('stt-stop');
+        const sttTranslateBtn = document.getElementById('stt-translate-btn');
+
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            sttStartBtn.disabled = true;
+            sttStartBtn.innerHTML = "❌ Browser Not Supported";
+        } else {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                sttStartBtn.classList.add('recording');
+                sttStartBtn.innerHTML = "<span>🔴</span> Recording...";
+                sttStartBtn.disabled = true;
+                sttStopBtn.disabled = false;
+                sttStopBtn.style.opacity = "1";
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    sttOutput.value += (sttOutput.value ? ' ' : '') + finalTranscript;
+                    // Trigger auto-save to local storage
+                    localStorage.setItem('epi_stt_transcript', sttOutput.value);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Recognition Error:", event.error);
+                stopSTT();
+            };
+
+            recognition.onend = () => {
+                if (isRecording) recognition.start(); // Keep recording if not stopped manually
+            };
+        }
+
+        function stopSTT() {
+            isRecording = false;
+            recognition.stop();
+            sttStartBtn.classList.remove('recording');
+            sttStartBtn.innerHTML = "<span>🎤</span> Start Recording";
+            sttStartBtn.disabled = false;
+            sttStopBtn.disabled = true;
+            sttStopBtn.style.opacity = "0.5";
+        }
+
+        sttStartBtn.onclick = () => {
+            const lang = document.getElementById('stt-language').value;
+            recognition.lang = lang;
+            recognition.start();
+        };
+
+        sttStopBtn.onclick = stopSTT;
+
+        function clearSTT() {
+            if (confirm("Clear both transcript and translation?")) {
+                sttOutput.value = '';
+                sttTranslation.value = '';
+            }
+        }
+
+        // v2.0 REAL API INTEGRATION
+        async function performRealTranslation(text, srcLang) {
+            try {
+                // Map Bhashini/Browser codes to MyMemory codes
+                const langMap = {
+                    'bn-IN': 'bn', 'hi-IN': 'hi', 'ta-IN': 'ta', 'te-IN': 'te', 
+                    'mr-IN': 'mr', 'gu-IN': 'gu', 'kn-IN': 'kn', 'ml-IN': 'ml', 'pa-IN': 'pa'
+                };
+                const src = langMap[srcLang] || 'auto';
+                
+                // Fetch from MyMemory (Free Public API)
+                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|en`);
+                const data = await response.json();
+                
+                if (data.responseData && data.responseData.translatedText) {
+                    return data.responseData.translatedText;
+                }
+                throw new Error("API Limit reached or invalid response");
+            } catch (error) {
+                console.error("Translation API Error:", error);
+                return "Translation Service Busy (MyMemory API). Please try again in a few seconds or check your internet connection.";
+            }
+        }
+
+        function initNuclearHandlers() {
+            const sttTranslateBtn = document.getElementById('stt-translate-btn');
+            const sttClearBtn = document.getElementById('stt-clear');
+
+            if (sttClearBtn) sttClearBtn.onclick = clearSTT;
+
+            if (sttTranslateBtn) {
+                sttTranslateBtn.onclick = async (e) => {
+                    if (e) e.stopImmediatePropagation();
+                    const text = sttOutput.value.trim();
+                    if (!text) {
+                        alert("Please record or type some text to translate first.");
+                        return;
+                    }
+
+                    const srcLang = document.getElementById('stt-language').value;
+                    
+                    // Simple Latin-based character detection for English
+                    const isEnglish = /^[A-Za-z0-9\s.,!?'"()\-]+$/.test(text);
+
+                    if (isEnglish || srcLang === 'en-IN') {
+                        sttTranslation.value = text;
+                        localStorage.setItem('epi_stt_translation', text);
+                        return;
+                    }
+
+                    sttTranslateBtn.innerHTML = "<span>⏳</span> Translating (Real-Time API)...";
+                    sttTranslateBtn.disabled = true;
+
+                    // v2.0 - LIVE API CALL (Handles full sentences & context)
+                    const translatedText = await performRealTranslation(text, srcLang);
+                    
+                    sttTranslation.value = translatedText;
+                    localStorage.setItem('epi_stt_translation', translatedText);
+                    sttTranslateBtn.innerHTML = "<span>🌐</span> Translate to English";
+                    sttTranslateBtn.disabled = false;
+                };
+            }
+        }
+
+        document.getElementById('stt-save').onclick = () => {
+            localStorage.setItem('epi_stt_transcript', sttOutput.value);
+            localStorage.setItem('epi_stt_translation', sttTranslation.value);
+            alert("Both transcript and translation saved locally!");
+        };
+
+        document.getElementById('stt-export').onclick = () => {
+            const text = sttOutput.value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "EpiSense_Original_Transcript.txt";
+            a.click();
+        };
+
+        document.getElementById('stt-export-trans').onclick = () => {
+            const text = sttTranslation.value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "EpiSense_English_Translation.txt";
+            a.click();
+        };
+
+        document.getElementById('stt-download-doc').onclick = () => {
+            const original = sttOutput.value;
+            const translation = sttTranslation.value;
+            
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table {width: 100%; border-collapse: collapse;} td {width: 50%; padding: 10px; border: 1px solid #ddd; vertical-align: top;}</style></head><body><h2 style='color:#3b82f6; text-align:center;'>Research Transcription & Translation</h2><table><tr><th style='background:#f8fafc'>Original Transcript</th><th style='background:#f8fafc'>English Translation</th></tr><tr><td>";
+            const middle = "</td><td>";
+            const footer = "</td></tr></table></body></html>";
+            
+            const sourceHTML = header + original.replace(/\n/g, '<br>') + middle + translation.replace(/\n/g, '<br>') + footer;
+            
+            const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Research_Dual_Transcript.doc";
+            a.click();
+        };
+
+        // Load saved transcript
+        window.addEventListener('load', () => {
+            const savedOrig = localStorage.getItem('epi_stt_transcript');
+            const savedTrans = localStorage.getItem('epi_stt_translation');
+            if (savedOrig) sttOutput.value = savedOrig;
+            if (savedTrans) sttTranslation.value = savedTrans;
+        });
+    </script>
+</body>
+
+</html>
