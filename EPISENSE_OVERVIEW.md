@@ -1,4 +1,4 @@
-# EpiSense Research Suite: Comprehensive Project Guide (v10.0)
+# EpiSense Research Suite: Comprehensive Project Guide
 
 Welcome to **EpiSense**, an all-in-one, high-fidelity research and epidemiology suite designed for medical students, public health researchers, and beginners. Developed by **Dr. Arkaprabha Sau**, this suite balances academic rigor with intuitive design, making complex statistical and epidemiological concepts accessible through interactive visualizations and medical analogies.
 
