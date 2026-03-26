@@ -15,20 +15,11 @@ Welcome to **EpiSense**, an all-in-one, high-fidelity research and epidemiology 
 ### 1. Research Design & Methodology
 *   **Purpose**: The foundational tile for structuring scientific inquiry.
 *   **Sub-Modules & Tabs**:
-    *   **Types of Epidemiological Research**: Detailed interactive guide with three primary tabs:
-        *   **Observational Studies**: Descriptive (Case Reports, Case Series, Cross-Sectional) vs. Analytical (Case-Control, Cohort).
-        *   **Experimental Studies**: Randomized Controlled Trials (RCTs), Quasi-experimental, and Community Trials.
-        *   **Systematic Review & Meta-analysis**: Logic for evidence synthesis and the PRISMA 2020 framework.
-        *   **Reporting Guidelines**: STROBE, CONSORT, PRISMA, and EQUATOR-Network standards.
-    *   **Randomization Lab**: Visual demonstration of:
-        *   **Simple Randomization**: Equal chance for any participant.
-        *   **Block Randomization**: Ensuring equal group sizes in small samples.
-        *   **Stratified Randomization**: Balancing prognostic factors (e.g., Age/Gender) across groups.
-    *   **Matching & Blinding**: Clinical logic for Case-Control matching and Blinding (Single, Double, Triple).
-    *   **Sampling Techniques**: Interactive visual for:
-        *   **Probability Sampling**: Simple Random, Systematic, Stratified, and Cluster techniques.
-        *   **Non-Probability Sampling**: Convenience, Snowball, and Quota methods.
-    *   **Bradford Hill Criteria**: A 9-point interactive checklist for establishing causality.
+    *   **Types of Epidemiological Research**: Detailed guide to Observational (Descriptive/Analytical) vs. Experimental studies.
+    *   **Randomization Lab**: Interactive tool for Simple, Blocked, and Stratified randomization.
+    *   **Matching & Blinding**: Logic for Case-Control matching and Single/Double/Triple-blind trial design.
+    *   **Sampling Techniques**: Visual guide to Probability (Simple Random, Systematic, Stratified, Cluster) vs. Non-Probability sampling.
+    *   **Bradford Hill Criteria**: Interactive checklist for establishing causality in epidemiology.
 
 ### 2. Basic Statistical Visuals (Stats Viz)
 *   **Purpose**: Understanding the "Shape" and "Pulse" of data.

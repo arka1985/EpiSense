@@ -561,19 +561,9 @@ input[type="number"]:focus {
     margin-bottom: 3rem;
 }
 
-@media (max-width: 768px) {
-    .two-by-two-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    .two-by-two-grid div:first-child {
-        display: none; /* Hide 'Positive'/'Negative' labels on side if stacking */
-    }
-}
-
-@media (max-width: 600px) {
+@media (max-width: 1024px) {
     .metrics-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

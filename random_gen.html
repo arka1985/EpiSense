@@ -16,16 +16,6 @@
             padding: 2rem;
         }
 
-        @media (max-width: 768px) {
-            .module-container {
-                padding: 1rem;
-                margin: 1rem auto;
-            }
-            h1 {
-                font-size: 2rem !important;
-            }
-        }
-
         .back-btn {
             display: inline-flex;
             align-items: center;
@@ -46,19 +36,9 @@
         /* Navigation Grid */
         .nav-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
             margin-bottom: 3rem;
-        }
-
-        @media (max-width: 480px) {
-            .nav-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .nav-btn {
-                padding: 1rem 0.5rem;
-                font-size: 0.8rem;
-            }
         }
 
         .nav-btn {

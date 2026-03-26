@@ -539,17 +539,9 @@ footer {
         /* Stack info cards */
     }
 
-    .back-btn {
-        margin-bottom: 0 !important;
-        position: relative !important;
-        width: 100%;
-        justify-content: center;
-    }
-
     footer {
-        padding: 1rem;
+        padding: 1.5rem;
         font-size: 0.85rem;
-        border-radius: 20px;
     }
 }
 
