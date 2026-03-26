@@ -14,6 +14,10 @@
     <link rel="stylesheet" href="main.css">
     <style>
         .module-container { max-width: 1400px; margin: 2rem auto; padding: 2rem; }
+        @media (max-width: 768px) {
+            .module-container { padding: 1rem; margin: 1rem auto; }
+            h1 { font-size: 2rem !important; }
+        }
         .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-dim); text-decoration: none; margin-bottom: 2rem; font-weight: 600; transition: color 0.3s; }
         .back-btn:hover { color: var(--text-white); }
         .viz-card { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 2rem; margin-bottom: 2rem; }
@@ -26,6 +30,9 @@
         .form-control::placeholder { color: rgba(255,255,255,0.3); }
 
         .author-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.8rem; margin-bottom: 0.8rem; align-items: center; }
+        @media (max-width: 600px) {
+            .author-row { grid-template-columns: 1fr; gap: 0.4rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        }
         .remove-btn { background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 0.5rem; transition: background 0.3s; }
         .remove-btn:hover { background: rgba(239,68,68,0.1); border-radius: 8px; }
 
@@ -136,7 +143,11 @@
                 </div>
 
                 <!-- Dynamic Grid for Details -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div class="details-grid">
+                    <style>
+                        .details-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+                        @media (max-width: 600px) { .details-grid { grid-template-columns: 1fr; } }
+                    </style>
                     <div class="form-group" id="f-publisher" style="display:none;">
                         <label>Publisher</label>
                         <input type="text" id="pub" class="form-control" oninput="generatePreview()" placeholder="e.g. Penguin">

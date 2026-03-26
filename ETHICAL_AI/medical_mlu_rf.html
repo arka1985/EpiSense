@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Forest Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-blue:#007bff; --primary-pink:#e83e8c; --glass-bg:rgba(255,255,255,0.07); --glass-border:rgba(255,255,255,0.15); --text-white:#f8fafc; --text-dim:#94a3b8; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Outfit',sans-serif; background:radial-gradient(circle at top left,#1e293b,#0f172a); color:var(--text-white); height:100vh; overflow:hidden; }
+
+        .blobs { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+        .blob { position:absolute; width:600px; height:600px; border-radius:50%; filter:blur(100px); opacity:0.2; animation:float 20s infinite alternate ease-in-out; }
+        .blob-blue { background:var(--primary-blue); top:-200px; left:-200px; }
+        .blob-pink  { background:var(--primary-pink); bottom:-200px; right:-200px; animation-delay:-10s; }
+        @keyframes float { from{transform:translate(0,0) scale(1)} to{transform:translate(80px,80px) scale(1.1)} }
+
+        .back-btn { position:fixed; top:1.1rem; left:1.1rem; z-index:200; display:inline-flex; align-items:center; gap:0.45rem; background:rgba(255,255,255,0.08); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.18); border-radius:50px; color:#fff; text-decoration:none; font-size:0.82rem; font-weight:600; padding:0.5rem 1rem; transition:all 0.25s; }
+        .back-btn:hover { background:rgba(255,255,255,0.14); transform:translateX(-3px); }
+
+        .app { position:relative; z-index:1; display:flex; height:100vh; overflow:hidden; }
+
+        /* Narrative */
+        .narrative { width:24%; min-width:210px; height:100%; overflow-y:auto; padding:4.5rem 1.5rem 3rem; border-right:1px solid rgba(255,255,255,0.1); scrollbar-width:none; flex-shrink:0; }
+        .narrative::-webkit-scrollbar { display:none; }
+        section { min-height:72vh; display:flex; flex-direction:column; justify-content:center; opacity:0.22; transform:translateX(-8px); transition:opacity 0.4s,transform 0.4s; }
+        section.active { opacity:1; transform:none; }
+        .hero { font-size:1.9rem; font-weight:800; line-height:1.15; margin-bottom:1rem; letter-spacing:-0.03em; }
+        .hero span { background:linear-gradient(to right,#60a5fa,#f472b6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        section h2 { font-size:0.95rem; font-weight:700; color:#60a5fa; margin-bottom:0.7rem; }
+        section p { font-size:0.88rem; line-height:1.7; color:var(--text-dim); margin-bottom:0.6rem; }
+        .cbox { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#34d399; background:rgba(0,0,0,0.28); border:1px solid rgba(52,211,153,0.18); border-radius:10px; padding:0.75rem; line-height:1.85; margin:0.6rem 0; }
+        .ethical-box { background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(232,62,140,0.05)); border:1px solid rgba(239,68,68,0.28); border-radius:14px; padding:1rem; }
+        .ethical-box h2 { color:#f87171; }
+
+        /* Scrollable right */
+        .lab-scroll { flex:1; height:100%; overflow-y:auto; overflow-x:hidden; padding:1.4rem; display:flex; flex-direction:column; gap:1rem; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.12) transparent; }
+        .lab-scroll::-webkit-scrollbar { width:5px; }
+        .lab-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:10px; }
+
+        .panels-row { display:grid; grid-template-columns:1fr 1.3fr 1fr; gap:1rem; }
+
+        .glass-panel { background:var(--glass-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid var(--glass-border); border-radius:20px; padding:1.3rem; display:flex; flex-direction:column; gap:0.85rem; }
+        .panel-label { font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-dim); padding-bottom:0.6rem; border-bottom:1px solid rgba(255,255,255,0.09); display:flex; align-items:center; gap:0.45rem; }
+        .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+        .dot-blue  { background:#60a5fa; box-shadow:0 0 6px #60a5fa; }
+        .dot-pink  { background:#f472b6; box-shadow:0 0 6px #f472b6; }
+        .dot-green { background:#34d399; box-shadow:0 0 6px #34d399; }
+        .dot-gold  { background:#fbbf24; box-shadow:0 0 6px #fbbf24; }
+
+        .num-field { display:flex; flex-direction:column; gap:0.32rem; }
+        .num-field .fl { font-size:0.68rem; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.07em; }
+        .num-field input[type="number"] { width:100%; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:#fff; font-family:'JetBrains Mono',monospace; font-size:1.6rem; font-weight:700; padding:0.5rem 0.8rem; text-align:center; outline:none; transition:border-color 0.2s; }
+        .num-field input[type="number"]:focus { border-color:#60a5fa; box-shadow:0 0 0 3px rgba(96,165,250,0.15); }
+        .num-field .fu { font-size:0.62rem; color:rgba(148,163,184,0.6); text-align:center; font-weight:600; text-transform:uppercase; }
+        input[type="number"]::-webkit-inner-spin-button { opacity:0.25; }
+
+        .slider-row { display:flex; flex-direction:column; gap:0.32rem; }
+        .slider-top { display:flex; justify-content:space-between; align-items:baseline; }
+        .s-label { font-size:0.7rem; font-weight:600; color:var(--text-dim); }
+        .s-val { font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:800; color:#f8fafc; }
+        .s-hint { font-size:0.58rem; color:rgba(148,163,184,0.5); }
+        input[type="range"] { width:100%; height:5px; appearance:none; border-radius:10px; background:rgba(255,255,255,0.08); cursor:pointer; outline:none; }
+        input[type="range"].blue::-webkit-slider-thumb  { appearance:none; width:16px; height:16px; border-radius:50%; background:#60a5fa; border:2px solid #fff; box-shadow:0 0 8px rgba(96,165,250,0.6); }
+        input[type="range"].pink::-webkit-slider-thumb  { appearance:none; width:16px; height:16px; border-radius:50%; background:#f472b6; border:2px solid #fff; box-shadow:0 0 8px rgba(244,114,182,0.6); }
+        input[type="range"].green::-webkit-slider-thumb { appearance:none; width:16px; height:16px; border-radius:50%; background:#34d399; border:2px solid #fff; box-shadow:0 0 8px rgba(52,211,153,0.6); }
+
+        .output-big { background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(244,114,182,0.06)); border:1px solid rgba(96,165,250,0.22); border-radius:16px; padding:1.1rem; text-align:center; }
+        .out-label { font-size:0.58rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-dim); }
+        .out-verdict { font-size:1.3rem; font-weight:800; padding:0.4rem 1.2rem; border-radius:50px; display:inline-block; margin:0.4rem 0 0.2rem; }
+        .verdict-mal { background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#f87171; }
+        .verdict-ben { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.4); color:#34d399; }
+        .out-conf { font-size:0.68rem; color:var(--text-dim); }
+
+        .mini-row { display:grid; grid-template-columns:1fr 1fr; gap:0.55rem; }
+        .mini-card { background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:0.7rem; text-align:center; }
+        .mini-val { font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:800; }
+        .mini-label { font-size:0.54rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; margin-top:0.2rem; }
+
+        .btn-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:auto; }
+        .btn-primary { padding:0.6rem 1.1rem; border-radius:50px; border:none; cursor:pointer; background:linear-gradient(135deg,#007bff,#e83e8c); color:#fff; font-family:'Outfit',sans-serif; font-size:0.8rem; font-weight:700; transition:all 0.2s; white-space:nowrap; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,123,255,0.35); }
+        .btn-secondary { padding:0.6rem 1rem; border-radius:50px; border:1px solid rgba(255,255,255,0.15); cursor:pointer; background:rgba(255,255,255,0.06); color:var(--text-dim); font-family:'Outfit',sans-serif; font-size:0.8rem; font-weight:600; transition:all 0.2s; white-space:nowrap; }
+        .btn-secondary:hover { background:rgba(255,255,255,0.12); color:#fff; }
+
+        .viz-panel { height:420px; flex-shrink:0; }
+        #forest-svg { width:100%; height:100%; display:block; }
+    </style>
+</head>
+<body>
+
+<div class="blobs"><div class="blob blob-blue"></div><div class="blob blob-pink"></div></div>
+
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Dashboard
+</a>
+
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Random Forest <span>Ensemble Lab</span></div>
+        <p>A Random Forest grows many independent Decision Trees on <strong>random subsets</strong> of the training data, then lets them <strong>vote</strong> on the final diagnosis.</p>
+        <p>Set patient values and watch each tree cast its vote live.</p>
+    </section>
+
+    <section id="s2">
+        <h2>Bootstrap Sampling</h2>
+        <p>Each tree is trained on a different <strong>bootstrap sample</strong> — drawn <em>with replacement</em> from the original dataset. On average, each tree sees ~63% of patients, missing ~37%.</p>
+        <div class="cbox">Bootstrap sample (n=100):
+— randomly draw 100 rows WITH replacement
+— some patients appear 2–3×, others not at all
+— ~37% are Out-of-Bag (OOB) for each tree</div>
+        <p>The <strong>OOB samples</strong> act as a built-in validation set — no separate test split needed.</p>
+    </section>
+
+    <section id="s3">
+        <h2>Feature Randomness &amp; Majority Vote</h2>
+        <p>At each split, only a <strong>random subset of features</strong> is considered (here: 1 of 2). This decorrelates the trees — they make different errors.</p>
+        <div class="cbox">Ensemble prediction:
+P(Malignant) = (# trees → Malignant) / N
+
+Final class = majority vote
+
+Confidence = votes for winner / N</div>
+        <p>More trees → more stable predictions. Variance drops but bias stays similar.</p>
+    </section>
+
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ Ethical Reality</h2>
+            <p>If training data over-represents one demographic, <em>every tree</em> in the forest inherits that bias. Ensemble methods amplify systematic errors, not just random ones.</p>
+        </div>
+    </section>
+</aside>
+
+<div class="lab-scroll">
+    <div class="panels-row">
+
+        <!-- Panel 1: Input -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>① Patient Input</div>
+            <div class="num-field">
+                <div class="fl">Tumour Size</div>
+                <input type="number" id="in-size" value="5.5" min="0" max="10" step="0.1">
+                <div class="fu">centimetres (cm)</div>
+            </div>
+            <div class="num-field">
+                <div class="fl">Cell Uniformity</div>
+                <input type="number" id="in-unif" value="4" min="1" max="10" step="1">
+                <div class="fu">score 1 – 10</div>
+            </div>
+        </div>
+
+        <!-- Panel 2: Forest Parameters -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-pink"></span>② Forest Parameters</div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Number of Trees</span><span class="s-val" id="lbl-ntrees">7</span></div>
+                <input type="range" class="blue" id="sl-ntrees" min="1" max="15" value="7">
+                <span class="s-hint">more trees = more stable vote</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Max Depth per Tree</span><span class="s-val" id="lbl-depth">3</span></div>
+                <input type="range" class="pink" id="sl-depth" min="1" max="5" value="3">
+                <span class="s-hint">controls individual tree complexity</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Bootstrap Fraction</span><span class="s-val" id="lbl-boot">80%</span></div>
+                <input type="range" class="green" id="sl-boot" min="40" max="100" value="80">
+                <span class="s-hint">% of data sampled per tree</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="btn-grow">🌲 Grow Forest</button>
+                <button class="btn-secondary" id="btn-reset">Reset</button>
+            </div>
+        </div>
+
+        <!-- Panel 3: Output -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-green"></span>③ Ensemble Output</div>
+            <div class="output-big">
+                <div class="out-label">Forest Consensus</div>
+                <div id="out-verdict" class="out-verdict verdict-mal">MALIGNANT</div>
+                <div class="out-conf" id="out-conf">—</div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card">
+                    <div class="mini-val" id="val-mal" style="color:#f87171">—</div>
+                    <div class="mini-label">Malignant Votes</div>
+                </div>
+                <div class="mini-card">
+                    <div class="mini-val" id="val-ben" style="color:#34d399">—</div>
+                    <div class="mini-label">Benign Votes</div>
+                </div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card">
+                    <div class="mini-val" id="val-oob" style="color:#fbbf24">—</div>
+                    <div class="mini-label">OOB Accuracy</div>
+                </div>
+                <div class="mini-card">
+                    <div class="mini-val" id="val-agree" style="color:#60a5fa">—</div>
+                    <div class="mini-label">Tree Agreement</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Visualization -->
+    <div class="glass-panel viz-panel">
+        <div class="panel-label"><span class="dot dot-gold"></span>④ Forest Visualization — each tree shows its patient path + vote · majority bar at right · highlighted = current patient outcome</div>
+        <svg id="forest-svg"></svg>
+    </div>
+</div>
+</div>
+
+<script>
+// ── CART Engine ────────────────────────────────────────────
+function gini(data) {
+    if (!data.length) return 0;
+    const p = data.filter(d=>d.label).length / data.length;
+    return 1 - p*p - (1-p)*(1-p);
+}
+function entropy(data) {
+    if (!data.length) return 0;
+    const p = data.filter(d=>d.label).length / data.length;
+    if (p===0||p===1) return 0;
+    return -(p*Math.log2(p)+(1-p)*Math.log2(1-p));
+}
+function bestSplitRF(data, features) {
+    let bg=-1, bf=null, bt=null;
+    const pg = gini(data);
+    features.forEach(feat => {
+        const vals = [...new Set(data.map(d=>d[feat]))].sort((a,b)=>a-b);
+        for (let i=0;i<vals.length-1;i++) {
+            const thr=(vals[i]+vals[i+1])/2;
+            const L=data.filter(d=>d[feat]<=thr), R=data.filter(d=>d[feat]>thr);
+            if (!L.length||!R.length) continue;
+            const g=pg-(L.length/data.length)*gini(L)-(R.length/data.length)*gini(R);
+            if (g>bg){bg=g;bf=feat;bt=thr;}
+        }
+    });
+    return {feat:bf,thr:bt,gain:bg};
+}
+function buildTree(data, maxDepth, minSamples=4, depth=0, allFeatures=['size','uniformity']) {
+    const mal=data.filter(d=>d.label).length, ben=data.length-mal;
+    const g=gini(data), e=entropy(data), pred=mal>=ben;
+    const node={samples:data.length,mal,ben,gini:g,entropy:e,prediction:pred,isLeaf:false};
+    if (depth>=maxDepth||data.length<minSamples||g<1e-6){node.isLeaf=true;return node;}
+    // Random feature subset: pick 1 feature randomly
+    const rndFeats = allFeatures.slice().sort(()=>Math.random()-0.5).slice(0,1);
+    const sp=bestSplitRF(data,rndFeats);
+    if (!sp.feat||sp.gain<=0){node.isLeaf=true;return node;}
+    node.feat=sp.feat; node.threshold=sp.thr; node.gain=sp.gain;
+    node.left =buildTree(data.filter(d=>d[sp.feat]<=sp.thr),maxDepth,minSamples,depth+1,allFeatures);
+    node.right=buildTree(data.filter(d=>d[sp.feat]> sp.thr),maxDepth,minSamples,depth+1,allFeatures);
+    return node;
+}
+function predictNode(node,size,unif) {
+    const path=[node]; let cur=node;
+    while(!cur.isLeaf){
+        const val=cur.feat==='size'?size:unif;
+        cur=val<=cur.threshold?cur.left:cur.right;
+        path.push(cur);
+    }
+    return {prediction:cur.prediction, confidence:(cur.prediction?cur.mal:cur.ben)/cur.samples, path};
+}
+
+// ── Dataset ───────────────────────────────────────────────
+const rng=d3.randomNormal.source(d3.randomLcg(7));
+const DATA=[];
+for(let i=0;i<55;i++){
+    const s=Math.max(0,Math.min(10,rng(7,1.5)())),
+          u=Math.max(1,Math.min(10,Math.round(rng(7,1.8)())));
+    DATA.push({size:s,uniformity:u,label:true});
+}
+for(let i=0;i<55;i++){
+    const s=Math.max(0,Math.min(10,rng(3,1.2)())),
+          u=Math.max(1,Math.min(10,Math.round(rng(3,1.6)())));
+    DATA.push({size:s,uniformity:u,label:false});
+}
+
+// ── State ─────────────────────────────────────────────────
+const state={nTrees:7,maxDepth:3,bootFrac:0.8,size:5.5,unif:4};
+let forest=[], treeResults=[];
+
+function bootstrap(data,frac) {
+    const n=Math.floor(data.length*frac), out=[];
+    for(let i=0;i<n;i++) out.push(data[Math.floor(Math.random()*data.length)]);
+    return out;
+}
+
+function growForest() {
+    forest=[]; treeResults=[];
+    for(let t=0;t<state.nTrees;t++){
+        const bsData=bootstrap(DATA,state.bootFrac);
+        const oobData=DATA.filter(d=>!bsData.includes(d));
+        const tree=buildTree(bsData,state.maxDepth);
+        const res=predictNode(tree,state.size,state.unif);
+        // OOB accuracy
+        let correct=0;
+        oobData.forEach(d=>{
+            const r=predictNode(tree,d.size,d.uniformity);
+            if(r.prediction===d.label) correct++;
+        });
+        const oobAcc=oobData.length?correct/oobData.length:null;
+        forest.push(tree);
+        treeResults.push({...res, oobAcc, treeIdx:t, tree});
+    }
+    updateMetrics();
+    renderForest();
+}
+
+function updateMetrics() {
+    const malVotes=treeResults.filter(r=>r.prediction).length;
+    const benVotes=treeResults.length-malVotes;
+    const winner=malVotes>=benVotes;
+    const conf=(winner?malVotes:benVotes)/treeResults.length;
+    const agree=Math.max(malVotes,benVotes)/treeResults.length;
+    const oobAccs=treeResults.filter(r=>r.oobAcc!==null).map(r=>r.oobAcc);
+    const avgOOB=oobAccs.length?d3.mean(oobAccs):0;
+
+    document.getElementById("out-verdict").textContent=winner?"MALIGNANT":"BENIGN";
+    document.getElementById("out-verdict").className="out-verdict "+(winner?"verdict-mal":"verdict-ben");
+    document.getElementById("out-conf").textContent=`Vote confidence: ${(conf*100).toFixed(0)}%`;
+    document.getElementById("val-mal").textContent=malVotes;
+    document.getElementById("val-ben").textContent=benVotes;
+    document.getElementById("val-oob").textContent=(avgOOB*100).toFixed(0)+"%";
+    document.getElementById("val-agree").textContent=(agree*100).toFixed(0)+"%";
+}
+
+// ── Render forest visualization ───────────────────────────
+function renderForest() {
+    const svgEl=document.getElementById("forest-svg");
+    const R=svgEl.getBoundingClientRect();
+    const W=R.width, H=R.height;
+    if(!W||!H) return;
+
+    const svg=d3.select("#forest-svg");
+    svg.selectAll("*").remove();
+
+    const defs=svg.append("defs");
+    const glow=defs.append("filter").attr("id","rf-glow");
+    glow.append("feGaussianBlur").attr("stdDeviation","3").attr("result","blur");
+    const fm=glow.append("feMerge");
+    fm.append("feMergeNode").attr("in","blur");
+    fm.append("feMergeNode").attr("in","SourceGraphic");
+
+    const N=treeResults.length;
+    const barW=90; // vote bar on right
+    const treeAreaW=W-barW-20;
+    const treePad=12;
+    const treeW=(treeAreaW-treePad*(N+1))/N;
+    const treeH=H-20;
+
+    // ── Draw each tree ───────────────────────────────────
+    treeResults.forEach((res,i)=>{
+        const tx=treePad+i*(treeW+treePad);
+        const winner=res.prediction;
+        const isActive=true; // every tree is active for current patient
+
+        // Tree card background
+        svg.append("rect")
+            .attr("x",tx).attr("y",10).attr("width",treeW).attr("height",treeH-10)
+            .attr("rx",10)
+            .attr("fill",winner?"rgba(239,68,68,0.07)":"rgba(16,185,129,0.07)")
+            .attr("stroke",winner?"rgba(248,113,113,0.35)":"rgba(52,211,153,0.35)")
+            .attr("stroke-width",1.5);
+
+        // Tree number
+        svg.append("text").attr("x",tx+treeW/2).attr("y",24)
+            .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.7)")
+            .attr("font-size",8).attr("font-family","Outfit").attr("font-weight",700)
+            .text(`Tree ${i+1}`);
+
+        // Mini tree sprite: draw a simplified 3-level tree within the card
+        const cX=tx+treeW/2, startY=38;
+        const levels=Math.min(state.maxDepth,3);
+        const levelH=(treeH-70)/levels;
+
+        function drawMiniNode(node, x, y, w, depth) {
+            if(!node||depth>levels) return;
+            const r=Math.min(treeW*0.18,14);
+            const inPath=res.path.includes(node);
+            const isLeafNode=node.isLeaf;
+
+            // Circle node
+            svg.append("circle").attr("cx",x).attr("cy",y).attr("r",r)
+                .attr("fill", isLeafNode?(node.prediction?"rgba(239,68,68,0.3)":"rgba(16,185,129,0.25)")
+                              :inPath?"rgba(251,191,36,0.2)":"rgba(255,255,255,0.07)")
+                .attr("stroke", inPath?"#fbbf24":isLeafNode?(node.prediction?"#f87171":"#34d399"):"rgba(255,255,255,0.18)")
+                .attr("stroke-width",inPath?2:1)
+                .attr("filter",inPath?"url(#rf-glow)":null);
+
+            // Node label
+            const lbl=isLeafNode?(node.prediction?"M":"B"):
+                      (node.feat==='size'?"Sz":"Un");
+            svg.append("text").attr("x",x).attr("y",y+3)
+                .attr("text-anchor","middle").attr("fill",inPath?"#fbbf24":"rgba(255,255,255,0.7)")
+                .attr("font-size",7).attr("font-family","JetBrains Mono").attr("font-weight",800)
+                .text(lbl);
+
+            // Gini under node
+            svg.append("text").attr("x",x).attr("y",y+r+9)
+                .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.5)")
+                .attr("font-size",5.5).attr("font-family","JetBrains Mono")
+                .text(`G:${node.gini.toFixed(2)}`);
+
+            if(!isLeafNode&&depth<levels){
+                const childY=y+levelH, offset=w/2;
+                // Left child link
+                if(node.left){
+                    const lInPath=res.path.includes(node.left)&&inPath;
+                    svg.append("line").attr("x1",x).attr("y1",y+r).attr("x2",x-offset).attr("y2",childY-r)
+                        .attr("stroke",lInPath?"#fbbf24":"rgba(255,255,255,0.1)")
+                        .attr("stroke-width",lInPath?2:1)
+                        .attr("filter",lInPath?"url(#rf-glow)":null);
+                    drawMiniNode(node.left,x-offset,childY,offset,depth+1);
+                }
+                // Right child link
+                if(node.right){
+                    const rInPath=res.path.includes(node.right)&&inPath;
+                    svg.append("line").attr("x1",x).attr("y1",y+r).attr("x2",x+offset).attr("y2",childY-r)
+                        .attr("stroke",rInPath?"#fbbf24":"rgba(255,255,255,0.1)")
+                        .attr("stroke-width",rInPath?2:1)
+                        .attr("filter",rInPath?"url(#rf-glow)":null);
+                    drawMiniNode(node.right,x+offset,childY,offset,depth+1);
+                }
+            }
+        }
+
+        drawMiniNode(res.tree,cX,startY,treeW*0.36,0);
+
+        // Vote badge at bottom
+        const badgeY=treeH-6;
+        svg.append("rect").attr("x",tx+treeW/2-22).attr("y",badgeY-13).attr("width",44).attr("height",16).attr("rx",8)
+            .attr("fill",winner?"rgba(239,68,68,0.2)":"rgba(16,185,129,0.18)")
+            .attr("stroke",winner?"rgba(248,113,113,0.5)":"rgba(52,211,153,0.5)").attr("stroke-width",1);
+        svg.append("text").attr("x",tx+treeW/2).attr("y",badgeY-2)
+            .attr("text-anchor","middle").attr("fill",winner?"#f87171":"#34d399")
+            .attr("font-size",7.5).attr("font-family","Outfit").attr("font-weight",800)
+            .text(winner?"MALIG":"BENIGN");
+
+        // OOB badge
+        if(res.oobAcc!==null){
+            svg.append("text").attr("x",tx+treeW/2).attr("y",treeH+2)
+                .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.5)")
+                .attr("font-size",6).attr("font-family","JetBrains Mono")
+                .text(`OOB:${(res.oobAcc*100).toFixed(0)}%`);
+        }
+    });
+
+    // ── Vote bar chart ────────────────────────────────────
+    const bx=treeAreaW+treePad;
+    const malV=treeResults.filter(r=>r.prediction).length;
+    const benV=N-malV;
+    const maxV=Math.max(malV,benV,1);
+    const barMaxH=treeH-80;
+    const bw=28;
+
+    svg.append("text").attr("x",bx+barW/2).attr("y",22)
+        .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.8)")
+        .attr("font-size",8).attr("font-family","Outfit").attr("font-weight",700)
+        .text("Votes");
+
+    // Malignant bar
+    const malH=(malV/maxV)*barMaxH;
+    svg.append("rect").attr("x",bx+5).attr("y",30+(barMaxH-malH)).attr("width",bw).attr("height",malH)
+        .attr("rx",5).attr("fill","rgba(248,113,113,0.6)").attr("stroke","#f87171").attr("stroke-width",1);
+    svg.append("text").attr("x",bx+5+bw/2).attr("y",30+(barMaxH-malH)-5)
+        .attr("text-anchor","middle").attr("fill","#f87171").attr("font-size",11).attr("font-family","JetBrains Mono").attr("font-weight",800)
+        .text(malV);
+    svg.append("text").attr("x",bx+5+bw/2).attr("y",30+barMaxH+12)
+        .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",7).attr("font-family","Outfit")
+        .text("Mal");
+
+    // Benign bar
+    const benH=(benV/maxV)*barMaxH;
+    svg.append("rect").attr("x",bx+bw+10).attr("y",30+(barMaxH-benH)).attr("width",bw).attr("height",benH)
+        .attr("rx",5).attr("fill","rgba(52,211,153,0.55)").attr("stroke","#34d399").attr("stroke-width",1);
+    svg.append("text").attr("x",bx+bw+10+bw/2).attr("y",30+(barMaxH-benH)-5)
+        .attr("text-anchor","middle").attr("fill","#34d399").attr("font-size",11).attr("font-family","JetBrains Mono").attr("font-weight",800)
+        .text(benV);
+    svg.append("text").attr("x",bx+bw+10+bw/2).attr("y",30+barMaxH+12)
+        .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",7).attr("font-family","Outfit")
+        .text("Ben");
+
+    // Majority line
+    const majY=30+(barMaxH-Math.floor(N/2+0.5)/maxV*barMaxH);
+    svg.append("line").attr("x1",bx+2).attr("x2",bx+barW-2).attr("y1",majY).attr("y2",majY)
+        .attr("stroke","#fbbf24").attr("stroke-width",1.5).attr("stroke-dasharray","4,3");
+    svg.append("text").attr("x",bx+barW/2).attr("y",majY-4)
+        .attr("text-anchor","middle").attr("fill","#fbbf24").attr("font-size",6).attr("font-family","Outfit")
+        .text("majority");
+
+    // Verdict label under bars
+    const winnerFinal=malV>=benV;
+    svg.append("rect").attr("x",bx+4).attr("y",30+barMaxH+20).attr("width",barW-8).attr("height",16).attr("rx",8)
+        .attr("fill",winnerFinal?"rgba(239,68,68,0.15)":"rgba(16,185,129,0.12)")
+        .attr("stroke",winnerFinal?"rgba(248,113,113,0.4)":"rgba(52,211,153,0.4)").attr("stroke-width",1);
+    svg.append("text").attr("x",bx+barW/2).attr("y",30+barMaxH+31)
+        .attr("text-anchor","middle").attr("fill",winnerFinal?"#f87171":"#34d399")
+        .attr("font-size",7).attr("font-family","Outfit").attr("font-weight",800)
+        .text(winnerFinal?"MALIGNANT":"BENIGN");
+}
+
+// ── Events ────────────────────────────────────────────────
+document.getElementById("in-size").addEventListener("input", e=>{state.size=+e.target.value||0;growForest();});
+document.getElementById("in-unif").addEventListener("input", e=>{state.unif=+e.target.value||1;growForest();});
+document.getElementById("sl-ntrees").addEventListener("input",function(){state.nTrees=+this.value;document.getElementById("lbl-ntrees").textContent=this.value;growForest();});
+document.getElementById("sl-depth").addEventListener("input", function(){state.maxDepth=+this.value;document.getElementById("lbl-depth").textContent=this.value;growForest();});
+document.getElementById("sl-boot").addEventListener("input",  function(){state.bootFrac=+this.value/100;document.getElementById("lbl-boot").textContent=this.value+"%";growForest();});
+document.getElementById("btn-grow").addEventListener("click",growForest);
+document.getElementById("btn-reset").addEventListener("click",()=>{
+    state.nTrees=7;state.maxDepth=3;state.bootFrac=0.8;
+    document.getElementById("sl-ntrees").value=7;document.getElementById("lbl-ntrees").textContent=7;
+    document.getElementById("sl-depth").value=3;document.getElementById("lbl-depth").textContent=3;
+    document.getElementById("sl-boot").value=80;document.getElementById("lbl-boot").textContent="80%";
+    growForest();
+});
+
+const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+        if(e.isIntersecting){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));e.target.classList.add("active");}
+    });
+},{threshold:0.5});
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+
+window.addEventListener("resize",renderForest);
+setTimeout(growForest,80);
+</script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Regression Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #007bff;
+            --primary-pink: #e83e8c;
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-hover: rgba(255, 255, 255, 0.12);
+            --text-white: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+            color: var(--text-white);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Blobs */
+        .blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; width: 600px; height: 600px; border-radius: 50%; filter: blur(100px); opacity: 0.22; animation: float 20s infinite alternate ease-in-out; }
+        .blob-blue { background: var(--primary-blue); top: -200px; left: -200px; }
+        .blob-pink  { background: var(--primary-pink);  bottom: -200px; right: -200px; animation-delay: -10s; }
+        @keyframes float { from { transform: translate(0,0) scale(1); } to { transform: translate(80px,80px) scale(1.1); } }
+
+        /* Back button */
+        .back-btn {
+            position: fixed; top: 1.1rem; left: 1.1rem; z-index: 200;
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 50px;
+            color: #fff; text-decoration: none; font-size: 0.82rem; font-weight: 600;
+            padding: 0.5rem 1rem; transition: all 0.25s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.14); transform: translateX(-3px); }
+
+        /* Page shell */
+        .app { position: relative; z-index: 1; display: flex; height: 100vh; overflow: hidden; }
+
+        /* ── Narrative ── */
+        .narrative {
+            width: 25%; min-width: 220px; height: 100%; overflow-y: auto;
+            padding: 4.5rem 1.6rem 3rem; border-right: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: none; flex-shrink: 0;
+        }
+        .narrative::-webkit-scrollbar { display: none; }
+        section { min-height: 75vh; display: flex; flex-direction: column; justify-content: center; opacity: 0.22; transform: translateX(-8px); transition: opacity 0.4s, transform 0.4s; }
+        section.active { opacity: 1; transform: none; }
+        .hero { font-size: 2rem; font-weight: 800; line-height: 1.15; margin-bottom: 1.1rem; letter-spacing: -0.03em; }
+        .hero span { background: linear-gradient(to right,#60a5fa,#f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        section h2 { font-size: 1rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.7rem; }
+        section p { font-size: 0.9rem; line-height: 1.7; color: var(--text-dim); margin-bottom: 0.65rem; }
+        .ethical-box { background: linear-gradient(135deg,rgba(239,68,68,0.08),rgba(232,62,140,0.05)); border: 1px solid rgba(239,68,68,0.28); border-radius: 14px; padding: 1.1rem; }
+        .ethical-box h2 { color: #f87171; }
+
+        /* ── Right lab area (scrollable) ── */
+        .lab-scroll {
+            flex: 1; height: 100%; overflow-y: auto; overflow-x: hidden;
+            padding: 1.4rem 1.4rem 1.4rem 1.1rem;
+            display: flex; flex-direction: column; gap: 1rem;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent;
+        }
+        .lab-scroll::-webkit-scrollbar { width: 5px; }
+        .lab-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
+
+        /* Top 3 panels in a row */
+        .panels-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 1rem; }
+
+        /* ── Glass Panel ── */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 1.3rem; display: flex; flex-direction: column; gap: 0.9rem;
+        }
+        .panel-label {
+            font-size: 0.58rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.16em;
+            color: var(--text-dim); padding-bottom: 0.65rem; border-bottom: 1px solid rgba(255,255,255,0.09);
+            display: flex; align-items: center; gap: 0.45rem;
+        }
+        .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .dot-blue  { background: #60a5fa; box-shadow: 0 0 6px #60a5fa; }
+        .dot-pink  { background: #f472b6; box-shadow: 0 0 6px #f472b6; }
+        .dot-green { background: #34d399; box-shadow: 0 0 6px #34d399; }
+        .dot-gold  { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; }
+
+        /* ── Number Input ── */
+        .num-field { display: flex; flex-direction: column; gap: 0.35rem; }
+        .num-field .field-label { font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; }
+        .num-field input[type="number"] {
+            width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px; color: #fff; font-family: 'JetBrains Mono', monospace;
+            font-size: 1.7rem; font-weight: 700; padding: 0.55rem 0.9rem;
+            text-align: center; outline: none; transition: border-color 0.2s;
+        }
+        .num-field input[type="number"]:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,0.15); }
+        .num-field .field-unit { font-size: 0.65rem; color: rgba(148,163,184,0.6); text-align: center; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { opacity: 0.25; }
+
+        /* ── Sliders ── */
+        .slider-row { display: flex; flex-direction: column; gap: 0.35rem; }
+        .slider-top { display: flex; justify-content: space-between; align-items: baseline; }
+        .slider-row .s-label { font-size: 0.72rem; font-weight: 600; color: var(--text-dim); }
+        .slider-row .s-val { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 800; color: #f8fafc; }
+        .slider-row .s-hint { font-size: 0.6rem; color: rgba(148,163,184,0.5); margin-top: 0.1rem; }
+        input[type="range"] {
+            width: 100%; height: 5px; appearance: none; border-radius: 10px;
+            background: rgba(255,255,255,0.08); cursor: pointer; outline: none;
+        }
+        input[type="range"].blue::-webkit-slider-thumb  { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #60a5fa; border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 8px rgba(96,165,250,0.6); }
+        input[type="range"].pink::-webkit-slider-thumb  { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #f472b6; border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 8px rgba(244,114,182,0.6); }
+        input[type="range"].green::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #34d399; border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 8px rgba(52,211,153,0.6); }
+
+        /* ── Output ── */
+        .output-big { background: linear-gradient(135deg,rgba(96,165,250,0.1),rgba(244,114,182,0.06)); border: 1px solid rgba(96,165,250,0.22); border-radius: 16px; padding: 1.2rem; text-align: center; }
+        .out-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-dim); }
+        .out-value { font-family: 'JetBrains Mono', monospace; font-size: 2.8rem; font-weight: 800; background: linear-gradient(to right,#60a5fa,#f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; margin: 0.1rem 0; }
+        .out-unit  { font-size: 0.68rem; color: var(--text-dim); }
+
+        .eq-row { font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: #34d399; background: rgba(0,0,0,0.28); border: 1px solid rgba(52,211,153,0.18); border-radius: 12px; padding: 0.75rem; text-align: center; line-height: 1.7; }
+        .eq-row span { color: #fff; font-weight: 800; }
+
+        .mini-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+        .mini-card { background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 0.75rem; text-align: center; }
+        .mini-val { font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 800; }
+        .mini-label { font-size: 0.56rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem; }
+
+        /* Buttons */
+        .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: auto; }
+        .btn-primary { padding: 0.6rem 1.1rem; border-radius: 50px; border: none; cursor: pointer; background: linear-gradient(135deg,#007bff,#e83e8c); color: #fff; font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 700; transition: all 0.2s; white-space: nowrap; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,123,255,0.35); }
+        .btn-secondary { padding: 0.6rem 1rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; background: rgba(255,255,255,0.06); color: var(--text-dim); font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+        /* ── Visualization panel ── */
+        .viz-panel { height: 340px; flex-shrink: 0; }
+        #main-svg { width: 100%; height: 100%; display: block; }
+        .axis text { fill: rgba(148,163,184,0.7); font-family: 'Outfit', sans-serif; font-size: 10px; }
+        .axis path, .axis line { stroke: rgba(255,255,255,0.06); }
+    </style>
+</head>
+<body>
+
+<div class="blobs">
+    <div class="blob blob-blue"></div>
+    <div class="blob blob-pink"></div>
+</div>
+
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Dashboard
+</a>
+
+<div class="app">
+
+    <!-- Narrative -->
+    <aside class="narrative">
+        <section id="s1" class="active">
+            <div class="hero">Linear Regression <span>Clinical Lab</span></div>
+            <p>We predict a patient's <strong>Systolic Blood Pressure (SBP)</strong> from their Age and BMI using a linear equation.</p>
+            <p>Enter patient data → adjust coefficients → observe the live prediction and regression line update.</p>
+        </section>
+        <section id="s2">
+            <h2>How Are β Coefficients Calculated?</h2>
+            <p>In a real clinical model, <strong>β₀, β₁, and β₂ are never manually set</strong>. They are <em>calculated from patient training data</em> using <strong>Ordinary Least Squares (OLS)</strong>.</p>
+            <p>OLS finds values of β that minimise the total squared gap between each patient's actual SBP and the model's prediction. This has an exact mathematical solution:</p>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.74rem;color:#34d399;background:rgba(0,0,0,0.3);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:0.75rem;line-height:1.8">β = (XᵀX)⁻¹ Xᵀy
+
+Training data → OLS → optimal β₀, β₁, β₂
+
+The sliders let you <em>explore</em> the impact
+of different values. Click "Auto-Fit" to watch
+gradient descent learn the correct β values
+from the data.</div>
+        </section>
+        <section id="s3">
+            <h2>How MSE Is Calculated</h2>
+            <p>Every patient has an <strong>actual SBP</strong> and a <strong>predicted SBP</strong> from the model. The gap is the <em>residual</em>. We <strong>square</strong> each residual (to punish large errors more) and average them:</p>
+            <!-- MSE Visual -->
+            <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:1rem;margin:0.8rem 0;">
+                <svg viewBox="0 0 240 130" width="100%" style="display:block;">
+                    <!-- Y axis -->
+                    <line x1="30" y1="10" x2="30" y2="115" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    <!-- X axis -->
+                    <line x1="30" y1="115" x2="220" y2="115" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    <!-- Regression line -->
+                    <line x1="40" y1="95" x2="210" y2="30" stroke="#60a5fa" stroke-width="2" stroke-dasharray="0"/>
+                    <!-- Actual points + residuals + squares -->
+                    <!-- P1 -->
+                    <rect x="58" y="48" width="14" height="14" fill="rgba(244,114,182,0.25)" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="65" y1="62" x2="65" y2="76" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="3,2"/>
+                    <circle cx="65" cy="76" r="3.5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+                    <circle cx="65" cy="62" r="3" fill="#60a5fa"/>
+                    <!-- P2 -->
+                    <rect x="108" y="32" width="20" height="20" fill="rgba(244,114,182,0.25)" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="118" y1="52" x2="118" y2="72" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="3,2"/>
+                    <circle cx="118" cy="72" r="3.5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+                    <circle cx="118" cy="52" r="3" fill="#60a5fa"/>
+                    <!-- P3 -->
+                    <rect x="163" y="45" width="10" height="10" fill="rgba(244,114,182,0.25)" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="168" y1="55" x2="168" y2="65" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="3,2"/>
+                    <circle cx="168" cy="65" r="3.5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+                    <circle cx="168" cy="55" r="3" fill="#60a5fa"/>
+                    <!-- Labels -->
+                    <text x="36" y="125" fill="rgba(148,163,184,0.7)" font-size="7" font-family="Outfit">BMI →</text>
+                    <text x="74" y="70" fill="#f472b6" font-size="7" font-family="JetBrains Mono">e²</text>
+                    <text x="131" y="60" fill="#f472b6" font-size="7" font-family="JetBrains Mono">e²</text>
+                    <text x="175" y="52" fill="#f472b6" font-size="7" font-family="JetBrains Mono">e²</text>
+                    <text x="130" y="12" fill="#60a5fa" font-size="8" font-family="Outfit" text-anchor="middle">Regression Line</text>
+                </svg>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#34d399;text-align:center;margin-top:0.5rem;line-height:1.8;">
+                    MSE = Σ (yᵢ − ŷᵢ)² / n<br>
+                    <span style="color:rgba(148,163,184,0.6);font-size:0.62rem;">Pink boxes = squared residuals · smaller = better fit</span>
+                </div>
+            </div>
+            <p>A <strong>perfect fit</strong> has MSE = 0. Squaring ensures large errors are penalised far more than small ones.</p>
+        </section>
+        <section id="s4">
+            <div class="ethical-box">
+                <h2>⚖️ Ethical Reality</h2>
+                <p>Applying population-average coefficients to diverse patients can systematically under-predict SBP risk in specific metabolic subgroups.</p>
+            </div>
+        </section>
+    </aside>
+
+    <!-- Scrollable right lab -->
+    <div class="lab-scroll">
+
+        <!-- Row 1: 3 panels -->
+        <div class="panels-row">
+
+            <!-- Panel 1: Input -->
+            <div class="glass-panel">
+                <div class="panel-label"><span class="dot dot-blue"></span>① Patient Input</div>
+
+                <div class="num-field">
+                    <div class="field-label">Patient Age</div>
+                    <input type="number" id="in-age" value="45" min="18" max="95">
+                    <div class="field-unit">years</div>
+                </div>
+
+                <div class="num-field">
+                    <div class="field-label">Patient BMI</div>
+                    <input type="number" id="in-bmi" value="25.0" min="15" max="50" step="0.1">
+                    <div class="field-unit">kg / m²</div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Coefficients -->
+            <div class="glass-panel">
+                <div class="panel-label"><span class="dot dot-pink"></span>② Model Coefficients</div>
+
+                <div class="slider-row">
+                    <div class="slider-top">
+                        <span class="s-label">β₀ · Intercept</span>
+                        <span class="s-val" id="lbl-b0">70.0</span>
+                    </div>
+                    <input type="range" class="blue" id="sl-b0" min="50" max="100" step="0.5" value="70">
+                    <span class="s-hint">baseline mmHg</span>
+                </div>
+
+                <div class="slider-row">
+                    <div class="slider-top">
+                        <span class="s-label">β₁ · Age Weight</span>
+                        <span class="s-val" id="lbl-b1">0.30</span>
+                    </div>
+                    <input type="range" class="pink" id="sl-b1" min="0" max="1.5" step="0.01" value="0.3">
+                    <span class="s-hint">mmHg per year</span>
+                </div>
+
+                <div class="slider-row">
+                    <div class="slider-top">
+                        <span class="s-label">β₂ · BMI Weight</span>
+                        <span class="s-val" id="lbl-b2">1.50</span>
+                    </div>
+                    <input type="range" class="green" id="sl-b2" min="0" max="3.0" step="0.01" value="1.5">
+                    <span class="s-hint">mmHg per kg/m²</span>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn-primary"   id="btn-fit">▶ Auto-Fit</button>
+                    <button class="btn-secondary"  id="btn-reset">Reset</button>
+                    <button class="btn-secondary"  id="btn-res">Residuals</button>
+                </div>
+            </div>
+
+            <!-- Panel 3: Output -->
+            <div class="glass-panel">
+                <div class="panel-label"><span class="dot dot-green"></span>③ Prediction Output</div>
+
+                <div class="output-big">
+                    <div class="out-label">Predicted Systolic BP</div>
+                    <div class="out-value" id="out-sbp">—</div>
+                    <div class="out-unit">mmHg</div>
+                </div>
+
+                <div class="eq-row">
+                    SBP = <span id="eq-b0">70.0</span> + <span id="eq-b1">0.30</span>×Age<br>+ <span id="eq-b2">1.50</span>×BMI
+                </div>
+
+                <div class="mini-row">
+                    <div class="mini-card">
+                        <div class="mini-val" id="val-mse" style="color:#f472b6">—</div>
+                        <div class="mini-label">MSE</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-val" id="val-class" style="color:#34d399">—</div>
+                        <div class="mini-label">BP Class</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Full-width visualization -->
+        <div class="glass-panel viz-panel">
+            <div class="panel-label"><span class="dot dot-gold"></span>④ Regression Visualization — BMI vs Systolic BP (line shown at subject's age)</div>
+            <svg id="main-svg"></svg>
+        </div>
+
+    </div><!-- end lab-scroll -->
+</div><!-- end app -->
+
+<script>
+// Dataset
+const GT = (age, bmi) => 70 + 0.3 * age + 1.5 * bmi;
+const dataset = Array.from({length: 55}, () => {
+    const age = 18 + Math.random() * 70;
+    const bmi = 18 + Math.random() * 27;
+    return { age, bmi, sbp: GT(age, bmi) + (Math.random() - 0.5) * 14 };
+});
+
+const state = { b0:70, b1:0.3, b2:1.5, age:45, bmi:25, showRes:true, fitting:false };
+
+// D3 chart
+const margin = { top: 22, right: 30, bottom: 46, left: 58 };
+const svg = d3.select("#main-svg");
+const g   = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+let W = 0, H = 0;
+
+const xSc = d3.scaleLinear().domain([15, 46]);
+const ySc = d3.scaleLinear().domain([82, 192]);
+
+function getSize() {
+    const el = document.getElementById("main-svg");
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    const nw = r.width  - margin.left - margin.right;
+    const nh = r.height - margin.top  - margin.bottom;
+    if (nw <= 0 || nh <= 0) return false;
+    W = nw; H = nh;
+    xSc.range([0, W]);
+    ySc.range([H, 0]);
+    return true;
+}
+
+function classify(sbp) {
+    if (sbp < 120) return { t:"Normal",     c:"#34d399" };
+    if (sbp < 130) return { t:"Elevated",   c:"#fbbf24" };
+    if (sbp < 140) return { t:"Stage 1 HT", c:"#fb923c" };
+    return               { t:"Stage 2 HT",  c:"#f87171" };
+}
+
+function render() {
+    // Update labels
+    document.getElementById("lbl-b0").textContent = state.b0.toFixed(1);
+    document.getElementById("lbl-b1").textContent = state.b1.toFixed(2);
+    document.getElementById("lbl-b2").textContent = state.b2.toFixed(2);
+    document.getElementById("eq-b0").textContent  = state.b0.toFixed(1);
+    document.getElementById("eq-b1").textContent  = state.b1.toFixed(2);
+    document.getElementById("eq-b2").textContent  = state.b2.toFixed(2);
+
+    // Prediction
+    const pred = state.b0 + state.b1 * state.age + state.b2 * state.bmi;
+    document.getElementById("out-sbp").textContent = pred.toFixed(1);
+    const cls = classify(pred);
+    const vc = document.getElementById("val-class");
+    vc.textContent = cls.t; vc.style.color = cls.c;
+
+    // MSE
+    const mse = d3.mean(dataset, d => (d.sbp - (state.b0 + state.b1*d.age + state.b2*d.bmi)) ** 2);
+    document.getElementById("val-mse").textContent = mse.toFixed(1);
+
+    // Chart
+    if (!getSize()) return;
+    g.selectAll("*").remove();
+
+    // Grid lines
+    g.append("g").attr("class","axis").attr("transform",`translate(0,${H})`)
+        .call(d3.axisBottom(xSc).ticks(6).tickSize(-H).tickFormat(""))
+        .selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    g.append("g").attr("class","axis")
+        .call(d3.axisLeft(ySc).ticks(6).tickSize(-W).tickFormat(""))
+        .selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+
+    // Axes
+    g.append("g").attr("class","axis").attr("transform",`translate(0,${H})`)
+        .call(d3.axisBottom(xSc).ticks(6));
+    g.append("g").attr("class","axis")
+        .call(d3.axisLeft(ySc).ticks(6));
+
+    // Axis labels
+    g.append("text").attr("x",W/2).attr("y",H+40).attr("text-anchor","middle")
+        .attr("fill","rgba(148,163,184,0.6)").attr("font-size",11).attr("font-family","Outfit").text("BMI (kg / m²)");
+    g.append("text").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",-45)
+        .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",11).attr("font-family","Outfit").text("Systolic BP (mmHg)");
+
+    // Residuals
+    if (state.showRes) {
+        dataset.forEach(d => {
+            const py = ySc(state.b0 + state.b1*d.age + state.b2*d.bmi);
+            g.append("line")
+                .attr("x1",xSc(d.bmi)).attr("x2",xSc(d.bmi))
+                .attr("y1",ySc(d.sbp)).attr("y2",py)
+                .attr("stroke","rgba(255,255,255,0.1)").attr("stroke-width",1).attr("stroke-dasharray","3,3");
+        });
+    }
+
+    // Data dots
+    g.selectAll(".pt").data(dataset).enter().append("circle")
+        .attr("cx",d=>xSc(d.bmi)).attr("cy",d=>ySc(d.sbp))
+        .attr("r",3.5).attr("fill","rgba(255,255,255,0.18)").attr("stroke","rgba(255,255,255,0.28)").attr("stroke-width",0.5);
+
+    // Defs for gradient
+    const defs = g.append("defs");
+    const lg = defs.append("linearGradient").attr("id","rg").attr("x1","0%").attr("y1","0%").attr("x2","100%").attr("y2","0%");
+    lg.append("stop").attr("offset","0%").attr("stop-color","#60a5fa");
+    lg.append("stop").attr("offset","100%").attr("stop-color","#f472b6");
+
+    // Regression line (at subject's age)
+    const bmi0 = 15, bmi1 = 46;
+    g.append("line")
+        .attr("x1",xSc(bmi0)).attr("y1",ySc(state.b0 + state.b1*state.age + state.b2*bmi0))
+        .attr("x2",xSc(bmi1)).attr("y2",ySc(state.b0 + state.b1*state.age + state.b2*bmi1))
+        .attr("stroke","url(#rg)").attr("stroke-width",3.5)
+        .attr("filter","drop-shadow(0 0 6px rgba(96,165,250,0.65))");
+
+    // Subject marker
+    const px = xSc(state.bmi), py = ySc(pred);
+    g.append("circle").attr("cx",px).attr("cy",py).attr("r",11)
+        .attr("fill","none").attr("stroke","rgba(96,165,250,0.25)").attr("stroke-width",8);
+    g.append("circle").attr("cx",px).attr("cy",py).attr("r",6)
+        .attr("fill","#60a5fa").attr("stroke","#fff").attr("stroke-width",2)
+        .attr("filter","drop-shadow(0 0 8px #60a5fa)");
+    g.append("text").attr("x",px+14).attr("y",py-6)
+        .attr("fill","#f8fafc").attr("font-size",10).attr("font-family","Outfit").attr("font-weight",700)
+        .text(`${pred.toFixed(0)} mmHg`);
+}
+
+// Events
+document.getElementById("in-age").addEventListener("input", e => { state.age = +e.target.value || 0; render(); });
+document.getElementById("in-bmi").addEventListener("input", e => { state.bmi = +e.target.value || 0; render(); });
+document.getElementById("sl-b0").addEventListener("input", function() { state.b0 = +this.value; render(); });
+document.getElementById("sl-b1").addEventListener("input", function() { state.b1 = +this.value; render(); });
+document.getElementById("sl-b2").addEventListener("input", function() { state.b2 = +this.value; render(); });
+
+document.getElementById("btn-res").addEventListener("click", () => { state.showRes = !state.showRes; render(); });
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+    state.b0=70; state.b1=0.3; state.b2=1.5;
+    document.getElementById("sl-b0").value=70;
+    document.getElementById("sl-b1").value=0.3;
+    document.getElementById("sl-b2").value=1.5;
+    render();
+});
+
+document.getElementById("btn-fit").addEventListener("click", function() {
+    if (state.fitting) return;
+    state.fitting = true;
+    const btn = this; btn.textContent = "📈 Fitting…";
+    let n = 0;
+    const iv = setInterval(() => {
+        let db0=0, db1=0, db2=0;
+        const N = dataset.length;
+        dataset.forEach(d => {
+            const err = (state.b0 + state.b1*d.age + state.b2*d.bmi) - d.sbp;
+            db0 += err; db1 += err*d.age; db2 += err*d.bmi;
+        });
+        state.b0 -= db0/N * 0.08;
+        state.b1 -= db1/N * 0.000008;
+        state.b2 -= db2/N * 0.000008;
+        document.getElementById("sl-b0").value = Math.max(50, Math.min(100, state.b0));
+        document.getElementById("sl-b1").value = Math.max(0,  Math.min(1.5, state.b1));
+        document.getElementById("sl-b2").value = Math.max(0,  Math.min(3.0, state.b2));
+        render();
+        if (++n >= 100) { clearInterval(iv); state.fitting = false; btn.textContent = "▶ Auto-Fit"; }
+    }, 18);
+});
+
+// Scrollytelling
+const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+            e.target.classList.add("active");
+        }
+    });
+}, { threshold: 0.5 });
+document.querySelectorAll("section").forEach(s => obs.observe(s));
+
+window.addEventListener("resize", render);
+// Small delay so the viz panel has time to be painted
+setTimeout(render, 80);
+</script>
+</body>
+</html>

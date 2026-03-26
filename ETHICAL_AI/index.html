@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ethical AI in Healthcare — Interactive Demo Suite</title>
+<meta name="description" content="Interactive demos on Ethical AI in Healthcare: Bias, Hallucination, Explainability, Fairness, Privacy, Consent & Adversarial AI.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#04060f;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,.09);--cyan:#00d4ff;--purple:#8b5cf6;--pink:#ec4899;--t1:#f0f4ff;--t2:#94a3b8;--t3:#475569}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 20%,rgba(0,212,255,.07) 0%,transparent 50%),radial-gradient(ellipse at 85% 80%,rgba(139,92,246,.07) 0%,transparent 50%);z-index:-2}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:60px 60px;z-index:-1}
+nav{position:sticky;top:0;z-index:99;background:rgba(4,6,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.2rem}
+.nb{font-weight:900;font-size:.95rem;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nl{display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.na{color:var(--t2);text-decoration:none;padding:.3rem .65rem;border-radius:7px;font-size:.74rem;font-weight:500;white-space:nowrap;transition:all .2s}.na:hover{background:rgba(255,255,255,.06);color:var(--t1)}.na.act{background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.25)}
+.hero{text-align:center;padding:4.5rem 2rem 2.5rem;max-width:860px;margin:0 auto}
+.pill{display:inline-block;padding:.3rem 1rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:100px;font-size:.73rem;font-weight:700;color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.5rem}
+h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;letter-spacing:-.05em;line-height:1}
+.grad{background:linear-gradient(135deg,var(--cyan),var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.05rem;color:var(--t2);max-width:580px;margin:1.5rem auto 2.5rem;line-height:1.75}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:0 auto 3rem;max-width:950px}
+.stat{background:rgba(10,13,25,.97);padding:1.4rem;text-align:center}
+.stat-n{font-size:1.9rem;font-weight:900;letter-spacing:-.04em}
+.stat-l{font-size:.71rem;color:var(--t2);margin-top:.25rem;line-height:1.4}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1.1rem;max-width:1150px;margin:0 auto;padding:0 2rem 3.5rem}
+.demo-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.65rem 1.4rem;cursor:pointer;transition:all .35s;text-decoration:none;color:inherit;display:block;position:relative;overflow:hidden}
+.demo-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .4s;border-radius:18px}
+.demo-card:hover{transform:translateY(-8px)}
+.c-bias::before{background:radial-gradient(circle at 50% 0%,rgba(239,68,68,.12),transparent 70%)}
+.c-bias:hover{border-color:rgba(239,68,68,.4);box-shadow:0 20px 50px rgba(239,68,68,.15)}
+.c-bias:hover::before{opacity:1}
+.c-hall::before{background:radial-gradient(circle at 50% 0%,rgba(245,158,11,.12),transparent 70%)}
+.c-hall:hover{border-color:rgba(245,158,11,.4);box-shadow:0 20px 50px rgba(245,158,11,.15)}
+.c-hall:hover::before{opacity:1}
+.c-xai::before{background:radial-gradient(circle at 50% 0%,rgba(0,212,255,.12),transparent 70%)}
+.c-xai:hover{border-color:rgba(0,212,255,.4);box-shadow:0 20px 50px rgba(0,212,255,.15)}
+.c-xai:hover::before{opacity:1}
+.c-fair::before{background:radial-gradient(circle at 50% 0%,rgba(34,197,94,.12),transparent 70%)}
+.c-fair:hover{border-color:rgba(34,197,94,.4);box-shadow:0 20px 50px rgba(34,197,94,.15)}
+.c-fair:hover::before{opacity:1}
+.c-adv::before{background:radial-gradient(circle at 50% 0%,rgba(139,92,246,.12),transparent 70%)}
+.c-adv:hover{border-color:rgba(139,92,246,.4);box-shadow:0 20px 50px rgba(139,92,246,.15)}
+.c-adv:hover::before{opacity:1}
+.c-priv::before{background:radial-gradient(circle at 50% 0%,rgba(236,72,153,.12),transparent 70%)}
+.c-priv:hover{border-color:rgba(236,72,153,.4);box-shadow:0 20px 50px rgba(236,72,153,.15)}
+.c-priv:hover::before{opacity:1}
+.c-consent::before{background:radial-gradient(circle at 50% 0%,rgba(251,146,60,.12),transparent 70%)}
+.c-consent:hover{border-color:rgba(251,146,60,.4);box-shadow:0 20px 50px rgba(251,146,60,.15)}
+.c-consent:hover::before{opacity:1}
+.card-icon{font-size:2.5rem;margin-bottom:.9rem;display:block}
+.card-num{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:.35rem}
+.card-title{font-size:1.05rem;font-weight:800;margin-bottom:.55rem;letter-spacing:-.02em}
+.card-desc{font-size:.78rem;color:var(--t2);line-height:1.6}
+.card-arrow{position:absolute;bottom:1.2rem;right:1.4rem;font-size:1.1rem;opacity:.3;transition:all .3s}
+.demo-card:hover .card-arrow{opacity:1;transform:translateX(4px)}
+footer{border-top:1px solid var(--border);background:rgba(255,255,255,.015);padding:1.5rem 2rem;text-align:center}
+.dn{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.28rem}
+.dc{font-size:.77rem;color:var(--t2);line-height:1.6;margin-bottom:.35rem}.cp{font-size:.7rem;color:var(--t3)}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.hero{padding:3rem 1.5rem 2rem}h1{font-size:2.5rem}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nb">⚕️ Ethical AI in Healthcare</div>
+  <div class="nl">
+    <a class="na" href="../index.html">🏠 Back to Dashboard</a>
+    <a class="na act" href="index.html">🏠 Home</a>
+    <a class="na" href="bias.html">🎭 Clinical AI Bias</a>
+    <a class="na" href="hallucination.html">👻 AI Hallucination</a>
+    <a class="na" href="xai.html">🔍 AI Explainability</a>
+    <a class="na" href="fairness.html">⚖️ AI Fairness</a>
+    <a class="na" href="adversarial.html">🛡️ Adversarial AI</a>
+    <a class="na" href="privacy.html">🔐 Patient Privacy</a>
+    <a class="na" href="consent.html">📋 Informed Consent</a>
+    <a class="na" href="regression.html">📉 Visual AI</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <span class="pill">🎓 Post-Graduate Interactive Demo Suite</span>
+  <h1>Ethical AI in<br><span class="grad">Healthcare</span></h1>
+  <p>Hands-on demonstrations of where clinical AI fails, misleads, and discriminates — and how we build safer, fairer, and more transparent AI for medicine.</p>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" style="color:#ef4444">58%</div><div class="stat-l">of clinical AI tools show racial or gender performance gaps in validation studies</div></div>
+  <div class="stat"><div class="stat-n" style="color:#f59e0b">~30%</div><div class="stat-l">of AI-generated drug information contains factual errors or dangerous hallucinations</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--cyan)">92%</div><div class="stat-l">of patients unaware when AI systems assist their clinical decisions</div></div>
+  <div class="stat"><div class="stat-n" style="color:#22c55e">€30M</div><div class="stat-l">max EU AI Act fine — healthcare AI classified as "High Risk" under the Act</div></div>
+</div>
+
+<div class="cards">
+  <a href="bias.html" class="demo-card c-bias">
+    <span class="card-icon">🎭</span>
+    <div class="card-num">Demo 01</div>
+    <div class="card-title">Clinical AI Bias</div>
+    <div class="card-desc">5 patients with identical vitals — different AI triage priorities based on name and demographics. Live-threatening disparity.</div>
+    <span class="card-arrow">→</span>
+  </a>
+  <a href="hallucination.html" class="demo-card c-hall">
+    <span class="card-icon">👻</span>
+    <div class="card-num">Demo 02</div>
+    <div class="card-title">Medical AI Hallucination</div>
+    <div class="card-desc">An AI confidently prescribes wrong drug doses and fabricates clinical guidelines. Spot the hallucinations before a patient is harmed.</div>
+    <span class="card-arrow">→</span>
+  </a>
+  <a href="xai.html" class="demo-card c-xai">
+    <span class="card-icon">🔍</span>
+    <div class="card-num">Demo 03</div>
+    <div class="card-title">Explainable AI (XAI)</div>
+    <div class="card-desc">SHAP-style attribution reveals why a deep learning model predicted high diabetes risk for this patient — in real time.</div>
+    <span class="card-arrow">→</span>
+  </a>
+  <a href="fairness.html" class="demo-card c-fair">
+    <span class="card-icon">⚖️</span>
+    <div class="card-num">Demo 04</div>
+    <div class="card-title">Fairness in Pain AI</div>
+    <div class="card-desc">Pain management AI treats identical pain scores differently across demographic groups. The Impossibility Theorem explained.</div>
+    <span class="card-arrow">→</span>
+  </a>
+  <a href="adversarial.html" class="demo-card c-adv">
+    <span class="card-icon">🛡️</span>
+    <div class="card-num">Demo 05</div>
+    <div class="card-title">Adversarial Clinical AI</div>
+    <div class="card-desc">Try prompt injection, jailbreaking, and social engineering on a clinical decision support AI. Watch attacks and defences in action.</div>
+    <span class="card-arrow">→</span>
+  </a>
+  <a href="privacy.html" class="demo-card c-priv">
+    <span class="card-icon">🔐</span>
+    <div class="card-num">Demo 06</div>
+    <div class="card-title">Patient Data Privacy</div>
+    <div class="card-desc">Re-identify "anonymized" patient records with just 3 variables. Explore differential privacy, federated learning, and HIPAA.</div>
+    <span class="card-arrow">→</span>
+  </a>
+  <a href="consent.html" class="demo-card c-consent">
+    <span class="card-icon">📋</span>
+    <div class="card-num">Demo 07</div>
+    <div class="card-title">Informed Consent & Accountability</div>
+    <div class="card-desc">What must patients know when AI assists diagnosis? Explore the gaps in AI transparency, liability, and the Right to Explanation.</div>
+    <span class="card-arrow">→</span>
+  </a>
+  <a href="regression.html" class="demo-card" style="border-color:rgba(0,212,255,.25);background:linear-gradient(135deg,rgba(0,212,255,.06),rgba(139,92,246,.04))">
+    <span class="card-icon">📈</span>
+    <div class="card-num">Module 08</div>
+    <div class="card-title">Visual AI</div>
+    <div class="card-desc">Step-by-step interactive ML module — live equations, health predictions, cross-validation visualised, and overfitting/underfitting explained.</div>
+    <span class="card-arrow">→</span>
+  </a>
+</div>
+
+<footer>
+  <div class="dn">Dr. Arkaprabha Sau</div>
+  <div class="dc">MBBS, MD (Gold Medalist) · DPH · Dip. Geriatric Medicine · CCEBDM<br>Ph.D. (Computer Science & Engineering)</div>
+  <div class="cp">Ethical AI in Healthcare · Interactive Demo Suite for Postgraduate Education · 2025</div>
+</footer>
+
+<script>
+document.querySelectorAll('.stat-n').forEach(el=>{
+  const text=el.textContent.trim();
+  const num=parseFloat(text.replace(/[^0-9.]/g,''));
+  const pre=text.match(/^[^0-9]*/)[0];
+  const suf=text.match(/[^0-9.]*$/)[0];
+  if(!isNaN(num)){
+    let s=0;const dur=1800,step=16,inc=num/(dur/step);
+    const t=setInterval(()=>{
+      s=Math.min(s+inc,num);
+      el.textContent=pre+(Number.isInteger(num)?Math.round(s):s.toFixed(0))+suf;
+      if(s>=num)clearInterval(t);
+    },step);
+  }
+});
+</script>
+</body>
+</html>

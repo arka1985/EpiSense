@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Trees: A Clinical Deep Dive | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05070a;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --accent: #8b5cf6;
+            --benign: #10b981;
+            --malignant: #ef4444;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Scrollytelling Layout */
+        .container {
+            display: flex;
+            position: relative;
+        }
+
+        .narrative {
+            width: 45%;
+            padding: 0 5% 50vh 5%;
+            z-index: 2;
+        }
+
+        .visuals {
+            width: 55%;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 1px solid var(--border);
+            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05), transparent);
+        }
+
+        /* Narrative Sections */
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0.3;
+            transition: opacity 0.5s;
+            margin-bottom: 5rem;
+        }
+        section.active { opacity: 1; }
+
+        h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.02em; }
+        h1 span { color: var(--accent); }
+        h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--accent); }
+        p { font-size: 1.1rem; color: var(--text); margin-bottom: 1.5rem; }
+
+        .math {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--accent);
+            margin: 1rem 0;
+        }
+
+        /* SVG Overlays */
+        #viz-container {
+            width: 90%;
+            height: 80%;
+            position: relative;
+        }
+
+        .dot { stroke: #000; stroke-width: 0.5; transition: all 0.5s; }
+        .split-line { stroke: #fff; stroke-width: 2; stroke-dasharray: 4; pointer-events: none; }
+        .axis-label { fill: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Tree Styles */
+        .node circle { fill: #1f2937; stroke: var(--accent); stroke-width: 2px; }
+        .node text { fill: #fff; font-size: 10px; font-weight: 600; pointer-events: none; }
+        .link { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 2px; }
+
+        /* UI Elements */
+        .gain-chart { position: absolute; bottom: 20px; right: 20px; width: 150px; height: 100px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid var(--border); display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Narrative Panel -->
+        <article class="narrative">
+            <section id="sec-intro" class="active">
+                <h1>Decision Trees <span>In Medicine</span></h1>
+                <p>How do doctors make critical decisions? Beyond intuition lies a logical structure often mirrored by machine learning: the **Decision Tree**.</p>
+                <p>Imagine we have data from 100 patients. Some have **Benign** tumors, while others are **Malignant**. Our goal is to find the rules that distinguish them.</p>
+            </section>
+
+            <section id="sec-features">
+                <h2>The Clinical Variables</h2>
+                <p>We'll look at two key indicators: 
+                    <br>1. <strong>Tumor Size</strong> (Diameter in mm)
+                    <br>2. <strong>Cell Uniformity</strong> (Structural regularity)
+                </p>
+                <p>Notice how the Malignant cases (red) tend to cluster in the upper-right corner of our feature space.</p>
+            </section>
+
+            <section id="sec-entropy">
+                <h2>The Math of Disorder</h2>
+                <p>To find the best split, we need a way to measure "messiness." In ML, we call this <strong>Entropy</strong>.</p>
+                <div class="math">
+                    Entropy (S) = -Σ pᵢ log₂(pᵢ)
+                </div>
+                <p>A perfectly mixed group (50/50 benign/malignant) has high entropy. A pure group has zero entropy.</p>
+            </section>
+
+            <section id="sec-splitter">
+                <h2>Where to Split?</h2>
+                <p>We hunt for the rule that gives us the most <strong>Information Gain</strong>. This is simply the reduction in entropy after a split.</p>
+                <p>Try dragging the boundary line to separate the red from the green. Watch the Information Gain spike when you hit the visual "sweet spot."</p>
+                <div id="gain-readout" class="math" style="display:none;">Information Gain: <span id="gain-val">0.00</span></div>
+            </section>
+
+            <section id="sec-tree">
+                <h2>Branching Out</h2>
+                <p>One split isn't enough. We repeat the process recursively, creating a tree. Each node "asks" a question, and each leaf provides a diagnosis.</p>
+                <p>The resulting flow chart—or **Decision Tree**—is both powerful and intuitively interpretable by clinicians.</p>
+            </section>
+        </article>
+
+        <!-- Visuals Panel -->
+        <div class="visuals">
+            <div id="viz-container"></div>
+            <div class="gain-chart" id="gain-chart-container">
+                <div class="result-label" style="font-size: 8px; margin-bottom: 5px;">Information Gain</div>
+                <svg id="gain-svg" width="130" height="70"></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ══ CONFIG & DATA ══
+        const width = 600, height = 500;
+        const margin = { top: 40, right: 40, bottom: 60, left: 60 };
+        
+        let dataset = [];
+        function generateData() {
+            for(let i=0; i<100; i++) {
+                const isMalignant = Math.random() < 0.4;
+                const size = isMalignant ? (30 + Math.random() * 40) : (10 + Math.random() * 30);
+                const unif = isMalignant ? (4 + Math.random() * 6) : (1 + Math.random() * 5);
+                dataset.push({ size, unif, label: isMalignant ? 'M' : 'B' });
+            }
+        }
+        generateData();
+
+        // ══ SCALES ══
+        const xScale = d3.scaleLinear().domain([0, 80]).range([margin.left, width - margin.right]);
+        const yScale = d3.scaleLinear().domain([0, 10]).range([height - margin.bottom, margin.top]);
+        const colorScale = d3.scaleOrdinal().domain(['B', 'M']).range(['var(--benign)', 'var(--malignant)']);
+
+        // ══ INITIALIZE VIZ ══
+        const svg = d3.select("#viz-container").append("svg")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("width", "100%")
+            .attr("height", "100%");
+
+        // Axes
+        svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(d3.axisBottom(xScale).ticks(5))
+            .attr("class", "axis");
+        svg.append("g").attr("transform", `translate(${margin.left},0)`)
+            .call(d3.axisLeft(yScale).ticks(5))
+            .attr("class", "axis");
+
+        svg.append("text").attr("class", "axis-label")
+            .attr("x", width/2).attr("y", height - 10).attr("text-anchor", "middle")
+            .text("Tumor Size (mm)");
+        svg.append("text").attr("class", "axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -height/2).attr("y", 20).attr("text-anchor", "middle")
+            .text("Cell Uniformity");
+
+        // Dots
+        const dots = svg.selectAll(".dot")
+            .data(dataset)
+            .enter().append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => xScale(d.size))
+            .attr("cy", d => yScale(d.unif))
+            .attr("r", 5)
+            .attr("fill", d => colorScale(d.label))
+            .attr("opacity", 0);
+
+        // ══ SCROLLYTELLING LOGIC ══
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    d3.selectAll("section").classed("active", false);
+                    d3.select(`#${id}`).classed("active", true);
+                    updateViz(id);
+                }
+            });
+        }, { threshold: 0.6 });
+
+        document.querySelectorAll("section").forEach(s => observer.observe(s));
+
+        function updateViz(step) {
+            switch(step) {
+                case 'sec-intro':
+                    restoreScatter();
+                    dots.transition().duration(800).attr("opacity", 0.8).attr("r", 5);
+                    removeSplit();
+                    break;
+                case 'sec-features':
+                    restoreScatter();
+                    dots.transition().duration(800).attr("opacity", 1).attr("r", 6);
+                    break;
+                case 'sec-entropy':
+                    restoreScatter();
+                    showEntropyGrid();
+                    dots.transition().duration(500).attr("opacity", 0.1);
+                    break;
+                case 'sec-splitter':
+                    restoreScatter();
+                    dots.transition().duration(500).attr("opacity", 0.6);
+                    addSplit();
+                    break;
+                case 'sec-tree':
+                    renderTree();
+                    break;
+            }
+        }
+
+        function showEntropyGrid() {
+            const gridG = svg.append("g").attr("id", "entropy-grid").attr("transform", "translate(150, 100)");
+            const gridData = d3.range(100).map(i => ({ 
+                x: (i % 10) * 30, 
+                y: Math.floor(i / 10) * 30, 
+                label: i < 50 ? 'M' : 'B' 
+            }));
+            
+            gridG.selectAll("rect")
+                .data(gridData).enter().append("rect")
+                .attr("x", d => d.x).attr("y", d => d.y)
+                .attr("width", 25).attr("height", 25)
+                .attr("rx", 4).attr("fill", d => colorScale(d.label))
+                .attr("opacity", 0)
+                .transition().duration(800).delay((d,i) => i * 5)
+                .attr("opacity", 0.6);
+            
+            gridG.append("text").attr("x", 150).attr("y", -20).attr("text-anchor", "middle").text("HIGH ENTROPY (50/50 MIX)").style("fill", "#fff");
+        }
+
+        function restoreScatter() {
+            svg.select("#entropy-grid").remove();
+            if (svg.select(".axis").empty()) {
+                // SVG was cleared for tree, rebuild scatter core
+                svg.selectAll("*").remove();
+                
+                // Re-append axes
+                svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`)
+                    .call(d3.axisBottom(xScale).ticks(5)).attr("class", "axis");
+                svg.append("g").attr("transform", `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(yScale).ticks(5)).attr("class", "axis");
+                
+                // Re-append dots
+                svg.selectAll(".dot")
+                    .data(dataset).enter().append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => xScale(d.size))
+                    .attr("cy", d => yScale(d.unif))
+                    .attr("r", 5)
+                    .attr("fill", d => colorScale(d.label));
+            }
+        }
+
+        // ══ INTERACTIVE ELEMENTS ══
+        function addSplit() {
+            removeSplit();
+            const splitLine = svg.append("line")
+                .attr("class", "split-line")
+                .attr("x1", xScale(35)).attr("y1", margin.top)
+                .attr("x2", xScale(35)).attr("y2", height - margin.bottom)
+                .style("stroke-dasharray", "4,4")
+                .style("pointer-events", "all")
+                .style("cursor", "ew-resize")
+                .call(d3.drag().on("drag", function(event) {
+                    const x = Math.max(margin.left, Math.min(width - margin.right, event.x));
+                    d3.select(this).attr("x1", x).attr("x2", x);
+                    updateGain(xScale.invert(x));
+                }));
+            
+            d3.select("#gain-readout").style("display", "block");
+            d3.select(".gain-chart").style("display", "block");
+        }
+
+        function removeSplit() {
+            svg.selectAll(".split-line").remove();
+            d3.select("#gain-readout").style("display", "none");
+            d3.select(".gain-chart").style("display", "none");
+        }
+
+        // ══ MATH LOGIC ══
+        function getEntropy(data) {
+            if (data.length === 0) return 0;
+            const groupM = data.filter(d => d.label === 'M').length;
+            const pM = groupM / data.length;
+            const pB = 1 - pM;
+            if (pM === 0 || pB === 0) return 0;
+            return -(pM * Math.log2(pM) + pB * Math.log2(pB));
+        }
+
+        function calculateGain(thresh) {
+            const left = dataset.filter(d => d.size <= thresh);
+            const right = dataset.filter(d => d.size > thresh);
+            
+            const baseEnt = getEntropy(dataset);
+            const leftEnt = getEntropy(left);
+            const rightEnt = getEntropy(right);
+            
+            const weightLeft = left.length / dataset.length;
+            const weightRight = right.length / dataset.length;
+            
+            return baseEnt - (weightLeft * leftEnt + weightRight * rightEnt);
+        }
+
+        // ══ INTERACTIVE ELEMENTS ══
+        let gainData = [];
+        const gainSvg = d3.select("#gain-svg");
+
+        function addSplit() {
+            removeSplit();
+            const splitLine = svg.append("line")
+                .attr("class", "split-line")
+                .attr("x1", xScale(35)).attr("y1", margin.top)
+                .attr("x2", xScale(35)).attr("y2", height - margin.bottom)
+                .style("stroke-dasharray", "4,4")
+                .style("pointer-events", "all")
+                .style("cursor", "ew-resize")
+                .call(d3.drag().on("drag", function(event) {
+                    const x = Math.max(margin.left, Math.min(width - margin.right, event.x));
+                    d3.select(this).attr("x1", x).attr("x2", x);
+                    updateGain(xScale.invert(x));
+                }));
+            
+            d3.select("#gain-readout").style("display", "block");
+            d3.select(".gain-chart").style("display", "block");
+            updateGain(35);
+        }
+
+        function removeSplit() {
+            svg.selectAll(".split-line").remove();
+            d3.select("#gain-readout").style("display", "none");
+            d3.select(".gain-chart").style("display", "none");
+        }
+
+        function updateGain(thresh) {
+            const gain = calculateGain(thresh);
+            d3.select("#gain-val").text(gain.toFixed(3));
+            
+            // Update Gain mini-chart
+            gainData.push({ t: thresh, g: gain });
+            if(gainData.length > 50) gainData.shift();
+            
+            const gx = d3.scaleLinear().domain([0, 80]).range([0, 130]);
+            const gy = d3.scaleLinear().domain([0, 0.5]).range([70, 0]);
+            
+            gainSvg.selectAll("*").remove();
+            gainSvg.append("path")
+                .datum(d3.range(0, 80, 2).map(t => ({t, g: calculateGain(t)})))
+                .attr("fill", "none").attr("stroke", "var(--accent)").attr("stroke-width", 1.5)
+                .attr("d", d3.line().x(d => gx(d.t)).y(d => gy(d.g)));
+            
+            gainSvg.append("circle")
+                .attr("cx", gx(thresh)).attr("cy", gy(gain)).attr("r", 3).attr("fill", "#fff");
+        }
+
+        // ══ TREE VISUALIZATION ══
+        function renderTree() {
+            const treeData = {
+                name: "Size > 35?",
+                children: [
+                    { name: "Benign (42)", color: "var(--benign)" },
+                    { 
+                        name: "Unif > 5?", 
+                        children: [
+                            { name: "Suspicious (10)", color: "var(--w)" },
+                            { name: "Malignant (48)", color: "var(--malignant)" }
+                        ]
+                    }
+                ]
+            };
+
+            const vWidth = d3.select("#viz-container").node().getBoundingClientRect().width;
+            const treeRoot = d3.hierarchy(treeData);
+            const treeLayout = d3.tree().size([vWidth - 100, 300]);
+            treeLayout(treeRoot);
+
+            svg.selectAll("*").remove(); // Clear for tree view
+            
+            const g = svg.append("g").attr("transform", "translate(50, 50)");
+
+            g.selectAll(".link")
+                .data(treeRoot.links())
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
+
+            const node = g.selectAll(".node")
+                .data(treeRoot.descendants())
+                .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+
+            node.append("circle").attr("r", 20)
+                .style("fill", d => d.data.color || "var(--accent)");
+
+            node.append("text").attr("dy", 35).attr("text-anchor", "middle")
+                .text(d => d.data.name).style("fill", "#fff");
+        }
+
+    </script>
+</body>
+</html>

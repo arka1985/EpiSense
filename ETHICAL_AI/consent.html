@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Informed Consent & AI Accountability — Ethical AI in Healthcare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#04060f;--border:rgba(255,255,255,.09);--cyan:#00d4ff;--purple:#8b5cf6;--orange:#fb923c;--t1:#f0f4ff;--t2:#94a3b8;--t3:#475569;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 25%,rgba(251,146,60,.07),transparent 50%),radial-gradient(ellipse at 90% 70%,rgba(139,92,246,.06),transparent 50%);z-index:-2}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(251,146,60,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(251,146,60,.02) 1px,transparent 1px);background-size:60px 60px;z-index:-1}
+nav{position:sticky;top:0;z-index:99;background:rgba(4,6,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.2rem}
+.nb{font-weight:900;font-size:.95rem;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nl{display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.na{color:var(--t2);text-decoration:none;padding:.3rem .65rem;border-radius:7px;font-size:.74rem;font-weight:500;white-space:nowrap;transition:all .2s}.na:hover{background:rgba(255,255,255,.06);color:var(--t1)}.na.act{background:rgba(251,146,60,.1);color:#fdba74;border:1px solid rgba(251,146,60,.25)}
+.explorable-card { background: rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; padding:1.4rem; backdrop-filter:blur(10px); box-shadow:0 8px 32px rgba(0,0,0,.15) }
+.wrap{max-width:1150px;margin:0 auto;padding:2.5rem 1.5rem}
+.pill{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem 1rem;border-radius:100px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);color:#fdba74;font-size:.73rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem}
+h1{font-size:clamp(1.9rem,4.5vw,3.1rem);font-weight:900;letter-spacing:-.04em;margin-bottom:.75rem}
+.grad{background:linear-gradient(135deg,var(--orange),var(--warn));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--t2);font-size:.97rem;line-height:1.72;max-width:720px;margin-bottom:1.75rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+@media(max-width:850px){.grid{grid-template-columns:1fr}}
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.25rem;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.panel-title{font-weight:700;font-size:.9rem;margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem}
+
+/* Consent checker */
+.scenario-box{background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.2);border-radius:12px;padding:1rem 1.25rem;font-size:.83rem;color:#fed7aa;margin-bottom:1.25rem;line-height:1.65}
+.consent-list{display:flex;flex-direction:column;gap:.6rem}
+.consent-item{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 1rem;border-radius:11px;border:1.5px solid var(--border);background:rgba(255,255,255,.025);cursor:pointer;transition:all .25s}
+.consent-item:hover{background:rgba(255,255,255,.04)}
+.consent-item.checked{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.06)}
+.consent-item.missing{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.06)}
+.ci-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--t3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s;font-size:.85rem}
+.consent-item.checked .ci-check{background:rgba(34,197,94,.2);border-color:#22c55e;color:#22c55e}
+.consent-item.missing .ci-check{background:rgba(239,68,68,.15);border-color:#ef4444;color:#ef4444}
+.ci-text{font-size:.82rem;line-height:1.55;color:var(--t2)}
+.consent-item.checked .ci-text{color:var(--t1)}
+.ci-tag{font-size:.68rem;font-weight:700;padding:.15rem .45rem;border-radius:5px;margin-top:.3rem;display:inline-block}
+.tag-required{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.tag-good{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.tag-missing{background:rgba(239,68,68,.15);color:#fca5a5}
+
+/* Score */
+.consent-score{text-align:center;padding:1.25rem}
+.score-n{font-size:3.5rem;font-weight:900;letter-spacing:-.06em;font-family:'JetBrains Mono',monospace;transition:color .5s}
+.score-bar-wrap{width:100%;height:10px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin:.6rem auto;max-width:260px}
+.score-bar{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.4,0,.2,1),background .5s}
+
+/* Accountability */
+.liability-grid{display:grid;grid-template-columns:1fr;gap:.65rem}
+.party-card{border-radius:12px;padding:1rem 1.15rem;border:1.5px solid var(--border);display:flex;align-items:flex-start;gap:.85rem;transition:all .3s}
+.party-card:hover{transform:translateX(4px)}
+.party-icon{font-size:1.5rem;flex-shrink:0}
+.party-name{font-weight:700;font-size:.85rem;margin-bottom:.25rem}
+.party-resp{font-size:.76rem;color:var(--t2);line-height:1.55}
+.party-liability{font-size:.68rem;font-weight:700;padding:.18rem .5rem;border-radius:5px;margin-top:.35rem;display:inline-block}
+.l-high{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.l-med{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.l-low{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+
+/* Rights */
+.rights-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.75rem}
+.right-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.85rem;font-size:.77rem}
+.right-icon{font-size:1.2rem;margin-bottom:.3rem;display:block}
+.right-name{font-weight:700;font-size:.81rem;margin-bottom:.25rem;color:var(--t1)}
+.right-desc{color:var(--t2);line-height:1.5}
+
+.info-box{padding:.85rem 1.1rem;border-radius:10px;font-size:.8rem;line-height:1.65;border-left:3px solid;margin-top:.85rem}
+.info-warn{background:rgba(251,146,60,.07);border-color:var(--orange);color:#fed7aa}
+.info-info{background:rgba(139,92,246,.07);border-color:var(--purple);color:#e9d5ff}
+footer{border-top:1px solid var(--border);background:rgba(255,255,255,.015);padding:1.5rem 2rem;text-align:center}
+.dn{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.28rem}
+.dc{font-size:.77rem;color:var(--t2);line-height:1.6;margin-bottom:.35rem}.cp{font-size:.7rem;color:var(--t3)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nb">⚕️ Ethical AI in Healthcare</div>
+  <div class="nl">
+    <a class="na" href="../index.html">🏠 Back to Dashboard</a>
+    <a class="na" href="index.html">🏠 Home</a>
+    <a class="na" href="bias.html">🎭 Clinical AI Bias</a>
+    <a class="na" href="hallucination.html">👻 AI Hallucination</a>
+    <a class="na" href="xai.html">🔍 AI Explainability</a>
+    <a class="na" href="fairness.html">⚖️ AI Fairness</a>
+    <a class="na" href="adversarial.html">🛡️ Adversarial AI</a>
+    <a class="na" href="privacy.html">🔐 Patient Privacy</a>
+    <a class="na act" href="consent.html">📋 Informed Consent</a>
+    <a class="na" href="regression.html">📉 Visual AI</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <span class="pill">📋 Demo 07 — Informed Consent &amp; Accountability</span>
+  <h1>Who is <span class="grad">Responsible</span> When AI Errs?</h1>
+  <p class="sub">An AI diagnosed your patient — <strong>but did they consent?</strong> And when the AI is wrong, who bears liability? Explore the critical gaps in informed consent for clinical AI and the accountability chain.</p>
+
+  <div class="grid">
+    <div>
+      <div class="scenario-box">
+        🏥 <strong>Scenario:</strong> Smt. Kasturi Chatterjee (62F, homemaker, Kolkata) underwent a routine CT chest at a tertiary care hospital. An AI radiology system flagged a "suspicious pulmonary nodule — high suspicion of malignancy (AI confidence: 87%)." The radiologist reviewed only the AI report and the patient received a cancer diagnosis — later found to be a <strong>false positive</strong> (calcified granuloma from old TB). She underwent an unnecessary CT-guided biopsy, causing pneumothorax, a 5-day hospitalisation, and severe psychological distress for herself and her family.<br><br>
+        <strong>Did the hospital fulfill its informed consent obligations?</strong> Check the boxes below.
+      </div>
+      <div class="panel">
+        <div class="panel-title">☑️ Informed Consent Checklist for Clinical AI</div>
+        <div class="consent-list" id="consentList">
+          <!-- Filled by JS -->
+        </div>
+        <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap">
+          <button onclick="checkAll()" style="padding:.45rem 1rem;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#86efac;border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:600;font-family:'Inter',sans-serif">✓ Check All</button>
+          <button onclick="uncheckAll()" style="padding:.45rem 1rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--t2);border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:600;font-family:'Inter',sans-serif">↺ Uncheck All</button>
+          <button onclick="showActual()" style="padding:.45rem 1rem;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);color:#fdba74;border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:600;font-family:'Inter',sans-serif">🏥 Show Actual Practice</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="consent-score">
+          <div style="font-size:.73rem;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:.4rem">Consent Compliance Score</div>
+          <div class="score-n" id="scoreN">0%</div>
+          <div class="score-bar-wrap"><div class="score-bar" id="scoreBar" style="width:0%"></div></div>
+          <div id="scoreVerdict" style="font-size:.82rem;font-weight:600;color:var(--t2);margin-top:.4rem">Check the boxes above</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">⚖️ Liability Chain — Who Is Responsible?</div>
+        <div class="liability-grid">
+          <div class="party-card" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)">
+            <div class="party-icon">🏥</div>
+            <div><div class="party-name">Hospital / Healthcare Organisation</div>
+              <div class="party-resp">Deployed the AI system; responsible for ensuring it is validated, audited, and used within safe parameters. Bears vicarious liability for clinical decisions.</div>
+              <span class="party-liability l-high">⚠ High Liability</span></div>
+          </div>
+          <div class="party-card" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
+            <div class="party-icon">👨‍⚕️</div>
+            <div><div class="party-name">Treating Physician / Radiologist</div>
+              <div class="party-resp">AI is a decision-support tool — the clinician retains final decision authority. Professional negligence applies if AI output accepted without clinical judgment.</div>
+              <span class="party-liability l-med">⚠ Shared Liability</span></div>
+          </div>
+          <div class="party-card" style="border-color:rgba(139,92,246,.3);background:rgba(139,92,246,.04)">
+            <div class="party-icon">💻</div>
+            <div><div class="party-name">AI Developer / Vendor</div>
+              <div class="party-resp">Product liability under EU AI Act. If the AI system had undisclosed failure modes, the developer may bear liability for design defects.</div>
+              <span class="party-liability l-med">⚠ Variable Liability</span></div>
+          </div>
+          <div class="party-card" style="border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)">
+            <div class="party-icon">📋</div>
+            <div><div class="party-name">Regulatory Authority</div>
+              <div class="party-resp">CDSCO (India) / FDA (US) / CE (EU) must have pre-approved the AI medical device. Inadequate regulation may create systemic liability.</div>
+              <span class="party-liability l-low">ℹ Regulatory</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📜 Patient Rights in AI-Assisted Care</div>
+        <div class="rights-grid">
+          <div class="right-item"><span class="right-icon">🔍</span><div class="right-name">Right to Explanation</div><div class="right-desc">GDPR Art. 22: Right to meaningful explanation of automated decisions.</div></div>
+          <div class="right-item"><span class="right-icon">🚫</span><div class="right-name">Right to Opt-Out</div><div class="right-desc">Patients may refuse AI-assisted diagnosis and demand human-only review.</div></div>
+          <div class="right-item"><span class="right-icon">👤</span><div class="right-name">Right to Human Review</div><div class="right-desc">High-risk AI decisions must have qualified human oversight under EU AI Act.</div></div>
+          <div class="right-item"><span class="right-icon">♻️</span><div class="right-name">Right to Correct</div><div class="right-desc">Patients can challenge and correct AI-generated medical records under DPDP/GDPR.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box info-warn">
+    ⚖️ <strong>EU AI Act (2024):</strong> AI systems used in clinical diagnosis are classified as <em>High-Risk AI</em>. They must undergo conformity assessment, maintain logs for accountability, provide transparency to users, and allow meaningful human oversight. Violations carry fines up to €30M or 6% of global turnover.
+  </div>
+  <div class="info-box info-info">
+    📋 <strong>Legal Principle (Montgomery v Lanarkshire 2015, UK SC):</strong> Patients must be told about "material risks" relevant to their decision — this includes the fact that AI, and not just a human clinician, contributed to their diagnosis. Failure to disclose constitutes a breach of informed consent.
+  </div>
+</div>
+
+<footer>
+  <div class="dn">Dr. Arkaprabha Sau</div>
+  <div class="dc">MBBS, MD (Gold Medalist) · DPH · Dip. Geriatric Medicine · CCEBDM<br>Ph.D. (Computer Science & Engineering)</div>
+  <div class="cp">Ethical AI in Healthcare · Interactive Demo Suite for Postgraduate Education · 2025</div>
+</footer>
+
+<script>
+const consentItems=[
+  {text:'Patient was informed that AI software assisted in analysing their CT scan.',required:true,actuallyDone:false},
+  {text:'Patient was told the AI system\'s known false positive rate (12%) for pulmonary nodules.',required:true,actuallyDone:false},
+  {text:'Patient was given the option to request human-only radiologist interpretation.',required:true,actuallyDone:false},
+  {text:'Patient was informed of the AI vendor and that their scan data may be used for model retraining.',required:true,actuallyDone:false},
+  {text:'Clinician independently reviewed the primary imaging data, not just the AI summary.',required:true,actuallyDone:true},
+  {text:'Patient was provided a Plain English explanation of why the AI flagged the nodule.',required:true,actuallyDone:false},
+  {text:'AI-assisted decision was documented in the patient\'s records with the AI system version.',required:false,actuallyDone:true},
+  {text:'Second-opinion pathway was offered before initiating the biopsy.',required:false,actuallyDone:false},
+];
+
+let checked=new Array(consentItems.length).fill(false);
+
+function buildList(){
+  document.getElementById('consentList').innerHTML=consentItems.map((c,i)=>`
+    <div class="consent-item ${checked[i]?'checked':''}" onclick="toggle(${i})" id="ci${i}">
+      <div class="ci-check" id="ck${i}">${checked[i]?'✓':''}</div>
+      <div>
+        <div class="ci-text">${c.text}</div>
+        <span class="ci-tag ${c.required?'tag-required':'tag-good'}">${c.required?'⚠ Required by law':'✓ Best practice'}</span>
+      </div>
+    </div>`).join('');
+  updateScore();
+}
+
+function toggle(i){
+  checked[i]=!checked[i];buildList();
+}
+
+function checkAll(){ checked=new Array(consentItems.length).fill(true);buildList(); }
+function uncheckAll(){ checked=new Array(consentItems.length).fill(false);buildList(); }
+function showActual(){
+  checked=consentItems.map(c=>c.actuallyDone);
+  consentItems.forEach((c,i)=>{
+    const el=document.getElementById(`ci${i}`);
+    if(c.required&&!c.actuallyDone){el.classList.add('missing');el.classList.remove('checked');}
+  });
+  buildList();
+}
+
+function updateScore(){
+  const total=consentItems.length;
+  const done=checked.filter(Boolean).length;
+  const pct=Math.round(done/total*100);
+  document.getElementById('scoreN').textContent=pct+'%';
+  const bar=document.getElementById('scoreBar');
+  bar.style.width=pct+'%';
+  let color,verdict;
+  if(pct<40){color='#ef4444';verdict='🚨 Critically Non-Compliant — Legal exposure is very high';}
+  else if(pct<70){color='#f59e0b';verdict='⚠️ Partially Compliant — Key patient rights may be violated';}
+  else if(pct<90){color='#84cc16';verdict='🟡 Mostly Compliant — Close but not sufficient';}
+  else{color='#22c55e';verdict='✅ Fully Compliant — Ethical and legal obligations met';}
+  bar.style.background=color;
+  document.getElementById('scoreN').style.color=color;
+  document.getElementById('scoreVerdict').textContent=verdict;
+  document.getElementById('scoreVerdict').style.color=color;
+}
+
+buildList();
+</script>
+</body>
+</html>

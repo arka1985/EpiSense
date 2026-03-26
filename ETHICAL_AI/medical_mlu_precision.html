@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precision-Recall Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--primary-blue:#007bff;--primary-pink:#e83e8c;--glass-bg:rgba(255,255,255,0.07);--glass-border:rgba(255,255,255,0.15);--text-white:#f8fafc;--text-dim:#94a3b8;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#1e293b,#0f172a);color:var(--text-white);height:100vh;overflow:hidden;}
+        .blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:float 20s infinite alternate ease-in-out;}
+        .blob-blue{background:var(--primary-blue);top:-200px;left:-200px;}
+        .blob-pink{background:var(--primary-pink);bottom:-200px;right:-200px;animation-delay:-10s;}
+        @keyframes float{from{transform:translate(0,0)scale(1)}to{transform:translate(80px,80px)scale(1.1)}}
+        .back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:0.45rem;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:50px;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:600;padding:0.5rem 1rem;transition:all 0.25s;}
+        .back-btn:hover{background:rgba(255,255,255,0.14);transform:translateX(-3px);}
+        .app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+        .narrative{width:24%;min-width:210px;height:100%;overflow-y:auto;padding:4.5rem 1.5rem 3rem;border-right:1px solid rgba(255,255,255,0.1);scrollbar-width:none;flex-shrink:0;}
+        .narrative::-webkit-scrollbar{display:none;}
+        section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:0.22;transform:translateX(-8px);transition:opacity 0.4s,transform 0.4s;}
+        section.active{opacity:1;transform:none;}
+        .hero{font-size:1.9rem;font-weight:800;line-height:1.15;margin-bottom:1rem;letter-spacing:-0.03em;}
+        .hero span{background:linear-gradient(to right,#60a5fa,#f472b6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+        section h2{font-size:0.95rem;font-weight:700;color:#60a5fa;margin-bottom:0.7rem;}
+        section p{font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem;}
+        .cbox{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:0.75rem;line-height:1.85;margin:0.6rem 0;}
+        .ethical-box{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(232,62,140,0.05));border:1px solid rgba(239,68,68,0.28);border-radius:14px;padding:1rem;}
+        .ethical-box h2{color:#f87171;}
+        .lab-scroll{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.4rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent;}
+        .lab-scroll::-webkit-scrollbar{width:5px;}
+        .lab-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:10px;}
+        .panels-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+        .glass-panel{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:1.3rem;display:flex;flex-direction:column;gap:0.85rem;}
+        .panel-label{font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:var(--text-dim);padding-bottom:0.6rem;border-bottom:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;gap:0.45rem;}
+        .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .dot-blue{background:#60a5fa;box-shadow:0 0 6px #60a5fa;}
+        .dot-pink{background:#f472b6;box-shadow:0 0 6px #f472b6;}
+        .dot-green{background:#34d399;box-shadow:0 0 6px #34d399;}
+        .dot-gold{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+        .num-field{display:flex;flex-direction:column;gap:0.32rem;}
+        .num-field .fl{font-size:0.68rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;}
+        .num-field input[type="number"]{width:100%;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;padding:0.5rem 0.8rem;text-align:center;outline:none;transition:border-color 0.2s;}
+        .num-field input[type="number"]:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,0.15);}
+        .num-field .fu{font-size:0.62rem;color:rgba(148,163,184,0.6);text-align:center;font-weight:600;text-transform:uppercase;}
+        input[type="number"]::-webkit-inner-spin-button{opacity:0.25;}
+        .slider-row{display:flex;flex-direction:column;gap:0.32rem;}
+        .slider-top{display:flex;justify-content:space-between;align-items:baseline;}
+        .s-label{font-size:0.7rem;font-weight:600;color:var(--text-dim);}
+        .s-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;color:#f8fafc;}
+        .s-hint{font-size:0.58rem;color:rgba(148,163,184,0.5);}
+        input[type="range"]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,0.08);cursor:pointer;outline:none;}
+        input[type="range"].blue::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#60a5fa;border:2px solid #fff;box-shadow:0 0 8px rgba(96,165,250,0.6);}
+        input[type="range"].pink::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#f472b6;border:2px solid #fff;box-shadow:0 0 8px rgba(244,114,182,0.6);}
+        input[type="range"].green::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#34d399;border:2px solid #fff;box-shadow:0 0 8px rgba(52,211,153,0.6);}
+        .output-big{background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(244,114,182,0.06));border:1px solid rgba(96,165,250,0.22);border-radius:16px;padding:1.1rem;text-align:center;}
+        .out-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim);}
+        .out-value{font-family:'JetBrains Mono',monospace;font-size:2.8rem;font-weight:800;background:linear-gradient(to right,#60a5fa,#f472b6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin:0.1rem 0;}
+        .out-sub{font-size:0.68rem;color:var(--text-dim);}
+        .mini-row{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;}
+        .mini-card{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:0.7rem;text-align:center;}
+        .mini-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;}
+        .mini-label{font-size:0.54rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+        .viz-panel{height:400px;flex-shrink:0;}
+        #pr-svg{width:100%;height:100%;display:block;}
+        .axis text{fill:rgba(148,163,184,0.7);font-family:'Outfit',sans-serif;font-size:10px;}
+        .axis path,.axis line{stroke:rgba(255,255,255,0.06);}
+    </style>
+</head>
+<body>
+<div class="blobs"><div class="blob blob-blue"></div><div class="blob blob-pink"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard
+</a>
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Precision &amp; Recall <span>Screening Lab</span></div>
+        <p>The <strong>Precision-Recall curve</strong> answers: <em>when you raise an alarm, how trustworthy is it?</em> (Precision) — and <em>how many true cases did you catch?</em> (Recall).</p>
+        <p>Drag the <strong>yellow dot</strong> on the P-R curve to explore the trade-off at every threshold.</p>
+    </section>
+    <section id="s2">
+        <h2>Precision vs Recall</h2>
+        <p>Both are computed from the <strong>confusion matrix</strong> at a given threshold:</p>
+        <div class="cbox">Precision = TP / (TP + FP)
+  → of all patients flagged malignant,
+    how many actually are?
+
+Recall = TP / (TP + FN)
+  → of all malignant patients,
+    how many did we flag?</div>
+        <p>Raising the threshold → higher Precision, lower Recall. Lowering it → vice versa.</p>
+    </section>
+    <section id="s3">
+        <h2>The F1 Score</h2>
+        <p>F1 is the <strong>harmonic mean</strong> of Precision and Recall — it balances both into one number:</p>
+        <div class="cbox">F1 = 2 × (Precision × Recall)
+        / (Precision + Recall)
+
+F1 = 1.0  →  perfect
+F1 = 0.0  →  completely wrong
+
+The F-beta score generalises this:
+Fβ = (1+β²) × P×R / (β²×P + R)
+β > 1  →  prioritise Recall (screening)
+β &lt; 1  →  prioritise Precision (follow-up)</div>
+    </section>
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ Ethical Reality</h2>
+            <p>In cancer screening, <strong>Recall is life-critical</strong>. Missing a malignancy has severe consequences. A model optimised for Precision alone may achieve 95% precision by only flagging the most obvious cases — missing early-stage cancers entirely.</p>
+        </div>
+    </section>
+</aside>
+<div class="lab-scroll">
+    <div class="panels-row">
+        <!-- Panel 1 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>① Patient Input</div>
+            <div class="num-field">
+                <div class="fl">Fasting Glucose</div>
+                <input type="number" id="in-glucose" value="130" min="70" max="300">
+                <div class="fu">mg / dL</div>
+            </div>
+            <div class="num-field">
+                <div class="fl">Patient BMI</div>
+                <input type="number" id="in-bmi" value="28" min="15" max="50" step="0.1">
+                <div class="fu">kg / m²</div>
+            </div>
+        </div>
+        <!-- Panel 2 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-pink"></span>② Threshold &amp; Model</div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Decision Threshold</span><span class="s-val" id="lbl-thresh">0.50</span></div>
+                <input type="range" class="blue" id="sl-thresh" min="0.01" max="0.99" step="0.01" value="0.5">
+                <span class="s-hint">or drag yellow dot on the P-R curve</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">β₀ · Risk Baseline</span><span class="s-val" id="lbl-b0">-9.0</span></div>
+                <input type="range" class="pink" id="sl-b0" min="-20" max="5" step="0.1" value="-9">
+                <span class="s-hint">intercept</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">β₁ · Glucose Weight</span><span class="s-val" id="lbl-b1">0.045</span></div>
+                <input type="range" class="green" id="sl-b1" min="0.001" max="0.15" step="0.001" value="0.045">
+                <span class="s-hint">mg/dL discriminating power</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Fβ Beta Weight</span><span class="s-val" id="lbl-beta">1.0</span></div>
+                <input type="range" class="blue" id="sl-beta" min="0.1" max="3" step="0.1" value="1">
+                <span class="s-hint">&gt;1 prioritises Recall (screening)</span>
+            </div>
+        </div>
+        <!-- Panel 3 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-green"></span>③ Metrics at Threshold</div>
+            <div class="output-big">
+                <div class="out-label">F1 Score (harmonic mean)</div>
+                <div class="out-value" id="out-f1">—</div>
+                <div class="out-sub" id="out-fbeta">—</div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-prec" style="color:#f472b6">—</div><div class="mini-label">Precision (PPV)</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-rec" style="color:#34d399">—</div><div class="mini-label">Recall (Sensitivity)</div></div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-ap" style="color:#60a5fa">—</div><div class="mini-label">Avg Precision (AP)</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-thresh" style="color:#fbbf24">—</div><div class="mini-label">Threshold</div></div>
+            </div>
+        </div>
+    </div>
+    <!-- Viz -->
+    <div class="glass-panel viz-panel">
+        <div class="panel-label"><span class="dot dot-gold"></span>④ Precision-Recall Curve — Recall (x) vs Precision (y) · F1 iso-curves shown · drag yellow dot to explore · AP = area under curve</div>
+        <svg id="pr-svg"></svg>
+    </div>
+</div>
+</div>
+
+<script>
+const sig=z=>1/(1+Math.exp(-z));
+const rng2=d3.randomNormal.source(d3.randomLcg(19));
+const DATA=[];
+for(let i=0;i<60;i++) DATA.push({glucose:Math.max(70,Math.min(300,rng2(165,25)())),bmi:Math.max(15,Math.min(50,rng2(31,4)())),label:true});
+for(let i=0;i<60;i++) DATA.push({glucose:Math.max(70,Math.min(300,rng2(105,20)())),bmi:Math.max(15,Math.min(50,rng2(24,3.5)())),label:false});
+
+const state={b0:-9,b1:0.045,b2:0.12,thresh:0.5,beta:1.0};
+
+function buildPR(b0,b1,b2){
+    const scores=DATA.map(d=>({score:sig(b0+b1*d.glucose+b2*d.bmi),label:d.label}));
+    const thrs=[...new Set(scores.map(s=>s.score))].sort((a,b)=>b-a);
+    const P=scores.filter(s=>s.label).length;
+    const pts=thrs.map(t=>{
+        let tp=0,fp=0;
+        scores.forEach(s=>{if(s.score>=t){s.label?tp++:fp++;}});
+        const prec=tp+fp>0?tp/(tp+fp):1;
+        const rec=P>0?tp/P:0;
+        return {prec,rec,thresh:t};
+    });
+    pts.unshift({prec:1,rec:0,thresh:1.01});
+    pts.push({prec:0,rec:1,thresh:0});
+    // AP (area under P-R)
+    let ap=0;
+    for(let i=1;i<pts.length;i++) ap+=Math.abs(pts[i].rec-pts[i-1].rec)*(pts[i].prec+pts[i-1].prec)/2;
+    // Closest to threshold
+    const cp=pts.reduce((b,p)=>Math.abs(p.thresh-state.thresh)<Math.abs(b.thresh-state.thresh)?p:b,pts[0]);
+    return {pts,ap,cp};
+}
+
+const margin={top:22,right:30,bottom:46,left:58};
+const svg=d3.select("#pr-svg");
+const g=svg.append("g").attr("transform",`translate(${margin.left},${margin.top})`);
+let W=0,H=0;
+const xSc=d3.scaleLinear().domain([0,1]);
+const ySc=d3.scaleLinear().domain([0,1]);
+
+function getSize(){
+    const r=document.getElementById("pr-svg").getBoundingClientRect();
+    const nw=r.width-margin.left-margin.right,nh=r.height-margin.top-margin.bottom;
+    if(nw<=0||nh<=0) return false;
+    W=nw;H=nh;xSc.range([0,W]);ySc.range([H,0]);return true;
+}
+
+function f1(p,r){return p+r>0?2*p*r/(p+r):0;}
+function fbeta(p,r,b){return p+r>0?(1+b*b)*p*r/(b*b*p+r):0;}
+
+function render(){
+    document.getElementById("lbl-thresh").textContent=state.thresh.toFixed(2);
+    document.getElementById("lbl-b0").textContent=state.b0.toFixed(1);
+    document.getElementById("lbl-b1").textContent=state.b1.toFixed(3);
+    document.getElementById("lbl-beta").textContent=state.beta.toFixed(1);
+
+    const {pts,ap,cp}=buildPR(state.b0,state.b1,state.b2);
+    const f1v=f1(cp.prec,cp.rec);
+    const fbv=fbeta(cp.prec,cp.rec,state.beta);
+
+    document.getElementById("out-f1").textContent=f1v.toFixed(3);
+    document.getElementById("out-fbeta").textContent=`F${state.beta.toFixed(1)}: ${fbv.toFixed(3)}`;
+    document.getElementById("val-prec").textContent=(cp.prec*100).toFixed(0)+"%";
+    document.getElementById("val-rec").textContent=(cp.rec*100).toFixed(0)+"%";
+    document.getElementById("val-ap").textContent=ap.toFixed(3);
+    document.getElementById("val-thresh").textContent=state.thresh.toFixed(2);
+
+    if(!getSize()) return;
+    g.selectAll("*").remove();
+
+    const defs=svg.selectAll("defs").data([0]).join("defs");
+    const ag=defs.append("linearGradient").attr("id","prFill").attr("x1","0%").attr("y1","0%").attr("x2","0%").attr("y2","100%");
+    ag.append("stop").attr("offset","0%").attr("stop-color","rgba(244,114,182,0.3)");
+    ag.append("stop").attr("offset","100%").attr("stop-color","rgba(244,114,182,0.02)");
+    const lg=defs.append("linearGradient").attr("id","prGrad").attr("x1","0%").attr("y1","0%").attr("x2","100%").attr("y2","0%");
+    lg.append("stop").attr("offset","0%").attr("stop-color","#f472b6");
+    lg.append("stop").attr("offset","100%").attr("stop-color","#34d399");
+    const glow=defs.append("filter").attr("id","glow3");
+    glow.append("feGaussianBlur").attr("stdDeviation","3").attr("result","blur");
+    const fm=glow.append("feMerge");fm.append("feMergeNode").attr("in","blur");fm.append("feMergeNode").attr("in","SourceGraphic");
+
+    // Grid
+    g.append("g").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(5).tickSize(-H).tickFormat("")).selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    g.append("g").call(d3.axisLeft(ySc).ticks(5).tickSize(-W).tickFormat("")).selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    // Axes
+    g.append("g").attr("class","axis").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(5).tickFormat(d3.format(".1f")));
+    g.append("g").attr("class","axis").call(d3.axisLeft(ySc).ticks(5).tickFormat(d3.format(".1f")));
+    g.append("text").attr("x",W/2).attr("y",H+40).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",11).attr("font-family","Outfit").text("Recall (Sensitivity = TP / [TP+FN])");
+    g.append("text").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",-45).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",11).attr("font-family","Outfit").text("Precision (PPV = TP / [TP+FP])");
+
+    // F1 iso-curves (constant F1 values)
+    [0.3,0.5,0.7,0.9].forEach(fv=>{
+        const isoPts=[];
+        for(let r=0.01;r<=1;r+=0.02){
+            const p=fv*r/(2*r-fv);
+            if(p>0&&p<=1) isoPts.push({r,p});
+        }
+        if(isoPts.length<2) return;
+        const isoLine=d3.line().x(d=>xSc(d.r)).y(d=>ySc(d.p));
+        g.append("path").datum(isoPts).attr("fill","none").attr("d",isoLine)
+            .attr("stroke","rgba(251,191,36,0.12)").attr("stroke-width",1).attr("stroke-dasharray","4,4");
+        g.append("text").attr("x",xSc(isoPts[isoPts.length-1].r)-4).attr("y",ySc(isoPts[isoPts.length-1].p)-4)
+            .attr("fill","rgba(251,191,36,0.3)").attr("font-size",7).attr("font-family","Outfit").text(`F1=${fv}`);
+    });
+
+    // No-skill baseline (prevalence line)
+    const prev=DATA.filter(d=>d.label).length/DATA.length;
+    g.append("line").attr("x1",0).attr("x2",W).attr("y1",ySc(prev)).attr("y2",ySc(prev))
+        .attr("stroke","rgba(255,255,255,0.15)").attr("stroke-width",1.5).attr("stroke-dasharray","6,4");
+    g.append("text").attr("x",8).attr("y",ySc(prev)-5).attr("fill","rgba(255,255,255,0.25)").attr("font-size",7.5).attr("font-family","Outfit").text(`No-skill baseline (prevalence ${(prev*100).toFixed(0)}%)`);
+
+    // Fill under P-R curve
+    const area=d3.area().x(d=>xSc(d.rec)).y0(H).y1(d=>ySc(d.prec)).curve(d3.curveBasis);
+    g.append("path").datum(pts).attr("d",area).attr("fill","url(#prFill)");
+
+    // P-R curve
+    const prLine=d3.line().x(d=>xSc(d.rec)).y(d=>ySc(d.prec)).curve(d3.curveBasis);
+    g.append("path").datum(pts).attr("fill","none").attr("d",prLine)
+        .attr("stroke","url(#prGrad)").attr("stroke-width",3)
+        .attr("filter","drop-shadow(0 0 6px rgba(244,114,182,0.5))");
+
+    // Best F1 point
+    const bestF1=pts.reduce((b,p)=>f1(p.prec,p.rec)>f1(b.prec,b.rec)?p:b,pts[0]);
+    g.append("circle").attr("cx",xSc(bestF1.rec)).attr("cy",ySc(bestF1.prec)).attr("r",5)
+        .attr("fill","#34d399").attr("stroke","#fff").attr("stroke-width",1.5).attr("filter","url(#glow3)");
+    g.append("text").attr("x",xSc(bestF1.rec)+8).attr("y",ySc(bestF1.prec)-6)
+        .attr("fill","#34d399").attr("font-size",7.5).attr("font-family","Outfit").attr("font-weight",700)
+        .text(`Best F1=${f1(bestF1.prec,bestF1.rec).toFixed(2)}`);
+
+    // Operating point (draggable)
+    const opX=xSc(cp.rec),opY=ySc(cp.prec);
+    g.append("circle").attr("cx",opX).attr("cy",opY).attr("r",12).attr("fill","none").attr("stroke","rgba(251,191,36,0.22)").attr("stroke-width",8);
+    const opDot=g.append("circle").attr("cx",opX).attr("cy",opY).attr("r",7)
+        .attr("fill","#fbbf24").attr("stroke","#fff").attr("stroke-width",2).attr("cursor","grab")
+        .attr("filter","url(#glow3)");
+    g.append("text").attr("x",opX+12).attr("y",opY-8)
+        .attr("fill","#fbbf24").attr("font-size",9).attr("font-family","JetBrains Mono").attr("font-weight",700)
+        .text(`T=${state.thresh.toFixed(2)}`);
+    // Crosshairs
+    g.append("line").attr("x1",0).attr("x2",opX).attr("y1",opY).attr("y2",opY).attr("stroke","rgba(251,191,36,0.18)").attr("stroke-width",1).attr("stroke-dasharray","4,3");
+    g.append("line").attr("x1",opX).attr("x2",opX).attr("y1",opY).attr("y2",H).attr("stroke","rgba(251,191,36,0.18)").attr("stroke-width",1).attr("stroke-dasharray","4,3");
+
+    // Drag
+    const drag=d3.drag().on("drag",function(event){
+        const rx=Math.max(0,Math.min(W,event.x)), ry=Math.max(0,Math.min(H,event.y));
+        const recT=xSc.invert(rx), precT=ySc.invert(ry);
+        const best=pts.reduce((b,p)=>{
+            const d=Math.hypot(p.rec-recT,p.prec-precT);
+            return d<b.d?{p,d}:{b:b.b||p,d:b.d};
+        },{d:Infinity});
+        state.thresh=best.p.thresh;
+        document.getElementById("sl-thresh").value=Math.max(0.01,Math.min(0.99,state.thresh));
+        render();
+    });
+    opDot.call(drag);
+}
+
+document.getElementById("in-glucose").addEventListener("input",e=>{state.glu=+e.target.value||70;render();});
+document.getElementById("in-bmi").addEventListener("input",e=>{state.bmi=+e.target.value||15;render();});
+document.getElementById("sl-thresh").addEventListener("input",function(){state.thresh=+this.value;render();});
+document.getElementById("sl-b0").addEventListener("input",function(){state.b0=+this.value;render();});
+document.getElementById("sl-b1").addEventListener("input",function(){state.b1=+this.value;render();});
+document.getElementById("sl-beta").addEventListener("input",function(){state.beta=+this.value;render();});
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));e.target.classList.add("active");}});},{threshold:0.5});
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+window.addEventListener("resize",render);
+setTimeout(render,80);
+</script>
+</body>
+</html>

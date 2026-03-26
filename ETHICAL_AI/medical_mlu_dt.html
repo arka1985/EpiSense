@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Tree Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-blue:#007bff; --primary-pink:#e83e8c; --glass-bg:rgba(255,255,255,0.07); --glass-border:rgba(255,255,255,0.15); --text-white:#f8fafc; --text-dim:#94a3b8; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Outfit',sans-serif; background:radial-gradient(circle at top left,#1e293b,#0f172a); color:var(--text-white); height:100vh; overflow:hidden; }
+
+        .blobs { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+        .blob { position:absolute; width:600px; height:600px; border-radius:50%; filter:blur(100px); opacity:0.2; animation:float 20s infinite alternate ease-in-out; }
+        .blob-blue { background:var(--primary-blue); top:-200px; left:-200px; }
+        .blob-pink  { background:var(--primary-pink); bottom:-200px; right:-200px; animation-delay:-10s; }
+        @keyframes float { from{transform:translate(0,0) scale(1)} to{transform:translate(80px,80px) scale(1.1)} }
+
+        .back-btn { position:fixed; top:1.1rem; left:1.1rem; z-index:200; display:inline-flex; align-items:center; gap:0.45rem; background:rgba(255,255,255,0.08); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.18); border-radius:50px; color:#fff; text-decoration:none; font-size:0.82rem; font-weight:600; padding:0.5rem 1rem; transition:all 0.25s; }
+        .back-btn:hover { background:rgba(255,255,255,0.14); transform:translateX(-3px); }
+
+        .app { position:relative; z-index:1; display:flex; height:100vh; overflow:hidden; }
+
+        /* Narrative */
+        .narrative { width:24%; min-width:210px; height:100%; overflow-y:auto; padding:4.5rem 1.5rem 3rem; border-right:1px solid rgba(255,255,255,0.1); scrollbar-width:none; flex-shrink:0; }
+        .narrative::-webkit-scrollbar { display:none; }
+        section { min-height:72vh; display:flex; flex-direction:column; justify-content:center; opacity:0.22; transform:translateX(-8px); transition:opacity 0.4s,transform 0.4s; }
+        section.active { opacity:1; transform:none; }
+        .hero { font-size:1.9rem; font-weight:800; line-height:1.15; margin-bottom:1rem; letter-spacing:-0.03em; }
+        .hero span { background:linear-gradient(to right,#60a5fa,#f472b6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        section h2 { font-size:0.95rem; font-weight:700; color:#60a5fa; margin-bottom:0.7rem; }
+        section p { font-size:0.88rem; line-height:1.7; color:var(--text-dim); margin-bottom:0.6rem; }
+        .cbox { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#34d399; background:rgba(0,0,0,0.28); border:1px solid rgba(52,211,153,0.18); border-radius:10px; padding:0.75rem; line-height:1.85; margin:0.6rem 0; }
+        .ethical-box { background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(232,62,140,0.05)); border:1px solid rgba(239,68,68,0.28); border-radius:14px; padding:1rem; }
+        .ethical-box h2 { color:#f87171; }
+
+        /* Scrollable right */
+        .lab-scroll { flex:1; height:100%; overflow-y:auto; overflow-x:hidden; padding:1.4rem; display:flex; flex-direction:column; gap:1rem; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.12) transparent; }
+        .lab-scroll::-webkit-scrollbar { width:5px; }
+        .lab-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:10px; }
+
+        .panels-row { display:grid; grid-template-columns:1fr 1.3fr 1fr; gap:1rem; }
+
+        /* Glass panel */
+        .glass-panel { background:var(--glass-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid var(--glass-border); border-radius:20px; padding:1.3rem; display:flex; flex-direction:column; gap:0.85rem; }
+        .panel-label { font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-dim); padding-bottom:0.6rem; border-bottom:1px solid rgba(255,255,255,0.09); display:flex; align-items:center; gap:0.45rem; }
+        .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+        .dot-blue  { background:#60a5fa; box-shadow:0 0 6px #60a5fa; }
+        .dot-pink  { background:#f472b6; box-shadow:0 0 6px #f472b6; }
+        .dot-green { background:#34d399; box-shadow:0 0 6px #34d399; }
+        .dot-gold  { background:#fbbf24; box-shadow:0 0 6px #fbbf24; }
+
+        /* Number input */
+        .num-field { display:flex; flex-direction:column; gap:0.32rem; }
+        .num-field .fl { font-size:0.68rem; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.07em; }
+        .num-field input[type="number"] { width:100%; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:#fff; font-family:'JetBrains Mono',monospace; font-size:1.6rem; font-weight:700; padding:0.5rem 0.8rem; text-align:center; outline:none; transition:border-color 0.2s; }
+        .num-field input[type="number"]:focus { border-color:#60a5fa; box-shadow:0 0 0 3px rgba(96,165,250,0.15); }
+        .num-field .fu { font-size:0.62rem; color:rgba(148,163,184,0.6); text-align:center; font-weight:600; text-transform:uppercase; }
+        input[type="number"]::-webkit-inner-spin-button { opacity:0.25; }
+
+        /* Sliders */
+        .slider-row { display:flex; flex-direction:column; gap:0.32rem; }
+        .slider-top { display:flex; justify-content:space-between; align-items:baseline; }
+        .s-label { font-size:0.7rem; font-weight:600; color:var(--text-dim); }
+        .s-val { font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:800; color:#f8fafc; }
+        .s-hint { font-size:0.58rem; color:rgba(148,163,184,0.5); }
+        input[type="range"] { width:100%; height:5px; appearance:none; border-radius:10px; background:rgba(255,255,255,0.08); cursor:pointer; outline:none; }
+        input[type="range"].blue::-webkit-slider-thumb  { appearance:none; width:16px; height:16px; border-radius:50%; background:#60a5fa; border:2px solid #fff; box-shadow:0 0 8px rgba(96,165,250,0.6); }
+        input[type="range"].pink::-webkit-slider-thumb  { appearance:none; width:16px; height:16px; border-radius:50%; background:#f472b6; border:2px solid #fff; box-shadow:0 0 8px rgba(244,114,182,0.6); }
+        input[type="range"].green::-webkit-slider-thumb { appearance:none; width:16px; height:16px; border-radius:50%; background:#34d399; border:2px solid #fff; box-shadow:0 0 8px rgba(52,211,153,0.6); }
+
+        /* Output */
+        .output-big { background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(244,114,182,0.06)); border:1px solid rgba(96,165,250,0.22); border-radius:16px; padding:1.1rem; text-align:center; }
+        .out-label { font-size:0.58rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-dim); }
+        .out-verdict { font-size:1.3rem; font-weight:800; padding:0.4rem 1.2rem; border-radius:50px; display:inline-block; margin:0.4rem 0 0.2rem; }
+        .verdict-mal { background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#f87171; }
+        .verdict-ben { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.4); color:#34d399; }
+        .out-conf { font-size:0.68rem; color:var(--text-dim); }
+
+        .mini-row { display:grid; grid-template-columns:1fr 1fr; gap:0.55rem; }
+        .mini-card { background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.09); border-radius:12px; padding:0.7rem; text-align:center; }
+        .mini-val { font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:800; }
+        .mini-label { font-size:0.54rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; margin-top:0.2rem; }
+
+        /* Buttons */
+        .btn-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:auto; }
+        .btn-primary { padding:0.6rem 1.1rem; border-radius:50px; border:none; cursor:pointer; background:linear-gradient(135deg,#007bff,#e83e8c); color:#fff; font-family:'Outfit',sans-serif; font-size:0.8rem; font-weight:700; transition:all 0.2s; white-space:nowrap; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,123,255,0.35); }
+        .btn-secondary { padding:0.6rem 1rem; border-radius:50px; border:1px solid rgba(255,255,255,0.15); cursor:pointer; background:rgba(255,255,255,0.06); color:var(--text-dim); font-family:'Outfit',sans-serif; font-size:0.8rem; font-weight:600; transition:all 0.2s; white-space:nowrap; }
+        .btn-secondary:hover { background:rgba(255,255,255,0.12); color:#fff; }
+
+        /* Tree viz */
+        .viz-panel { height:600px; flex-shrink:0; }
+        #tree-svg { width:100%; height:100%; display:block; }
+    </style>
+</head>
+<body>
+
+<div class="blobs"><div class="blob blob-blue"></div><div class="blob blob-pink"></div></div>
+
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Dashboard
+</a>
+
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Decision Trees <span>Pathology Lab</span></div>
+        <p>A Decision Tree is a clinical flowchart: it asks a series of yes/no questions about a patient's tumour to reach a diagnosis.</p>
+        <p>Set <strong>Tumour Size</strong> and <strong>Cell Uniformity</strong> and watch the patient's path glow through the tree.</p>
+    </section>
+
+    <section id="s2">
+        <h2>Entropy &amp; Information Gain</h2>
+        <p>At each split, the tree asks: <em>"Which question reduces diagnostic uncertainty the most?"</em></p>
+        <p><strong>Entropy</strong> measures impurity — how mixed malignant/benign cases are at a node:</p>
+        <div class="cbox">H = −Σ pᵢ log₂(pᵢ)
+
+H = 0  →  pure (all one class)
+H = 1  →  maximally mixed (50/50)</div>
+        <p><strong>Information Gain</strong> is the entropy drop after a split:</p>
+        <div class="cbox">IG = H(parent) − Σ (|child|/|parent|)·H(child)
+
+The tree always picks the split with the
+highest IG — the most informative question.</div>
+    </section>
+
+    <section id="s3">
+        <h2>Gini Impurity</h2>
+        <p>Gini is an alternative to Entropy (used by scikit-learn's CART by default). It measures the probability of misclassifying a randomly chosen sample:</p>
+        <div class="cbox">Gini = 1 − Σ pᵢ²
+
+Gini = 0      → pure node
+Gini = 0.5    → worst case (binary)
+
+Gain = Gini(parent) − Σ weighted Gini(child)</div>
+        <p>Both entropy and Gini are shown live at each node in the tree below.</p>
+    </section>
+
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ Ethical Reality</h2>
+            <p><strong>Overfitting Rare Cases:</strong> A very deep tree memorises the training set, including noise. It may learn that one elderly patient with high BMI is always malignant — a rule that doesn't generalise to new patients.</p>
+        </div>
+    </section>
+</aside>
+
+<div class="lab-scroll">
+    <div class="panels-row">
+
+        <!-- Panel 1: Patient Input -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>① Patient Input</div>
+            <div class="num-field">
+                <div class="fl">Tumour Size</div>
+                <input type="number" id="in-size" value="5.5" min="0" max="10" step="0.1">
+                <div class="fu">centimetres (cm)</div>
+            </div>
+            <div class="num-field">
+                <div class="fl">Cell Uniformity</div>
+                <input type="number" id="in-unif" value="4" min="1" max="10" step="1">
+                <div class="fu">score 1 – 10</div>
+            </div>
+        </div>
+
+        <!-- Panel 2: Tree Parameters -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-pink"></span>② Tree Parameters</div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Max Depth</span><span class="s-val" id="lbl-depth">3</span></div>
+                <input type="range" class="blue" id="sl-depth" min="1" max="5" value="3">
+                <span class="s-hint">maximum levels of questions</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Min Samples to Split</span><span class="s-val" id="lbl-min">5</span></div>
+                <input type="range" class="pink" id="sl-min" min="2" max="20" value="5">
+                <span class="s-hint">minimum patients required for a split</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="btn-rebuild">↺ Rebuild Tree</button>
+                <button class="btn-secondary" id="btn-reset">Reset</button>
+            </div>
+            <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.75rem;">
+                <div style="font-size:0.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;">Tree Summary</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;line-height:1.85;color:#f8fafc;">
+                    Nodes: <span id="info-nodes" style="color:#60a5fa">—</span><br>
+                    Leaves: <span id="info-leaves" style="color:#34d399">—</span><br>
+                    Root IG: <span id="info-rootig" style="color:#fbbf24">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Output -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-green"></span>③ Prediction Output</div>
+            <div class="output-big">
+                <div class="out-label">Diagnostic Verdict</div>
+                <div id="out-verdict" class="out-verdict verdict-mal">MALIGNANT</div>
+                <div class="out-conf" id="out-conf">Confidence: —%</div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card">
+                    <div class="mini-val" id="val-depth" style="color:#60a5fa">—</div>
+                    <div class="mini-label">Path Depth</div>
+                </div>
+                <div class="mini-card">
+                    <div class="mini-val" id="val-entropy" style="color:#fbbf24">—</div>
+                    <div class="mini-label">Leaf Entropy</div>
+                </div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card">
+                    <div class="mini-val" id="val-gini" style="color:#f472b6">—</div>
+                    <div class="mini-label">Leaf Gini</div>
+                </div>
+                <div class="mini-card">
+                    <div class="mini-val" id="val-samples" style="color:#34d399">—</div>
+                    <div class="mini-label">Leaf Samples</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Tree Visualization -->
+    <div class="glass-panel viz-panel">
+        <div class="panel-label"><span class="dot dot-gold"></span>④ Decision Tree — Active patient path highlighted · internal nodes show split rule + Gini/Entropy · leaves show class + confidence</div>
+        <svg id="tree-svg"></svg>
+    </div>
+</div>
+</div>
+
+<script>
+// ── CART Engine ──────────────────────────────────────────────
+
+function gini(data) {
+    if (!data.length) return 0;
+    const p = data.filter(d => d.label).length / data.length;
+    return 1 - p*p - (1-p)*(1-p);
+}
+
+function entropy(data) {
+    if (!data.length) return 0;
+    const p = data.filter(d => d.label).length / data.length;
+    if (p === 0 || p === 1) return 0;
+    return -(p*Math.log2(p) + (1-p)*Math.log2(1-p));
+}
+
+function bestSplit(data) {
+    let bestGain = -1, bestFeat = null, bestThr = null;
+    const parentG = gini(data);
+
+    ['size','uniformity'].forEach(feat => {
+        const vals = [...new Set(data.map(d => d[feat]))].sort((a,b)=>a-b);
+        for (let i=0; i<vals.length-1; i++) {
+            const thr = (vals[i]+vals[i+1])/2;
+            const L = data.filter(d => d[feat] <= thr);
+            const R = data.filter(d => d[feat] >  thr);
+            if (!L.length || !R.length) continue;
+            const gain = parentG - (L.length/data.length)*gini(L) - (R.length/data.length)*gini(R);
+            if (gain > bestGain) { bestGain=gain; bestFeat=feat; bestThr=thr; }
+        }
+    });
+    return { feat:bestFeat, thr:bestThr, gain:bestGain };
+}
+
+function buildTree(data, maxDepth, minSamples, depth=0) {
+    const mal = data.filter(d=>d.label).length;
+    const ben = data.length - mal;
+    const g   = gini(data);
+    const e   = entropy(data);
+    const pred = mal >= ben;
+
+    const node = { samples:data.length, mal, ben, gini:g, entropy:e, prediction:pred, isLeaf:false };
+
+    if (depth >= maxDepth || data.length < minSamples || g < 1e-6) {
+        node.isLeaf = true; return node;
+    }
+    const sp = bestSplit(data);
+    if (!sp.feat || sp.gain <= 0) { node.isLeaf = true; return node; }
+
+    node.feat      = sp.feat;
+    node.threshold = sp.thr;
+    node.gain      = sp.gain;
+    node.left      = buildTree(data.filter(d=>d[sp.feat]<=sp.thr), maxDepth, minSamples, depth+1);
+    node.right     = buildTree(data.filter(d=>d[sp.feat]> sp.thr), maxDepth, minSamples, depth+1);
+    return node;
+}
+
+function countNodes(node) {
+    if (!node) return {nodes:0,leaves:0};
+    if (node.isLeaf) return {nodes:1,leaves:1};
+    const l = countNodes(node.left), r=countNodes(node.right);
+    return {nodes:l.nodes+r.nodes+1, leaves:l.leaves+r.leaves};
+}
+
+function predictPath(node, size, unif) {
+    const path = [node];
+    let cur = node;
+    while (!cur.isLeaf) {
+        const val = cur.feat === 'size' ? size : unif;
+        cur = val <= cur.threshold ? cur.left : cur.right;
+        path.push(cur);
+    }
+    return path;
+}
+
+// ── Synthetic cancer dataset ─────────────────────────────────
+const rng = d3.randomNormal.source(d3.randomLcg(42));
+const DATA = [];
+// Malignant cluster
+for (let i=0;i<55;i++) {
+    const size  = Math.max(0,Math.min(10, rng(7,1.5)()));
+    const unif  = Math.max(1,Math.min(10, Math.round(rng(7,1.8)())));
+    DATA.push({size,uniformity:unif,label:true});
+}
+// Benign cluster
+for (let i=0;i<55;i++) {
+    const size  = Math.max(0,Math.min(10, rng(3,1.2)()));
+    const unif  = Math.max(1,Math.min(10, Math.round(rng(3,1.6)())));
+    DATA.push({size,uniformity:unif,label:false});
+}
+
+// ── State ────────────────────────────────────────────────────
+const state = { maxDepth:3, minSamples:5, size:5.5, unif:4 };
+let treeRoot = null;
+
+// ── D3 Tree Render ────────────────────────────────────────────
+function renderTree() {
+    treeRoot = buildTree(DATA, state.maxDepth, state.minSamples);
+    const {nodes,leaves} = countNodes(treeRoot);
+    document.getElementById("info-nodes").textContent  = nodes;
+    document.getElementById("info-leaves").textContent = leaves;
+    document.getElementById("info-rootig").textContent = (treeRoot.gain || 0).toFixed(4);
+
+    const activePath = predictPath(treeRoot, state.size, state.unif);
+    const leaf = activePath[activePath.length-1];
+
+    const conf = (leaf.prediction ? leaf.mal : leaf.ben) / leaf.samples;
+    document.getElementById("out-verdict").textContent = leaf.prediction ? "MALIGNANT" : "BENIGN";
+    document.getElementById("out-verdict").className   = "out-verdict " + (leaf.prediction ? "verdict-mal" : "verdict-ben");
+    document.getElementById("out-conf").textContent    = `Confidence: ${(conf*100).toFixed(1)}%`;
+    document.getElementById("val-depth").textContent   = activePath.length - 1;
+    document.getElementById("val-entropy").textContent = leaf.entropy.toFixed(3);
+    document.getElementById("val-gini").textContent    = leaf.gini.toFixed(3);
+    document.getElementById("val-samples").textContent = leaf.samples;
+
+    // Build d3 hierarchy
+    function toH(node) {
+        if (node.isLeaf) return {data:node, children:[]};
+        return {data:node, children:[toH(node.left),toH(node.right)]};
+    }
+    const root = d3.hierarchy(toH(treeRoot), d=>d.children.length?d.children:null);
+
+    const svgEl = document.getElementById("tree-svg");
+    const rect  = svgEl.getBoundingClientRect();
+    const W=rect.width, H=rect.height;
+    if (!W||!H) return;
+
+    const pad = {top:35,bottom:65,left:20,right:20};
+    const iW  = W-pad.left-pad.right, iH=H-pad.top-pad.bottom;
+
+    const layout = d3.tree().size([iW, iH]);
+    layout(root);
+
+    const svg = d3.select("#tree-svg");
+    svg.selectAll("*").remove();
+
+    const activeSet = new Set(activePath.map((_,i,a)=>a.slice(0,i+1)));
+    // Build active node set by reference
+    const activeNodes = new Set(activePath);
+
+    // Build active edge pairs
+    const activeEdges = new Set();
+    for (let i=0;i<activePath.length-1;i++) activeEdges.add(activePath[i].prediction !== undefined ? `${i}-${i+1}` : '');
+
+    const g = svg.append("g").attr("transform",`translate(${pad.left},${pad.top})`);
+
+    // Defs: gradient
+    const defs = svg.append("defs");
+    const lg = defs.append("linearGradient").attr("id","nodeGrad").attr("x1","0%").attr("y1","0%").attr("x2","100%").attr("y2","0%");
+    lg.append("stop").attr("offset","0%").attr("stop-color","#007bff");
+    lg.append("stop").attr("offset","100%").attr("stop-color","#e83e8c");
+
+    const glow = defs.append("filter").attr("id","glow");
+    glow.append("feGaussianBlur").attr("stdDeviation","3").attr("result","blur");
+    const feMerge = glow.append("feMerge");
+    feMerge.append("feMergeNode").attr("in","blur");
+    feMerge.append("feMergeNode").attr("in","SourceGraphic");
+
+    // Edges
+    g.selectAll(".link").data(root.links()).enter().append("path")
+        .attr("d", d3.linkVertical().x(d=>d.x).y(d=>d.y))
+        .attr("fill","none")
+        .attr("stroke", l => {
+            // Mark active edges: both source and target are in activePath and consecutive
+            const si = activePath.indexOf(l.source.data.data);
+            const ti = activePath.indexOf(l.target.data.data);
+            return (si !== -1 && ti === si+1) ? "#fbbf24" : "rgba(255,255,255,0.12)";
+        })
+        .attr("stroke-width", l => {
+            const si = activePath.indexOf(l.source.data.data);
+            const ti = activePath.indexOf(l.target.data.data);
+            return (si !== -1 && ti === si+1) ? 3 : 1.5;
+        })
+        .attr("filter", l => {
+            const si = activePath.indexOf(l.source.data.data);
+            const ti = activePath.indexOf(l.target.data.data);
+            return (si !== -1 && ti === si+1) ? "url(#glow)" : null;
+        });
+
+    // Nodes
+    const nodeGroup = g.selectAll(".node").data(root.descendants()).enter()
+        .append("g").attr("transform", d=>`translate(${d.x},${d.y})`);
+
+    const NW=78, NH=54, NR=8;  // node card size
+
+    nodeGroup.append("rect")
+        .attr("x",-NW/2).attr("y",-NH/2)
+        .attr("width",NW).attr("height",NH)
+        .attr("rx",NR)
+        .attr("fill", d => {
+            const nd = d.data.data;
+            const isActive = activePath.includes(nd);
+            if (nd.isLeaf) return nd.prediction ? "rgba(239,68,68,0.18)" : "rgba(16,185,129,0.15)";
+            return isActive ? "rgba(96,165,250,0.18)" : "rgba(255,255,255,0.06)";
+        })
+        .attr("stroke", d => {
+            const nd = d.data.data;
+            const isActive = activePath.includes(nd);
+            if (isActive) return "#fbbf24";
+            if (nd.isLeaf) return nd.prediction ? "rgba(239,68,68,0.6)" : "rgba(52,211,153,0.6)";
+            return "rgba(255,255,255,0.18)";
+        })
+        .attr("stroke-width", d => activePath.includes(d.data.data) ? 2 : 1)
+        .attr("filter", d => activePath.includes(d.data.data) ? "url(#glow)" : null);
+
+    // Internal node text
+    nodeGroup.filter(d => !d.data.data.isLeaf).each(function(d) {
+        const nd  = d.data.data;
+        const sel = d3.select(this);
+        const featLabel = nd.feat === 'size' ? 'Size' : 'Uniformity';
+        const sym = nd.feat === 'size' ? 'cm' : '/10';
+
+        sel.append("text").attr("y",-NH/2+10).attr("text-anchor","middle")
+            .attr("fill","#f8fafc").attr("font-size",8).attr("font-family","Outfit").attr("font-weight",700)
+            .text(`${featLabel} ≤ ${nd.threshold.toFixed(1)}${sym}`);
+
+        sel.append("text").attr("y",-NH/2+22).attr("text-anchor","middle")
+            .attr("fill","#60a5fa").attr("font-size",7).attr("font-family","JetBrains Mono")
+            .text(`Gini: ${nd.gini.toFixed(3)}`);
+
+        sel.append("text").attr("y",-NH/2+33).attr("text-anchor","middle")
+            .attr("fill","#fbbf24").attr("font-size",7).attr("font-family","JetBrains Mono")
+            .text(`H: ${nd.entropy.toFixed(3)}`);
+
+        sel.append("text").attr("y",-NH/2+44).attr("text-anchor","middle")
+            .attr("fill","rgba(148,163,184,0.7)").attr("font-size",6.5).attr("font-family","Outfit")
+            .text(`IG: ${(nd.gain||0).toFixed(3)}  n=${nd.samples}`);
+    });
+
+    // Leaf node text
+    nodeGroup.filter(d => d.data.data.isLeaf).each(function(d) {
+        const nd  = d.data.data;
+        const sel = d3.select(this);
+        const conf = ((nd.prediction ? nd.mal : nd.ben) / nd.samples * 100).toFixed(0);
+
+        sel.append("text").attr("y",-NH/2+11).attr("text-anchor","middle")
+            .attr("fill", nd.prediction ? "#f87171" : "#34d399")
+            .attr("font-size",9).attr("font-family","Outfit").attr("font-weight",800)
+            .text(nd.prediction ? "MALIGNANT" : "BENIGN");
+
+        sel.append("text").attr("y",-NH/2+23).attr("text-anchor","middle")
+            .attr("fill","rgba(148,163,184,0.8)").attr("font-size",7).attr("font-family","JetBrains Mono")
+            .text(`Conf: ${conf}%`);
+
+        sel.append("text").attr("y",-NH/2+34).attr("text-anchor","middle")
+            .attr("fill","#60a5fa").attr("font-size",6.5).attr("font-family","JetBrains Mono")
+            .text(`Gini:${nd.gini.toFixed(2)} H:${nd.entropy.toFixed(2)}`);
+
+        sel.append("text").attr("y",-NH/2+44).attr("text-anchor","middle")
+            .attr("fill","rgba(148,163,184,0.6)").attr("font-size",6).attr("font-family","Outfit")
+            .text(`n=${nd.samples}  🔴${nd.mal} 🟢${nd.ben}`);
+    });
+
+    // Edge labels (Yes / No)
+    root.links().forEach(l => {
+        const nd = l.source.data.data;
+        if (nd.isLeaf) return;
+        const isLeft = l.target.data.data === nd.left;
+        const mx = (l.source.x + l.target.x) / 2;
+        const my = (l.source.y + l.target.y) / 2;
+        g.append("text").attr("x",mx).attr("y",my)
+            .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)")
+            .attr("font-size",7).attr("font-family","Outfit").attr("font-weight",600)
+            .text(isLeft ? "≤ Yes" : "> No");
+    });
+}
+
+// ── Events ─────────────────────────────────────────────────
+document.getElementById("in-size").addEventListener("input", e => { state.size = +e.target.value||0; renderTree(); });
+document.getElementById("in-unif").addEventListener("input", e => { state.unif = +e.target.value||1; renderTree(); });
+document.getElementById("sl-depth").addEventListener("input", function() { state.maxDepth=+this.value; document.getElementById("lbl-depth").textContent=this.value; renderTree(); });
+document.getElementById("sl-min").addEventListener("input",   function() { state.minSamples=+this.value; document.getElementById("lbl-min").textContent=this.value; renderTree(); });
+document.getElementById("btn-rebuild").addEventListener("click", renderTree);
+document.getElementById("btn-reset").addEventListener("click", () => {
+    state.maxDepth=3; state.minSamples=5;
+    document.getElementById("sl-depth").value=3; document.getElementById("lbl-depth").textContent=3;
+    document.getElementById("sl-min").value=5;   document.getElementById("lbl-min").textContent=5;
+    renderTree();
+});
+
+// Scrollytelling
+const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+            e.target.classList.add("active");
+        }
+    });
+}, { threshold:0.5 });
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+
+window.addEventListener("resize", renderTree);
+setTimeout(renderTree, 80);
+</script>
+</body>
+</html>

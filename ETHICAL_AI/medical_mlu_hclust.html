@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hierarchical Clustering Lab | EpiSense</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:rgba(255,255,255,0.07);--b:rgba(255,255,255,0.15);--d:#94a3b8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#10180f,#0f172a);color:#f8fafc;height:100vh;overflow:hidden;}
+.blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.blob{position:absolute;width:550px;height:550px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:fl 20s infinite alternate ease-in-out;}
+.bt{background:#10b981;top:-180px;left:-180px;} .bp_{background:#8b5cf6;bottom:-180px;right:-180px;animation-delay:-10s;}
+@keyframes fl{from{transform:translate(0,0)scale(1)}to{transform:translate(70px,70px)scale(1.1)}}
+.back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:.45rem;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);border-radius:50px;color:#fff;text-decoration:none;font-size:.82rem;font-weight:600;padding:.5rem 1rem;transition:all .25s;}
+.back-btn:hover{background:rgba(255,255,255,.14);transform:translateX(-3px);}
+.app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+.nar{width:24%;min-width:200px;height:100%;overflow-y:auto;padding:4.5rem 1.4rem 3rem;border-right:1px solid rgba(255,255,255,.1);scrollbar-width:none;flex-shrink:0;}
+.nar::-webkit-scrollbar{display:none;}
+section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:.22;transform:translateX(-8px);transition:opacity .4s,transform .4s;}
+section.active{opacity:1;transform:none;}
+.hero{font-size:1.85rem;font-weight:800;line-height:1.15;margin-bottom:.9rem;letter-spacing:-.03em;}
+.hero span{background:linear-gradient(to right,#34d399,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+section h2{font-size:.92rem;font-weight:700;color:#34d399;margin-bottom:.6rem;}
+section p{font-size:.86rem;line-height:1.7;color:var(--d);margin-bottom:.55rem;}
+.cb{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#8b5cf6;background:rgba(0,0,0,.28);border:1px solid rgba(139,92,246,.18);border-radius:10px;padding:.7rem;line-height:1.85;margin:.5rem 0;}
+.eb{background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(16,185,129,.05));border:1px solid rgba(239,68,68,.28);border-radius:14px;padding:.9rem;}
+.eb h2{color:#f87171;font-size:.92rem;font-weight:700;margin-bottom:.5rem;}
+.ls{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.3rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent;}
+.ls::-webkit-scrollbar{width:5px;} .ls::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:10px;}
+.pr{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+.gp{background:var(--g);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--b);border-radius:20px;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem;}
+.pl{font-size:.57rem;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:var(--d);padding-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.09);display:flex;align-items:center;gap:.4rem;}
+.dt{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dg{background:#34d399;box-shadow:0 0 6px #34d399;} .dp{background:#8b5cf6;box-shadow:0 0 6px #8b5cf6;} .dd{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+button{padding:.55rem 1rem;border-radius:50px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;transition:all .2s;}
+.bp{background:linear-gradient(135deg,#059669,#7c3aed);color:#fff;}
+.bp:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(16,185,129,.35);}
+.bs{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:var(--d);}
+.bs:hover{background:rgba(255,255,255,.12);color:#fff;}
+.bc{display:flex;gap:.5rem;flex-wrap:wrap;}
+.sr{display:flex;flex-direction:column;gap:.28rem;}
+.st{display:flex;justify-content:space-between;align-items:baseline;}
+.sl{font-size:.68rem;font-weight:600;color:var(--d);} .sv{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:800;color:#f8fafc;}
+.sh{font-size:.57rem;color:rgba(148,163,184,.5);}
+input[type=range]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,.08);cursor:pointer;outline:none;}
+input.gr::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#34d399;border:2px solid #fff;box-shadow:0 0 7px rgba(52,211,153,.6);}
+input.pu::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#8b5cf6;border:2px solid #fff;box-shadow:0 0 7px rgba(139,92,246,.6);}
+.ob{background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(139,92,246,.06));border:1px solid rgba(52,211,153,.22);border-radius:16px;padding:1rem;text-align:center;}
+.ol{font-size:.57rem;text-transform:uppercase;letter-spacing:.14em;color:var(--d);}
+.ov{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:800;background:linear-gradient(to right,#34d399,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin:.1rem 0;}
+.mr{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.mc{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:.65rem;text-align:center;}
+.mv{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:800;}
+.lml{font-size:.52rem;color:var(--d);text-transform:uppercase;letter-spacing:.08em;margin-top:.18rem;}
+.vp{height:400px;flex-shrink:0;}
+svg{width:100%;height:100%;display:block;}
+.axis text{fill:rgba(148,163,184,.7);font-family:'Outfit',sans-serif;font-size:9px;}
+.axis path,.axis line{stroke:rgba(255,255,255,.06);}
+select{background:rgba(0,0,0,.3);color:#f8fafc;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:.35rem .6rem;font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;width:100%;outline:none;}
+</style>
+</head>
+<body>
+<div class="blobs"><div class="blob bt"></div><div class="blob bp_"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard</a>
+<div class="app">
+<aside class="nar">
+  <section id="s1" class="active">
+    <div class="hero">Hierarchical <span>Clustering Lab</span></div>
+    <p>Agglomerative clustering merges the <strong>two closest patient groups</strong> at each step — bottom-up — building a dendrogram without choosing K upfront.</p>
+  </section>
+  <section id="s2">
+    <h2>Agglomerative Algorithm</h2>
+    <div class="cb">Start: each patient = own cluster
+Repeat until one cluster remains:
+  1. Compute pairwise inter-cluster dist
+  2. Merge two closest clusters
+  3. Update distance matrix
+
+Linkage:
+  Single  → min pairwise dist
+  Complete → max pairwise dist
+  Average  → mean pairwise dist</div>
+  </section>
+  <section id="s3">
+    <h2>Reading the Dendrogram</h2>
+    <p>Height of each merge = distance between merged clusters. <strong>Cut the dendrogram</strong> horizontally to get a flat clustering — the cut height determines the number of clusters.</p>
+    <div class="cb">High cut  → fewer, bigger clusters
+Low cut   → many, smaller clusters
+Optimal   → cut below the longest vertical
+           branch (biggest height gap)</div>
+  </section>
+  <section id="s4">
+    <div class="eb"><h2>⚖️ Ethical Reality</h2>
+    <p>Hierarchical clustering pipelines in genomics research often use complete linkage, which is sensitive to outliers. A single patient with an anomalous biomarker profile can distort entire cluster merges — causing misclassification of otherwise similar patients.</p></div>
+  </section>
+</aside>
+<div class="ls">
+  <div class="pr">
+    <div class="gp">
+      <div class="pl"><span class="dt dg"></span>① Clustering Parameters</div>
+      <div class="sr">
+        <div class="st"><span class="sl">Patients (N)</span><span class="sv" id="lbl-n">16</span></div>
+        <input type="range" class="gr" id="sl-n" min="6" max="22" step="2" value="16">
+        <span class="sh">smaller N = clearer dendrogram</span>
+      </div>
+      <div class="sr">
+        <div class="st"><span class="sl">Cut Height threshold</span><span class="sv" id="lbl-cut">3.5</span></div>
+        <input type="range" class="pu" id="sl-cut" min="0.5" max="8" step="0.5" value="3.5">
+        <span class="sh">horizontal cut = number of clusters</span>
+      </div>
+      <div class="sr">
+        <div class="st"><span class="sl">Linkage Method</span></div>
+        <select id="sel-link"><option value="complete">Complete (max)</option><option value="single">Single (min)</option><option value="average">Average</option></select>
+      </div>
+      <div class="bc">
+        <button class="bp" id="btn-anim">▶ Build Dendrogram</button>
+        <button class="bs" id="btn-reset">⟳ Resample</button>
+      </div>
+    </div>
+    <div class="gp">
+      <div class="pl"><span class="dt dp"></span>② Linkage Formula</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:#8b5cf6;background:rgba(0,0,0,.28);border:1px solid rgba(139,92,246,.18);border-radius:12px;padding:.75rem;line-height:1.9;">
+        Complete: d(A,B)=max‖a−b‖<br>
+        Single:   d(A,B)=min‖a−b‖<br>
+        Average:  d(A,B)=mean‖a−b‖<br>
+        <span style="color:#f8fafc;">Merges: <span id="lbl-step">0</span> of <span id="lbl-total">—</span></span>
+      </div>
+      <div style="font-size:.68rem;color:var(--d);line-height:1.8;">
+        x-axis: <span style="color:#34d399;font-weight:700;">Patient ID</span><br>
+        y-axis: <span style="color:#8b5cf6;font-weight:700;">Merge distance (linkage height)</span><br>
+        ── = cut height threshold
+      </div>
+    </div>
+    <div class="gp">
+      <div class="pl"><span class="dt dd"></span>③ Cluster Summary</div>
+      <div class="ob"><div class="ol">Clusters at Cut Height</div><div class="ov" id="out-k">—</div></div>
+      <div class="mr">
+        <div class="mc"><div class="mv" id="val-merges" style="color:#34d399">—</div><div class="lml">Total Merges</div></div>
+        <div class="mc"><div class="mv" id="val-maxd" style="color:#fbbf24">—</div><div class="lml">Max Distance</div></div>
+      </div>
+      <div class="mr">
+        <div class="mc"><div class="mv" id="val-link" style="color:#8b5cf6">—</div><div class="lml">Linkage Used</div></div>
+        <div class="mc"><div class="mv" id="val-nc" style="color:#f87171">—</div><div class="lml">N Patients</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="gp vp">
+    <div class="pl"><span class="dt dd"></span>④ Dendrogram — each U-shape = one merge event · height = distance · dashed red line = cut threshold · colour = resulting cluster</div>
+    <svg id="den-svg"></svg>
+  </div>
+</div>
+</div>
+<script>
+const COLORS=['#f87171','#34d399','#818cf8','#fbbf24','#22d3ee','#f472b6','#fb923c','#a78bfa'];
+let sd=42;function rng(){sd=(sd*1103515245+12345)&0x7fffffff;return sd/0x7fffffff;}function rseed(s){sd=s;}
+
+let state={N:16,cut:3.5,link:'complete'},pts=[],merges=[],animTimer=null,animStep=0,curSeed=42;
+
+function euclidean(a,b){return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2);}
+
+function linkageDist(setA,setB,method){
+    const dists=setA.flatMap(a=>setB.map(b=>euclidean(a,b)));
+    if(method==='single') return Math.min(...dists);
+    if(method==='complete') return Math.max(...dists);
+    return d3.mean(dists);
+}
+
+function buildDendrogram(pts,method){
+    // Agglomerative clustering — returns array of merge steps {height, left, right}
+    let clusters=pts.map((p,i)=>({id:i,pts:[p],label:[i]}));
+    const steps=[];
+    while(clusters.length>1){
+        let best=Infinity,bi=-1,bj=-1;
+        for(let i=0;i<clusters.length;i++){
+            for(let j=i+1;j<clusters.length;j++){
+                const d=linkageDist(clusters[i].pts,clusters[j].pts,method);
+                if(d<best){best=d;bi=i;bj=j;}
+            }
+        }
+        const merged={id:clusters.length+steps.length,pts:[...clusters[bi].pts,...clusters[bj].pts],label:[...clusters[bi].label,...clusters[bj].label]};
+        steps.push({height:best,left:clusters[bi],right:clusters[bj]});
+        clusters.splice(bj,1);clusters.splice(bi,1);clusters.push(merged);
+    }
+    return steps;
+}
+
+function genPts(N,seed){
+    rseed(seed);
+    const gs=[{g:90,b:21},{g:140,b:30},{g:170,b:36}];
+    return Array.from({length:N},(_,i)=>{const c=gs[i%3];return[c.g+(rng()-.5)*20,c.b+(rng()-.5)*5];});
+}
+
+function getLeafOrder(steps,N){
+    if(!steps.length) return d3.range(N);
+    const root=steps[steps.length-1];
+    function leaves(node){if(!node.left) return node.label;return [...leaves(node.left),...leaves(node.right)];}
+    return leaves(root);
+}
+
+function getClusters(steps,cut){
+    // Walk the steps: any cluster not merged above cut = separate cluster
+    if(!steps.length) return [[0]];
+    const allMerges=steps.map((s,i)=>({...s,idx:i}));
+    const aboveCut=allMerges.filter(s=>s.height>cut);
+    if(!aboveCut.length) return [steps[steps.length-1].label||[]];
+    // Collect subtrees below cut
+    const clusters=[];
+    function collect(node,belowCut){
+        if(!node.left){clusters.push([...node.label]);return;}
+        const isMergeAbove=node.height>cut;
+        if(!isMergeAbove){clusters.push([...node.label]);return;}
+        collect(node.left,false);collect(node.right,false);
+    }
+    if(steps.length) collect(steps[steps.length-1],false);
+    return clusters.filter(c=>c.length>0);
+}
+
+function renderDendrogram(upTo){
+    const svgEl=document.getElementById('den-svg');
+    const r=svgEl.getBoundingClientRect();
+    const M={top:18,right:18,bottom:48,left:52};
+    const W=r.width-M.left-M.right,H=r.height-M.top-M.bottom;
+    if(W<=0||H<=0||!merges.length) return;
+    const svg=d3.select('#den-svg');svg.selectAll('*').remove();
+    const g=svg.append('g').attr('transform',`translate(${M.left},${M.top})`);
+
+    const upToMerges=Math.min(upTo??merges.length,merges.length);
+    const shown=merges.slice(0,upToMerges);
+    const maxH=merges[merges.length-1].height;
+
+    const leafOrder=getLeafOrder(merges,state.N);
+    const xPos={};leafOrder.forEach((id,i)=>{xPos[id]=i*(W/(leafOrder.length-1||1));});
+
+    const ys=d3.scaleLinear().domain([0,maxH*1.08]).range([H,0]);
+    g.append('g').attr('class','axis').attr('transform',`translate(0,${H})`).call(d3.axisBottom(d3.scalePoint().domain(leafOrder.map(String)).range([0,W])).tickFormat(i=>'P'+(+i+1)));
+    g.append('g').attr('class','axis').call(d3.axisLeft(ys).ticks(5).tickFormat(d3.format('.1f')));
+    g.append('text').attr('x',W/2).attr('y',H+40).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',8.5).attr('font-family','Outfit').text('Patient ID (organised by merge order)');
+    g.append('text').attr('transform','rotate(-90)').attr('x',-H/2).attr('y',-42).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',8.5).attr('font-family','Outfit').text('Linkage Distance');
+
+    // Node x-position for merged clusters
+    const nodeX={};leafOrder.forEach((id)=>{nodeX[id+'_']=(xPos[id]!==undefined?xPos[id]:0);});
+    function mergeX(node){
+        if(!node.left) return xPos[node.label[0]];
+        return (mergeX(node.left)+mergeX(node.right))/2;
+    }
+
+    const defs=svg.append('defs');
+    const gf=defs.append('filter').attr('id','hgf');gf.append('feGaussianBlur').attr('stdDeviation','2').attr('result','blur');
+    const fm=gf.append('feMerge');fm.append('feMergeNode').attr('in','blur');fm.append('feMergeNode').attr('in','SourceGraphic');
+
+    // Draw U-shapes for each shown merge
+    shown.forEach((m,idx)=>{
+        const lx=mergeX(m.left),rx=mergeX(m.right);
+        const my=ys(m.height);
+        const lyBase=idx>0&&m.left.height?ys(m.left.height):H;
+        const ryBase=idx>0&&m.right.height?ys(m.right.height):H;
+        const clusterCol=COLORS[idx%COLORS.length];
+        const isRecent=upToMerges>0&&idx===upToMerges-1;
+
+        const col=isRecent?'#f8fafc':clusterCol;
+        const sw=isRecent?2.2:1.4;
+
+        // Left vertical
+        g.append('line').attr('x1',lx).attr('x2',lx).attr('y1',lyBase).attr('y2',my).attr('stroke',col).attr('stroke-width',sw).attr('opacity',isRecent?1:0.75);
+        // Right vertical
+        g.append('line').attr('x1',rx).attr('x2',rx).attr('y1',ryBase).attr('y2',my).attr('stroke',col).attr('stroke-width',sw).attr('opacity',isRecent?1:0.75);
+        // Horizontal bridge
+        g.append('line').attr('x1',lx).attr('x2',rx).attr('y1',my).attr('y2',my).attr('stroke',col).attr('stroke-width',sw).attr('filter',isRecent?'url(#hgf)':null).attr('opacity',isRecent?1:0.75);
+
+        // Height label on bridge
+        if(isRecent||upToMerges===merges.length){
+            g.append('text').attr('x',(lx+rx)/2).attr('y',my-4).attr('text-anchor','middle').attr('fill',col).attr('font-size',7).attr('font-family','JetBrains Mono').text(m.height.toFixed(2));
+        }
+    });
+
+    // Leaf dots
+    leafOrder.forEach((id,i)=>{
+        g.append('circle').attr('cx',xPos[id]).attr('cy',H).attr('r',4).attr('fill','rgba(148,163,184,.7)').attr('stroke','rgba(255,255,255,.2)').attr('stroke-width',.5);
+    });
+
+    // Cut line
+    const cutCol='rgba(248,113,113,.85)';
+    const cutY=ys(state.cut);
+    g.append('line').attr('x1',0).attr('x2',W).attr('y1',cutY).attr('y2',cutY).attr('stroke',cutCol).attr('stroke-width',1.5).attr('stroke-dasharray','6,4');
+    g.append('text').attr('x',W-2).attr('y',cutY-4).attr('text-anchor','end').attr('fill',cutCol).attr('font-size',7.5).attr('font-family','Outfit').attr('font-weight',700).text('cut='+state.cut);
+
+    // Count clusters
+    const above=merges.slice(0,upToMerges).filter(m=>m.height>state.cut).length;
+    const k=Math.max(1,state.N-above);
+    document.getElementById('out-k').textContent=k;
+    document.getElementById('lbl-step').textContent=upToMerges;
+}
+
+function updatePanel(){
+    document.getElementById('lbl-total').textContent=merges.length;
+    document.getElementById('val-merges').textContent=merges.length;
+    document.getElementById('val-maxd').textContent=merges.length?merges[merges.length-1].height.toFixed(2):'—';
+    document.getElementById('val-link').textContent=state.link;
+    document.getElementById('val-nc').textContent=state.N;
+}
+
+function init(seed){
+    pts=genPts(state.N,seed);
+    merges=buildDendrogram(pts,state.link);
+    animStep=merges.length;
+    document.getElementById('lbl-n').textContent=state.N;
+    document.getElementById('lbl-cut').textContent=state.cut;
+    updatePanel();renderDendrogram(merges.length);
+}
+
+function animate(){
+    animStep=0;
+    const go=()=>{
+        animStep++;renderDendrogram(animStep);
+        if(animStep<merges.length) animTimer=setTimeout(go,300);
+    };
+    go();
+}
+
+document.getElementById('sl-n').addEventListener('input',function(){state.N=+this.value;document.getElementById('lbl-n').textContent=this.value;init(curSeed);});
+document.getElementById('sl-cut').addEventListener('input',function(){state.cut=+this.value;document.getElementById('lbl-cut').textContent=this.value;renderDendrogram(merges.length);const above=merges.filter(m=>m.height>state.cut).length;document.getElementById('out-k').textContent=Math.max(1,state.N-above);});
+document.getElementById('sel-link').addEventListener('change',function(){state.link=this.value;init(curSeed);});
+document.getElementById('btn-anim').addEventListener('click',animate);
+document.getElementById('btn-reset').addEventListener('click',()=>{if(animTimer)clearTimeout(animTimer);curSeed=Math.random()*99999|0;init(curSeed);});
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));e.target.classList.add('active');}});},{threshold:0.5});
+document.querySelectorAll('section').forEach(s=>obs.observe(s));
+window.addEventListener('resize',()=>renderDendrogram(merges.length));
+setTimeout(()=>init(curSeed),80);
+</script>
+</body>
+</html>

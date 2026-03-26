@@ -791,7 +791,23 @@ footer {
 }
 
 @media (max-width: 600px) {
-
+    .container {
+        padding: 1rem;
+    }
+    h1 {
+        font-size: 1.8rem !important;
+    }
+    .main-tabs {
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+    .main-tab-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+    
     body,
     html {
         max-width: 100vw;

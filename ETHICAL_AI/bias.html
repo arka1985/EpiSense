@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Clinical AI Bias Demo — Ethical AI in Healthcare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#04060f;--border:rgba(255,255,255,.09);--cyan:#00d4ff;--purple:#8b5cf6;--t1:#f0f4ff;--t2:#94a3b8;--t3:#475569;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 20%,rgba(239,68,68,.06),transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(139,92,246,.05),transparent 50%);z-index:-2}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(239,68,68,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.02) 1px,transparent 1px);background-size:60px 60px;z-index:-1}
+nav{position:sticky;top:0;z-index:99;background:rgba(4,6,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.2rem}
+.nb{font-weight:900;font-size:.95rem;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nl{display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.na{color:var(--t2);text-decoration:none;padding:.3rem .65rem;border-radius:7px;font-size:.74rem;font-weight:500;white-space:nowrap;transition:all .2s}.na:hover{background:rgba(255,255,255,.06);color:var(--t1)}.na.act{background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.25)}
+.explorable-card { background: rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; padding:1.4rem; backdrop-filter:blur(10px); box-shadow:0 8px 32px rgba(0,0,0,.2) }
+.wrap{max-width:1150px;margin:0 auto;padding:2.5rem 1.5rem}
+.pill{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem 1rem;border-radius:100px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-size:.73rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem}
+h1{font-size:clamp(1.9rem,4.5vw,3rem);font-weight:900;letter-spacing:-.04em;margin-bottom:.75rem}
+.grad{background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--t2);font-size:.97rem;line-height:1.72;max-width:720px;margin-bottom:1.75rem}
+strong{color:var(--t1)}
+.vitals-box{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:12px;padding:.9rem 1.25rem;font-size:.82rem;color:#bae6fd;margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:1.25rem}
+.vital-item{display:flex;align-items:center;gap:.4rem}
+.vital-label{color:var(--t2);font-size:.73rem}
+.vital-val{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--cyan);font-size:.88rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+@media(max-width:850px){.grid{grid-template-columns:1fr}}
+.app-grid{display:flex;flex-direction:column;gap:.65rem}
+.app-card{background:rgba(255,255,255,.035);border:1.5px solid var(--border);border-radius:13px;padding:1rem 1.15rem;transition:all .4s;position:relative;overflow:hidden}
+.app-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;border-radius:2px;background:transparent;transition:background .5s}
+.app-card.priority1::after{background:#ef4444}
+.app-card.priority2::after{background:#f59e0b}
+.app-card.priority3::after{background:#22c55e}
+.app-top{display:flex;align-items:center;gap:.85rem;margin-bottom:.65rem}
+.avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0}
+.name{font-weight:700;font-size:.9rem}
+.origin{font-size:.72rem;color:var(--t2);margin-top:.05rem}
+.quals{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.55rem}
+.qual-tag{padding:.15rem .55rem;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:5px;font-size:.68rem;color:var(--t2)}
+.score-row{display:flex;align-items:center;gap:.7rem}
+.score-track{flex:1;height:7px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden}
+.score-fill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.score-pct{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;width:25px;text-align:right}
+.verdict{display:none;margin-top:.55rem;font-size:.76rem;font-weight:700;padding:.22rem .65rem;border-radius:6px;width:fit-content}
+.verdict.p1{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.verdict.p2{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+.verdict.p3{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.bias-badge{display:none;position:absolute;top:.7rem;right:.7rem;font-size:.63rem;font-weight:700;padding:.18rem .45rem;border-radius:5px;background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.ctrls{display:flex;gap:.65rem;margin-top:1.35rem;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.25rem;border-radius:9px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;font-size:.83rem;transition:all .25s}
+.btn-run{background:linear-gradient(135deg,var(--danger),#c2410c);color:#fff;box-shadow:0 0 20px rgba(239,68,68,.3)}
+.btn-run:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(239,68,68,.5)}
+.btn-reveal{background:rgba(245,158,11,.12);color:#fcd34d;border:1px solid rgba(245,158,11,.3);display:none}
+.btn-fix{background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.3);display:none}
+.btn-reset{background:rgba(255,255,255,.06);color:var(--t2);border:1px solid var(--border);display:none}
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.15rem;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.panel-title{font-weight:700;font-size:.9rem;margin-bottom:1.15rem}
+.info-box{padding:.85rem 1.15rem;border-radius:10px;font-size:.82rem;line-height:1.65;border-left:3px solid;margin-top:.75rem;display:none}
+.info-warn{background:rgba(239,68,68,.07);border-color:var(--danger);color:#fee2e2}
+.info-fix{background:rgba(34,197,94,.07);border-color:var(--success);color:#dcfce7}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1.1rem}
+.insight{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:11px;padding:.9rem;font-size:.76rem;color:var(--t2);line-height:1.6;display:none}
+.insight-icon{font-size:1.3rem;margin-bottom:.35rem;display:block}
+.insight-h{font-weight:700;color:var(--t1);margin-bottom:.25rem;font-size:.82rem}
+.quote{border-left:3px solid var(--danger);padding:.7rem 1.1rem;background:rgba(239,68,68,.06);border-radius:0 9px 9px 0;font-style:italic;font-size:.82rem;color:var(--t2);margin-top:1.4rem}
+footer{border-top:1px solid var(--border);background:rgba(255,255,255,.015);padding:1.5rem 2rem;text-align:center}
+.dn{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.28rem}
+.dc{font-size:.77rem;color:var(--t2);line-height:1.6;margin-bottom:.35rem}.cp{font-size:.7rem;color:var(--t3)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nb">⚕️ Ethical AI in Healthcare</div>
+  <div class="nl">
+    <a class="na" href="../index.html">🏠 Back to Dashboard</a>
+    <a class="na" href="index.html">🏠 Home</a>
+    <a class="na act" href="bias.html">🎭 Clinical AI Bias</a>
+    <a class="na" href="hallucination.html">👻 AI Hallucination</a>
+    <a class="na" href="xai.html">🔍 AI Explainability</a>
+    <a class="na" href="fairness.html">⚖️ AI Fairness</a>
+    <a class="na" href="adversarial.html">🛡️ Adversarial AI</a>
+    <a class="na" href="privacy.html">🔐 Patient Privacy</a>
+    <a class="na" href="consent.html">📋 Informed Consent</a>
+    <a class="na" href="regression.html">📉 Visual AI</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <span class="pill">🎭 Demo 01 — Clinical AI Bias</span>
+  <h1>The <span class="grad">Deadly Disparity</span> in AI Triage</h1>
+  <p class="sub">Five Bengali patients arrive at the Emergency Department with <strong>identical clinical presentations and identical demographics</strong>. The AI-assisted triage system assigns them different priority levels — based solely on the <strong>first letter of their name</strong>.</p>
+
+  <div class="vitals-box">
+    <span style="font-weight:700;color:var(--t1);margin-right:.5rem">⚠️ All Patients — Identical Vitals &amp; Demographics:</span>
+    <span class="vital-item"><span class="vital-label">BP</span><span class="vital-val">165/105</span></span>
+    <span class="vital-item"><span class="vital-label">HR</span><span class="vital-val">112 bpm</span></span>
+    <span class="vital-item"><span class="vital-label">SpO₂</span><span class="vital-val">93%</span></span>
+    <span class="vital-item"><span class="vital-label">Temp</span><span class="vital-val">38.8°C</span></span>
+    <span class="vital-item"><span class="vital-label">Pain</span><span class="vital-val">8/10</span></span>
+    <span class="vital-item"><span class="vital-label">Age</span><span class="vital-val">45yr</span></span>
+    <span class="vital-item"><span class="vital-label">Community</span><span class="vital-val">Bengali</span></span>
+    <span class="vital-item"><span class="vital-label">Chief Complaint</span><span class="vital-val">Chest pain + Dyspnoea</span></span>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div style="font-weight:700;font-size:.72rem;color:var(--t2);margin-bottom:.8rem;letter-spacing:.05em;text-transform:uppercase">📋 Patient Queue — AI Assigns Triage Priority (1=Critical, 5=Non-urgent)</div>
+      <div class="app-grid" id="appGrid"></div>
+      <div class="ctrls">
+        <button class="btn btn-run" onclick="runBias()">▶ Run AI Triage</button>
+        <button class="btn btn-reveal" id="revealBtn" onclick="revealBias()">🔍 Reveal Bias</button>
+        <button class="btn btn-fix" id="fixBtn" onclick="fixBias()">✅ Fair Triage</button>
+        <button class="btn btn-reset" id="resetBtn" onclick="resetDemo()">↺ Reset</button>
+      </div>
+      <div class="quote">“An AI model doesn’t know what a name means — but if names beginning with ‘A’ were historically treated faster, the model will ‘know’ that patients named Ayan should be triaged before Tapasi.”</div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">📊 AI Priority Scores (Higher = More Urgent)</div>
+        <canvas id="biasChart" height="235"></canvas>
+      </div>
+      <div class="info-box info-warn" id="warnBox">
+        ⚠️ <strong>Alphabetical Name Order Bias:</strong> The AI was trained on historical hospital records that were stored and processed in alphabetical order. Patients with names starting with 'A' were historically registered first, seen earlier, and received faster care. The model learned this spurious correlation — treating name initial as a proxy for clinical urgency. Same vitals → up to 43% lower urgency score for names starting with S or T.<br><br>
+        📌 <strong>Shortcut learning:</strong> The AI didn’t learn to predict urgency from vitals alone — it learned a statistical shortcut from the data generation process. This is called <em>spurious correlation</em> or <em>shortcut learning</em>, and it is one of the most common real-world failure modes in clinical AI.
+      </div>
+      <div class="info-box info-fix" id="fixBox">
+        ✅ <strong>Debiased Triage AI:</strong> After removing name fields, applying counterfactual fairness, and retraining on balanced data — all patients now receive <strong>Priority 1 (Critical)</strong> as their identical vitals warrant.<br><br>
+        🛠️ Techniques: Disparate impact removal · Fairness-aware retraining · Demographic parity constraint · Regular prospective bias auditing
+      </div>
+      <div class="insight-grid" id="insightGrid">
+        <div class="insight" id="i1"><span class="insight-icon">🩺</span><div class="insight-h">Historical Data Bias</div>Training data reflects decades of unequal healthcare access. AI learns who "usually" gets priority — not who should.</div>
+        <div class="insight" id="i2"><span class="insight-icon">📡</span><div class="insight-h">Device Bias</div>Pulse oximeters, trained on lighter skin, overread SpO₂ by 2–4% in dark-skinned patients. AI amplifies the error.</div>
+        <div class="insight" id="i3"><span class="insight-icon">⚖️</span><div class="insight-h">Legal Liability</div>EU AI Act classifies clinical AI as "High Risk." Biased triage could constitute medical negligence and GDPR violation.</div>
+        <div class="insight" id="i4"><span class="insight-icon">📊</span><div class="insight-h">It Happens Everywhere</div>'A' Company stocks open first. 'A' students get called first. 'A' patients were registered first in paper-based hospital rolls. AI trained on these systems inherits this positional artifact.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="dn">Dr. Arkaprabha Sau</div>
+  <div class="dc">MBBS, MD (Gold Medalist) · DPH · Dip. Geriatric Medicine · CCEBDM<br>Ph.D. (Computer Science & Engineering)</div>
+  <div class="cp">Ethical AI in Healthcare · Interactive Demo Suite for Postgraduate Education · 2025</div>
+</footer>
+
+<script>
+const patients = [
+  {name:'Ayan Banerjee',    origin:'Bengali · Name initial: “A”', emoji:'🧑', color:'#818cf8', biased:89, fair:90, bias:false},
+  {name:'Ananya Dey',       origin:'Bengali · Name initial: “A”', emoji:'👩', color:'#38bdf8', biased:85, fair:89, bias:false},
+  {name:'Biswanath Ghosh',  origin:'Bengali · Name initial: “B”', emoji:'🧑', color:'#fbbf24', biased:70, fair:88, bias:true},
+  {name:'Subhrajit Roy',    origin:'Bengali · Name initial: “S”', emoji:'🧑', color:'#fb923c', biased:52, fair:88, bias:true},
+  {name:'Tapasi Mitra',     origin:'Bengali · Name initial: “T”', emoji:'👩', color:'#4ade80', biased:46, fair:87, bias:true}
+];
+
+let chart, phase='idle';
+
+function pLabel(s){if(s>=80)return{t:'🚨 PRIORITY 1 — CRITICAL',cls:'p1'};if(s>=65)return{t:'⚠️ PRIORITY 2 — URGENT',cls:'p2'};return{t:'🟡 PRIORITY 4 — DEFERRED',cls:'p1'};}
+
+function buildCards(){
+  document.getElementById('appGrid').innerHTML=patients.map((a,i)=>`
+    <div class="app-card" id="card${i}">
+      <span class="bias-badge" id="badge${i}">⚠ UNDERTRIAGE</span>
+      <div class="app-top">
+        <div class="avatar" style="background:${a.color}22;border:1.5px solid ${a.color}44">${a.emoji}</div>
+        <div><div class="name">${a.name}</div><div class="origin">${a.origin}</div></div>
+      </div>
+      <div class="quals">
+        <span class="qual-tag">BP 165/105</span><span class="qual-tag">HR 112</span>
+        <span class="qual-tag">SpO₂ 93%</span><span class="qual-tag">Pain 8/10</span><span class="qual-tag">Chest Pain</span>
+      </div>
+      <div class="score-row">
+        <div class="score-track"><div class="score-fill" id="fill${i}" style="width:0%;background:${a.color}"></div></div>
+        <div class="score-pct" id="pct${i}" style="color:${a.color}">—</div>
+      </div>
+      <div class="verdict" id="verd${i}"></div>
+    </div>`).join('');
+}
+
+function buildChart(data){
+  const ctx=document.getElementById('biasChart').getContext('2d');
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{type:'bar',data:{
+    labels:patients.map(a=>a.name.split(' ')[0]),
+    datasets:[{label:'AI Urgency Score',data,backgroundColor:patients.map(a=>a.color+'88'),borderColor:patients.map(a=>a.color),borderWidth:2,borderRadius:8}]
+  },options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#94a3b8'}},x:{grid:{display:false},ticks:{color:'#94a3b8'}}}}});
+}
+
+async function runBias(){
+  if(phase!=='idle')return;phase='running';
+  document.querySelector('.btn-run').textContent='⏳ Triaging...';
+  document.querySelector('.btn-run').disabled=true;
+  buildChart(new Array(5).fill(0));
+  for(let i=0;i<patients.length;i++){
+    await new Promise(r=>setTimeout(r,420));
+    const s=patients[i].biased;
+    document.getElementById(`fill${i}`).style.width=s+'%';
+    document.getElementById(`pct${i}`).textContent=s;
+    const {t,cls}=pLabel(s);
+    const v=document.getElementById(`verd${i}`);
+    v.textContent=t;v.className=`verdict ${cls}`;v.style.display='block';
+    document.getElementById(`card${i}`).className=`app-card priority${cls==='p1'?1:cls==='p2'?2:3}`;
+  }
+  buildChart(patients.map(a=>a.biased));
+  phase='biased';
+  document.querySelector('.btn-run').textContent='▶ Run AI Triage';
+  document.querySelector('.btn-run').disabled=false;
+  document.getElementById('revealBtn').style.display='inline-flex';
+  document.getElementById('resetBtn').style.display='inline-flex';
+}
+
+function revealBias(){
+  document.getElementById('warnBox').style.display='block';
+  patients.forEach((_,i)=>{if(patients[i].bias)document.getElementById(`badge${i}`).style.display='block';});
+  document.querySelectorAll('.insight').forEach(e=>e.style.display='block');
+  document.getElementById('revealBtn').style.display='none';
+  document.getElementById('fixBtn').style.display='inline-flex';
+}
+
+async function fixBias(){
+  document.getElementById('warnBox').style.display='none';
+  document.getElementById('fixBox').style.display='block';
+  document.getElementById('fixBtn').style.display='none';
+  patients.forEach((_,i)=>{document.getElementById(`card${i}`).className='app-card priority1';document.getElementById(`badge${i}`).style.display='none';});
+  for(let i=0;i<patients.length;i++){
+    await new Promise(r=>setTimeout(r,280));
+    const s=patients[i].fair;
+    document.getElementById(`fill${i}`).style.width=s+'%';
+    document.getElementById(`pct${i}`).textContent=s;
+    const v=document.getElementById(`verd${i}`);
+    v.textContent='🚨 PRIORITY 1 — CRITICAL';v.className='verdict p1';v.style.display='block';
+  }
+  buildChart(patients.map(a=>a.fair));
+}
+
+function resetDemo(){
+  phase='idle';buildCards();buildChart(new Array(5).fill(0));
+  ['warnBox','fixBox'].forEach(id=>document.getElementById(id).style.display='none');
+  ['revealBtn','fixBtn','resetBtn'].forEach(id=>document.getElementById(id).style.display='none');
+  document.querySelectorAll('.insight').forEach(e=>e.style.display='none');
+}
+
+buildCards();buildChart(new Array(5).fill(0));
+</script>
+</body>
+</html>

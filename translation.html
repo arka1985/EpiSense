@@ -24,6 +24,16 @@
             padding: 2rem;
         }
 
+        @media (max-width: 768px) {
+            .module-container {
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+            h1 {
+                font-size: 2rem !important;
+            }
+        }
+
         .back-btn {
             display: inline-flex;
             align-items: center;
@@ -343,14 +353,14 @@
             Back to Dashboard
         </a>
 
-        <header style="text-align: left; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+        <header style="text-align: left; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div class="bhashini-skip-translation">
                 <h1
-                    style="font-size: 2.5rem; background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                    style="font-size: clamp(1.8rem, 5vw, 2.5rem); background: linear-gradient(to right, #60a5fa, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">
                     Language Translation for Research</h1>
-                <p class="subtitle" style="margin: 0; max-width: 600px;">Translate consent forms, research data collection tools, and information sheets to Indian languages.</p>
+                <p class="subtitle" style="margin: 0; max-width: 600px; font-size: 1rem;">Translate consent forms, research data collection tools, and information sheets to Indian languages.</p>
             </div>
-            <div class="bhashini-plugin-container neon-glow"></div>
+            <div class="bhashini-plugin-container neon-glow" style="flex-shrink: 0;"></div>
         </header>
 
         <div class="tab-box bhashini-skip-translation">

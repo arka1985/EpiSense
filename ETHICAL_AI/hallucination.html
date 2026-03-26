@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Medical AI Hallucination Demo — Ethical AI in Healthcare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#04060f;--border:rgba(255,255,255,.09);--cyan:#00d4ff;--purple:#8b5cf6;--t1:#f0f4ff;--t2:#94a3b8;--t3:#475569;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 30%,rgba(245,158,11,.05),transparent 50%),radial-gradient(ellipse at 90% 70%,rgba(139,92,246,.05),transparent 50%);z-index:-2}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(245,158,11,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(245,158,11,.02) 1px,transparent 1px);background-size:60px 60px;z-index:-1}
+nav{position:sticky;top:0;z-index:99;background:rgba(4,6,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.2rem}
+.nb{font-weight:900;font-size:.95rem;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nl{display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.na{color:var(--t2);text-decoration:none;padding:.3rem .65rem;border-radius:7px;font-size:.74rem;font-weight:500;white-space:nowrap;transition:all .2s}.na:hover{background:rgba(255,255,255,.06);color:var(--t1)}.na.act{background:rgba(245,158,11,.1);color:#fcd34d;border:1px solid rgba(245,158,11,.25)}
+.explorable-card { background: rgba(255,255,255,.03); border:1px solid var(--border); border-radius:18px; padding:1.4rem; backdrop-filter:blur(10px); box-shadow:0 8px 32px rgba(0,0,0,.2) }
+.wrap{max-width:1100px;margin:0 auto;padding:2.5rem 1.5rem}
+.pill{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem 1rem;border-radius:100px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fcd34d;font-size:.73rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem}
+h1{font-size:clamp(1.9rem,5vw,3rem);font-weight:900;letter-spacing:-.04em;margin-bottom:.75rem}
+.grad{background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--t2);font-size:.97rem;line-height:1.72;max-width:700px;margin-bottom:2rem}
+.layout{display:grid;grid-template-columns:1fr 330px;gap:1.75rem;align-items:start}
+@media(max-width:850px){.layout{grid-template-columns:1fr}}
+.chat-wrap{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+.chat-header{background:rgba(255,255,255,.04);border-bottom:1px solid var(--border);padding:.9rem 1.4rem;display:flex;align-items:center;gap:.75rem}
+.bot-dot{width:33px;height:33px;border-radius:50%;background:linear-gradient(135deg,#312e81,#4c1d95);border:1.5px solid rgba(139,92,246,.4);display:flex;align-items:center;justify-content:center;font-size:.95rem}
+.bot-name{font-weight:700;font-size:.88rem}
+.bot-status{font-size:.7rem;color:var(--success);display:flex;align-items:center;gap:.3rem}
+.bot-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block}
+.fact-toggle-row{margin-left:auto;display:flex;align-items:center;gap:.6rem;font-size:.76rem;color:var(--t2)}
+.toggle{position:relative;width:42px;height:23px}
+.toggle input{display:none}
+.toggle-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:100px;cursor:pointer;transition:.3s}
+.toggle input:checked~.toggle-track{background:var(--warn)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:17px;height:17px;background:#fff;border-radius:50%;transition:.3s;pointer-events:none}
+.toggle input:checked~.toggle-thumb{transform:translateX(19px)}
+.chat-messages{padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:1.1rem;min-height:360px;max-height:420px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}
+.msg{display:flex;gap:.65rem;animation:msgIn .3s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{flex-direction:row-reverse}
+.mavatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.ai-av{background:linear-gradient(135deg,#312e81,#4c1d95);border:1px solid rgba(139,92,246,.3)}
+.u-av{background:linear-gradient(135deg,#0c4a6e,#0369a1);border:1px solid rgba(0,212,255,.3)}
+.bubble{max-width:78%;padding:.8rem 1rem;border-radius:14px;font-size:.86rem;line-height:1.65}
+.msg-user .bubble{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);border-bottom-right-radius:3px}
+.msg-ai .bubble{background:rgba(255,255,255,.05);border:1px solid var(--border);border-bottom-left-radius:3px}
+.H{background:rgba(239,68,68,.25);border-bottom:2px solid var(--danger);border-radius:3px;cursor:help}
+.V{background:rgba(34,197,94,.18);border-bottom:2px solid var(--success);border-radius:3px}
+.U{background:rgba(245,158,11,.2);border-bottom:2px solid var(--warn);border-radius:3px;cursor:help}
+.H:not(.show-highlights .H){background:transparent;border-bottom:none}
+.V:not(.show-highlights .V){background:transparent;border-bottom:none}
+.U:not(.show-highlights .U){background:transparent;border-bottom:none}
+.thinking{display:inline-flex;align-items:center;gap:4px;padding:.8rem 1rem}
+.thinking span{width:6px;height:6px;border-radius:50%;background:var(--t2);animation:dp 1.2s ease infinite}
+.thinking span:nth-child(2){animation-delay:.2s}.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.chat-footer{padding:1rem 1.4rem;border-top:1px solid var(--border)}
+.chips{display:flex;gap:.45rem;flex-wrap:wrap}
+.chip{padding:.38rem .85rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:100px;font-size:.74rem;color:var(--t2);cursor:pointer;transition:all .2s}
+.chip:hover{background:rgba(245,158,11,.1);color:#fcd34d;border-color:rgba(245,158,11,.3)}
+.chip.used{opacity:.4;pointer-events:none}
+.legend{display:flex;gap:1rem;margin:.75rem 0;flex-wrap:wrap;font-size:.75rem}
+.li{display:flex;align-items:center;gap:.4rem}
+.dot{width:10px;height:10px;border-radius:50%}
+.sidebar>*+*{margin-top:.9rem}
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:1.15rem;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.panel-title{font-weight:700;font-size:.85rem;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.stat-row:last-child{border:none}
+.stat-val{font-weight:700;font-family:'JetBrains Mono',monospace}
+.why-points{display:flex;flex-direction:column;gap:.6rem}
+.why-pt{font-size:.76rem;color:var(--t2);line-height:1.6;padding-left:.8rem;border-left:2px solid var(--purple)}
+.info-box{padding:.85rem 1.1rem;border-radius:10px;font-size:.8rem;line-height:1.65;border-left:3px solid}
+.info-warn{background:rgba(239,68,68,.07);border-color:var(--danger);color:#fee2e2}
+footer{border-top:1px solid var(--border);background:rgba(255,255,255,.015);padding:1.5rem 2rem;text-align:center}
+.dn{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.28rem}
+.dc{font-size:.77rem;color:var(--t2);line-height:1.6;margin-bottom:.35rem}.cp{font-size:.7rem;color:var(--t3)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nb">⚕️ Ethical AI in Healthcare</div>
+  <div class="nl">
+    <a class="na" href="../index.html">🏠 Back to Dashboard</a>
+    <a class="na" href="index.html">🏠 Home</a>
+    <a class="na" href="bias.html">🎭 Clinical AI Bias</a>
+    <a class="na act" href="hallucination.html">👻 AI Hallucination</a>
+    <a class="na" href="xai.html">🔍 AI Explainability</a>
+    <a class="na" href="fairness.html">⚖️ AI Fairness</a>
+    <a class="na" href="adversarial.html">🛡️ Adversarial AI</a>
+    <a class="na" href="privacy.html">🔐 Patient Privacy</a>
+    <a class="na" href="consent.html">📋 Informed Consent</a>
+    <a class="na" href="regression.html">📉 Visual AI</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <span class="pill">👻 Demo 02 — Medical Hallucination</span>
+  <h1>When AI <span class="grad">Invents Clinical Facts</span></h1>
+  <p class="sub">MedBot-AI answers clinical questions with authoritative confidence. Ask it about drugs, doses, and diagnoses — then <strong>toggle Fact-Check</strong> to reveal where it fabricated information that could harm a patient.</p>
+
+  <div class="layout">
+    <div>
+      <div class="legend">
+        <div class="li"><div class="dot" style="background:#ef4444"></div> Hallucination — Dangerous/False</div>
+        <div class="li"><div class="dot" style="background:#22c55e"></div> Verified clinical fact</div>
+        <div class="li"><div class="dot" style="background:#f59e0b"></div> Uncertain / contested</div>
+      </div>
+      <div class="chat-wrap" id="chatWrap">
+        <div class="chat-header">
+          <div class="bot-dot">🏥</div>
+          <div><div class="bot-name">MedBot-AI Clinical Assistant</div><div class="bot-status">Ready</div></div>
+          <div class="fact-toggle-row">
+            <span>Fact-Check</span>
+            <label class="toggle"><input type="checkbox" id="fcToggle" onchange="toggleFC()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+        <div class="chat-messages" id="msgs">
+          <div class="msg msg-ai">
+            <div class="mavatar ai-av">🏥</div>
+            <div class="bubble">Hello! I'm MedBot-AI. I can answer clinical questions about drugs, dosages, diagnoses, and treatments. How can I assist you today?<br><br><em style="color:var(--t3);font-size:.78rem">⚠️ Educational demo — not for real clinical use.</em></div>
+          </div>
+        </div>
+        <div class="chat-footer">
+          <div style="font-size:.72rem;color:var(--t3);margin-bottom:.5rem">Click a clinical question:</div>
+          <div class="chips" id="chips">
+            <button class="chip" onclick="ask(0)">First-line Rx for Type 2 Diabetes?</button>
+            <button class="chip" onclick="ask(1)">Can warfarin + aspirin be co-prescribed?</button>
+            <button class="chip" onclick="ask(2)">Who discovered insulin & when?</button>
+            <button class="chip" onclick="ask(3)">Max safe paracetamol dose/day?</button>
+            <button class="chip" onclick="ask(4)">Symptoms of pulmonary embolism?</button>
+            <button class="chip" onclick="ask(5)">How do SGLT2 inhibitors work?</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-title">📊 Session Statistics</div>
+        <div class="stat-row"><span>Questions Asked</span><span class="stat-val" id="sQ">0</span></div>
+        <div class="stat-row"><span>Hallucinations</span><span class="stat-val" id="sH" style="color:#ef4444">0</span></div>
+        <div class="stat-row"><span>Verified Facts</span><span class="stat-val" id="sV" style="color:#22c55e">0</span></div>
+        <div class="stat-row"><span>Uncertain Claims</span><span class="stat-val" id="sU" style="color:#f59e0b">0</span></div>
+        <div class="stat-row"><span>Hallucination Rate</span><span class="stat-val" id="sR">—</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🧠 Why Does Medical AI Hallucinate?</div>
+        <div class="why-points">
+          <div class="why-pt"><strong>Stale training data:</strong> Drug guidelines change; AI trained 2 years ago may recommend outdated protocols.</div>
+          <div class="why-pt"><strong>Confident generation:</strong> LLMs are trained to produce fluent, authoritative text — even when guessing.</div>
+          <div class="why-pt"><strong>No pharmacopoeia access:</strong> Without live database access, AI cannot verify current doses or interactions.</div>
+          <div class="why-pt"><strong>Rare drug data:</strong> Specialty drugs have sparse training examples — the model extrapolates dangerously.</div>
+        </div>
+      </div>
+      <div class="info-box info-warn">
+        💀 <strong>Real Impact:</strong> A US physician using GPT-4 was cited after the AI recommended a drug dosage 5× too high for a paediatric patient. Always verify AI medical outputs against approved clinical databases.
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="dn">Dr. Arkaprabha Sau</div>
+  <div class="dc">MBBS, MD (Gold Medalist) · DPH · Dip. Geriatric Medicine · CCEBDM<br>Ph.D. (Computer Science & Engineering)</div>
+  <div class="cp">Ethical AI in Healthcare · Interactive Demo Suite for Postgraduate Education · 2025</div>
+</footer>
+
+<script>
+const QA=[
+  {q:"What is the first-line treatment for Type 2 Diabetes?",
+   a:`<span class="V">Metformin (biguanide) remains the first-line pharmacological agent for Type 2 Diabetes Mellitus, as recommended by both ADA (2024) and RSSDI guidelines.</span> <span class="V">It reduces hepatic glucose output and improves peripheral insulin sensitivity.</span> <span class="H" title="HALLUCINATION: Insulin is NOT first-line for T2DM; it is used when oral agents fail">Insulin glargine is concurrently started at diagnosis to immediately normalise blood glucose.</span>`,
+   stats:{h:1,v:2,u:0}},
+  {q:"Can warfarin and aspirin be co-prescribed safely?",
+   a:`<span class="H" title="HALLUCINATION: This combination significantly increases haemorrhagic risk and requires specialist oversight">Yes, warfarin and aspirin can safely be combined for most patients without additional monitoring requirements.</span> <span class="V">Both drugs have anticoagulant/antiplatelet effects that together substantially increase bleeding risk, particularly GI and intracranial haemorrhage.</span> <span class="U" title="UNCERTAIN: Benefit vs risk must be assessed per patient context">In specific indications (mechanical heart valves), the combination may be warranted with close INR monitoring.</span>`,
+   stats:{h:1,v:1,u:1}},
+  {q:"Who discovered insulin and when?",
+   a:`<span class="V">Insulin was discovered in 1921 by Frederick Banting and Charles Best at the University of Toronto.</span> <span class="H" title="HALLUCINATION: James Collip purified insulin, not discovered it; timing is wrong">The discovery was later confirmed in 1925 by James Collip, who independently identified insulin's role in glucose regulation.</span> <span class="V">Banting and Macleod received the Nobel Prize in Physiology or Medicine in 1923.</span>`,
+   stats:{h:1,v:2,u:0}},
+  {q:"What is the maximum safe daily dose of paracetamol (adults)?",
+   a:`<span class="V">The standard maximum daily dose of paracetamol (acetaminophen) for adults is 4 grams (4000 mg) per 24-hour period, taken in divided doses.</span> <span class="H" title="DANGEROUS HALLUCINATION: 6g/day causes severe hepatotoxicity">For patients with chronic pain, up to 6 grams per day can be safely administered to achieve adequate analgesia.</span> <span class="V">Hepatotoxicity risk increases dramatically with doses above 75–150 mg/kg in acute overdose.</span>`,
+   stats:{h:1,v:2,u:0}},
+  {q:"What are the symptoms of pulmonary embolism (PE)?",
+   a:`<span class="V">Classic symptoms of PE include sudden-onset dyspnoea, pleuritic chest pain, haemoptysis, tachycardia, and in massive PE — hypotension and syncope.</span> <span class="V">Many PEs are clinically silent or present atypically, which is why the Wells Score and D-dimer are used for risk stratification.</span> <span class="U" title="UNCERTAIN: Clinical presentation varies widely; 'classic triad' occurs in only ~30%">The pathognomonic triad of dyspnoea, chest pain, and haemoptysis is reliably present in most PE cases.</span>`,
+   stats:{h:0,v:2,u:1}},
+  {q:"How do SGLT2 inhibitors work in diabetes management?",
+   a:`<span class="V">SGLT2 (Sodium-Glucose Cotransporter 2) inhibitors block glucose reabsorption in the proximal renal tubule, promoting urinary glucose excretion (glycosuria) and thereby lowering blood glucose independently of insulin.</span> <span class="V">Key agents include empagliflozin, dapagliflozin, and canagliflozin — all with proven cardiovascular and renal protective effects in landmark trials (EMPA-REG, DECLARE).</span> <span class="H" title="HALLUCINATION: SGLT2 inhibitors do not increase insulin secretion">They also stimulate pancreatic β-cells to increase insulin secretion in a glucose-dependent manner.</span>`,
+   stats:{h:1,v:2,u:0}}
+];
+
+let asked=new Set(),totH=0,totV=0,totU=0,showFC=false;
+
+function toggleFC(){
+  showFC=document.getElementById('fcToggle').checked;
+  showFC?document.getElementById('msgs').classList.add('show-highlights'):document.getElementById('msgs').classList.remove('show-highlights');
+}
+
+function updateStats(){
+  document.getElementById('sQ').textContent=asked.size;
+  document.getElementById('sH').textContent=totH;
+  document.getElementById('sV').textContent=totV;
+  document.getElementById('sU').textContent=totU;
+  if(totH+totV+totU>0){
+    const r=Math.round(totH/(totH+totV+totU)*100);
+    document.getElementById('sR').textContent=r+'%';
+    document.getElementById('sR').style.color=r>30?'#ef4444':r>15?'#f59e0b':'#22c55e';
+  }
+}
+
+async function ask(i){
+  if(asked.has(i))return;
+  asked.add(i);
+  document.querySelectorAll('.chip')[i].classList.add('used');
+  const qa=QA[i];
+  const msgs=document.getElementById('msgs');
+  msgs.innerHTML+=`<div class="msg msg-user"><div class="mavatar u-av">👤</div><div class="bubble">${qa.q}</div></div>`;
+  const tid='t'+Date.now();
+  msgs.innerHTML+=`<div class="msg msg-ai" id="${tid}"><div class="mavatar ai-av">🏥</div><div class="bubble"><div class="thinking"><span></span><span></span><span></span></div></div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  await new Promise(r=>setTimeout(r,1500));
+  document.getElementById(tid).remove();
+  msgs.innerHTML+=`<div class="msg msg-ai"><div class="mavatar ai-av">🏥</div><div class="bubble">${qa.a}</div></div>`;
+  if(showFC)msgs.classList.add('show-highlights');
+  msgs.scrollTop=msgs.scrollHeight;
+  totH+=qa.stats.h;totV+=qa.stats.v;totU+=qa.stats.u;
+  updateStats();
+}
+</script>
+</body>
+</html>

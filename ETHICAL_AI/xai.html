@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Explainable AI Demo — Ethical AI in Healthcare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#04060f;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,.09);--cyan:#00d4ff;--purple:#8b5cf6;--t1:#f0f4ff;--t2:#94a3b8;--t3:#475569;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 20%,rgba(0,212,255,.07),transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(139,92,246,.06),transparent 50%);z-index:-2}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:60px 60px;z-index:-1}
+
+nav{position:sticky;top:0;z-index:99;background:rgba(4,6,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.2rem}
+.nb{font-weight:900;font-size:.95rem;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nl{display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.na{color:var(--t2);text-decoration:none;padding:.3rem .65rem;border-radius:7px;font-size:.74rem;font-weight:500;white-space:nowrap;transition:all .2s}.na:hover{background:rgba(255,255,255,.06);color:var(--t1)}.na.act{background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.25)}
+.explorable-card { background: rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; padding:1.4rem; backdrop-filter:blur(10px); box-shadow:0 8px 32px rgba(0,0,0,.15) }
+
+.wrap{max-width:1150px;margin:0 auto;padding:2.5rem 1.5rem}
+.pill{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem 1rem;border-radius:100px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--cyan);font-size:.73rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem}
+h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.04em;margin-bottom:.75rem}
+.grad{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--t2);font-size:.97rem;line-height:1.72;max-width:700px;margin-bottom:2rem}
+
+.layout{display:grid;grid-template-columns:320px 1fr;gap:2rem;align-items:start}
+@media(max-width:850px){.layout{grid-template-columns:1fr}}
+
+/* Sliders */
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:1.4rem;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.panel-title{font-weight:700;font-size:.9rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem}
+.sliders{display:flex;flex-direction:column;gap:1.05rem}
+.sl-item{display:grid;grid-template-columns:1fr;gap:.4rem}
+.sl-header{display:flex;justify-content:space-between;align-items:center}
+.sl-label{font-size:.8rem;font-weight:600;color:var(--t2)}
+.sl-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--cyan);font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:100px;background:rgba(255,255,255,.1);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--cyan);cursor:pointer;box-shadow:0 0 8px rgba(0,212,255,.6)}
+
+/* Presets */
+.presets{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1.2rem}
+.preset-btn{padding:.4rem .85rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;font-size:.76rem;font-weight:600;color:var(--t2);cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+.preset-btn:hover{background:rgba(0,212,255,.08);color:var(--cyan);border-color:rgba(0,212,255,.3)}
+
+/* Risk gauge */
+.risk-panel{text-align:center;padding:1.5rem}
+.risk-label{font-size:.78rem;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+.risk-pct{font-size:4rem;font-weight:900;letter-spacing:-.06em;font-family:'JetBrains Mono',monospace;transition:all .4s}
+.risk-bar-wrap{width:100%;height:12px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin:.75rem auto;max-width:280px}
+.risk-bar{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.4,0,.2,1),background .5s}
+.risk-verdict{display:inline-flex;align-items:center;gap:.5rem;padding:.4rem 1rem;border-radius:100px;font-size:.82rem;font-weight:700;transition:all .4s}
+
+/* SHAP chart */
+.shap-bars{display:flex;flex-direction:column;gap:.65rem;margin-top:.25rem}
+.shap-row{display:grid;grid-template-columns:130px 1fr 70px;align-items:center;gap:.6rem}
+.shap-feat{font-size:.78rem;color:var(--t2);text-align:right;font-weight:500}
+.shap-track{height:26px;background:rgba(255,255,255,.05);border-radius:7px;position:relative;overflow:hidden;display:flex;align-items:center}
+.shap-fill{height:100%;border-radius:7px;transition:width .9s cubic-bezier(.4,0,.2,1),background .5s;display:flex;align-items:center}
+.shap-inner{font-size:.72rem;font-family:'JetBrains Mono',monospace;padding:0 8px;font-weight:600;white-space:nowrap}
+.shap-impact{font-size:.74rem;font-weight:700;text-align:right;font-family:'JetBrains Mono',monospace}
+
+/* Explanation text */
+.explain-wrap{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;font-size:.84rem;line-height:1.7;color:var(--t2);margin-top:.75rem}
+.explain-wrap strong{color:var(--t1)}
+
+/* Mode switch */
+.mode-row{display:flex;gap:.5rem;margin-bottom:1.2rem}
+.mode-btn{padding:.45rem 1rem;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--t2);cursor:pointer;font-size:.8rem;font-weight:600;font-family:'Inter',sans-serif;transition:all .25s}
+.mode-btn.active{background:rgba(0,212,255,.1);color:var(--cyan);border-color:rgba(0,212,255,.3)}
+
+footer{border-top:1px solid var(--border);background:rgba(255,255,255,.015);padding:1.5rem 2rem;text-align:center}
+.dn{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.28rem}
+.dc{font-size:.77rem;color:var(--t2);line-height:1.6;margin-bottom:.35rem}.cp{font-size:.7rem;color:var(--t3)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nb">⚕️ Ethical AI in Healthcare</div>
+  <div class="nl">
+    <a class="na" href="../index.html">🏠 Back to Dashboard</a>
+    <a class="na" href="index.html">🏠 Home</a>
+    <a class="na" href="bias.html">🎭 Clinical AI Bias</a>
+    <a class="na" href="hallucination.html">👻 AI Hallucination</a>
+    <a class="na act" href="xai.html">🔍 AI Explainability</a>
+    <a class="na" href="fairness.html">⚖️ AI Fairness</a>
+    <a class="na" href="adversarial.html">🛡️ Adversarial AI</a>
+    <a class="na" href="privacy.html">🔐 Patient Privacy</a>
+    <a class="na" href="consent.html">📋 Informed Consent</a>
+    <a class="na" href="regression.html">📉 Visual AI</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <span class="pill">🔍 Demo 03 — Explainable AI</span>
+  <h1>Opening the <span class="grad">Black Box</span></h1>
+  <p class="sub">A deep learning model predicts 10-year diabetes risk. Adjust patient features and watch <strong>SHAP-style attributions</strong> explain exactly <em>why</em> the model made its decision — in real time.</p>
+
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <div class="panel-title">🧬 Patient Features</div>
+        <div class="sliders" id="sliders"></div>
+        <div class="presets">
+          <div style="font-size:.7rem;color:var(--t3);width:100%;margin-bottom:.2rem">Preset profiles:</div>
+          <button class="preset-btn" onclick="loadPreset('young')">🟢 Young Healthy</button>
+          <button class="preset-btn" onclick="loadPreset('risk')">🟡 Moderate Risk</button>
+          <button class="preset-btn" onclick="loadPreset('high')">🔴 High Risk</button>
+        </div>
+      </div>
+      <div class="info-box info-info" style="margin-top:1rem">
+        💡 <strong>How SHAP works:</strong> SHapley Additive exPlanations assign each feature an "impact score" — how much it pushed the prediction up (↑ risk) or down (↓ risk) compared to the average patient.
+      </div>
+    </div>
+
+    <div>
+      <div class="panel" style="margin-bottom:1.25rem">
+        <div class="risk-panel">
+          <div class="risk-label">10-Year Diabetes Risk</div>
+          <div class="risk-pct" id="riskPct">—%</div>
+          <div class="risk-bar-wrap"><div class="risk-bar" id="riskBar" style="width:0%"></div></div>
+          <div class="risk-verdict" id="riskVerdict">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📊 SHAP Feature Attributions</div>
+        <div class="mode-row">
+          <button class="mode-btn active" id="m1" onclick="setMode('shap')">📊 SHAP Values</button>
+          <button class="mode-btn" id="m2" onclick="setMode('plain')">💬 Plain English</button>
+        </div>
+        <div id="shapSection">
+          <div class="shap-bars" id="shapBars"></div>
+        </div>
+        <div id="plainSection" style="display:none">
+          <div class="explain-wrap" id="plainText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const features = [
+  {key:'glucose', label:'Blood Glucose (mg/dL)', min:70,  max:280, def:95,  unit:'mg/dL'},
+  {key:'bmi',     label:'BMI',                   min:16,  max:50,  def:24,  unit:''},
+  {key:'age',     label:'Age',                   min:20,  max:80,  def:32,  unit:'yr'},
+  {key:'hba1c',   label:'HbA1c (%)',             min:4,   max:12,  def:5.2, unit:'%', step:.1},
+  {key:'bp',      label:'Blood Pressure (mmHg)', min:60,  max:180, def:80,  unit:'mmHg'},
+  {key:'family',  label:'Family History (0–10)', min:0,   max:10,  def:2,   unit:''},
+  {key:'exercise',label:'Exercise (hrs/wk)',     min:0,   max:20,  def:5,   unit:'hr/wk'},
+  {key:'diet',    label:'Dietary Risk Score',    min:0,   max:10,  def:3,   unit:''},
+];
+
+const presets = {
+  young: {glucose:88,bmi:22,age:25,hba1c:5.0,bp:72,family:1,exercise:8,diet:2},
+  risk:  {glucose:155,bmi:30,age:45,hba1c:6.2,bp:130,family:6,exercise:2,diet:7},
+  high:  {glucose:230,bmi:38,age:62,hba1c:8.5,bp:160,family:9,exercise:0,diet:9}
+};
+
+let vals = {};
+let displayMode = 'shap';
+features.forEach(f=>{ vals[f.key]=f.def; });
+
+function buildSliders(){
+  const c=document.getElementById('sliders');
+  c.innerHTML=features.map(f=>`
+    <div class="sl-item">
+      <div class="sl-header">
+        <span class="sl-label">${f.label}</span>
+        <span class="sl-val" id="lbl_${f.key}">${f.def}${f.unit}</span>
+      </div>
+      <input type="range" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${f.def}" id="sl_${f.key}"
+        oninput="onSlide('${f.key}',this.value,'${f.unit}')">
+    </div>`).join('');
+}
+
+function onSlide(key,v,unit){
+  vals[key]=parseFloat(v);
+  document.getElementById(`lbl_${key}`).textContent=v+unit;
+  update();
+}
+
+function loadPreset(name){
+  const p=presets[name];
+  features.forEach(f=>{
+    vals[f.key]=p[f.key];
+    document.getElementById(`sl_${f.key}`).value=p[f.key];
+    document.getElementById(`lbl_${f.key}`).textContent=p[f.key]+(f.unit||'');
+  });
+  update();
+}
+
+function calcRisk(v){
+  let r=0;
+  r+=(v.glucose-90)/190*35;
+  r+=(v.hba1c-5)/7*30;
+  r+=(v.bmi-18.5)/31.5*20;
+  r+=(v.age-20)/60*15;
+  r+=(v.family/10)*18;
+  r+=(v.bp-60)/120*10;
+  r+=(v.diet/10)*12;
+  r-=(v.exercise/20)*15;
+  return Math.max(2,Math.min(97,Math.round(r)));
+}
+
+function calcShap(v){
+  return [
+    {feat:'Blood Glucose', impact:+(v.glucose-90)/190*35, s:'glucose'},
+    {feat:'HbA1c',         impact:+(v.hba1c-5)/7*30,     s:'hba1c'},
+    {feat:'BMI',           impact:+(v.bmi-18.5)/31.5*20,  s:'bmi'},
+    {feat:'Family History',impact:+(v.family/10)*18,      s:'family'},
+    {feat:'Age',           impact:+(v.age-20)/60*15,      s:'age'},
+    {feat:'Dietary Risk',  impact:+(v.diet/10)*12,        s:'diet'},
+    {feat:'Blood Pressure',impact:+(v.bp-60)/120*10,      s:'bp'},
+    {feat:'Exercise',      impact:-(v.exercise/20)*15,    s:'exercise'},
+  ].sort((a,b)=>Math.abs(b.impact)-Math.abs(a.impact));
+}
+
+function update(){
+  const risk=calcRisk(vals);
+  const shap=calcShap(vals);
+  // Risk display
+  document.getElementById('riskPct').textContent=risk+'%';
+  const bar=document.getElementById('riskBar');
+  const verd=document.getElementById('riskVerdict');
+  bar.style.width=risk+'%';
+  let color,label;
+  if(risk<25){color='#22c55e';label='✅ Low Risk'}
+  else if(risk<55){color='#f59e0b';label='⚠️ Moderate Risk'}
+  else if(risk<75){color='#f97316';label='🔶 High Risk'}
+  else{color='#ef4444';label='🚨 Very High Risk'}
+  bar.style.background=color;
+  document.getElementById('riskPct').style.color=color;
+  verd.textContent=label;
+  verd.style.background=color+'22';
+  verd.style.border=`1px solid ${color}55`;
+  verd.style.color=color;
+
+  // SHAP
+  const maxAbs=Math.max(...shap.map(s=>Math.abs(s.impact)),1);
+  document.getElementById('shapBars').innerHTML=shap.map(s=>{
+    const pct=Math.abs(s.impact)/maxAbs*85;
+    const pos=s.impact>0;
+    const col=pos?'#ef4444':'#22c55e';
+    const sign=pos?'↑':'↓';
+    return `<div class="shap-row">
+      <div class="shap-feat">${s.feat}</div>
+      <div class="shap-track">
+        <div class="shap-fill" style="width:${pct}%;background:${col}33;border:1px solid ${col}55">
+          <span class="shap-inner" style="color:${col}">${sign} ${Math.abs(s.impact).toFixed(1)}</span>
+        </div>
+      </div>
+      <div class="shap-impact" style="color:${col}">${pos?'+':''}${s.impact.toFixed(1)}</div>
+    </div>`;
+  }).join('');
+
+  // Plain English
+  const top=shap.slice(0,3);
+  const pos=top.filter(s=>s.impact>0);
+  const neg=top.filter(s=>s.impact<0);
+  let txt=`The model predicts a <strong>${risk}% risk</strong> of diabetes within 10 years. `;
+  if(pos.length) txt+=`The main risk-<strong>increasing</strong> factors are: ${pos.map(s=>`<em>${s.feat}</em>`).join(', ')}. `;
+  if(neg.length) txt+=`These are <strong>protecting</strong> the patient: ${neg.map(s=>`<em>${s.feat}</em>`).join(', ')}. `;
+  txt+=`<br><br>📋 <strong>Clinical recommendation:</strong> `;
+  if(risk<25) txt+='Routine monitoring. Encourage continued healthy habits.';
+  else if(risk<55) txt+='3-month follow-up. Consider lifestyle intervention programme.';
+  else if(risk<75) txt+='Immediate dietary counselling + HbA1c monitoring. Consider metformin.';
+  else txt+='<strong>Urgent specialist referral.</strong> Full diagnostic panel required. Consider medication.';
+  document.getElementById('plainText').innerHTML=txt;
+}
+
+function setMode(m){
+  displayMode=m;
+  document.getElementById('shapSection').style.display=m==='shap'?'block':'none';
+  document.getElementById('plainSection').style.display=m==='plain'?'block':'none';
+  document.getElementById('m1').className='mode-btn'+(m==='shap'?' active':'');
+  document.getElementById('m2').className='mode-btn'+(m==='plain'?' active':'');
+}
+
+buildSliders();
+update();
+</script>
+<footer>
+  <div class="dn">Dr. Arkaprabha Sau</div>
+  <div class="dc">MBBS, MD (Gold Medalist) · DPH · Dip. Geriatric Medicine · CCEBDM<br>Ph.D. (Computer Science & Engineering)</div>
+  <div class="cp">Ethical AI in Healthcare · Interactive Demo Suite for Postgraduate Education · 2025</div>
+</footer>
+</body>
+</html>

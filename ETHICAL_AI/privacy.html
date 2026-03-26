@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Patient Data Privacy Demo — Ethical AI in Healthcare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#04060f;--border:rgba(255,255,255,.09);--cyan:#00d4ff;--purple:#8b5cf6;--pink:#ec4899;--t1:#f0f4ff;--t2:#94a3b8;--t3:#475569;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 10% 25%,rgba(236,72,153,.07),transparent 50%),radial-gradient(ellipse at 90% 70%,rgba(139,92,246,.06),transparent 50%);z-index:-2}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(236,72,153,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(236,72,153,.025) 1px,transparent 1px);background-size:60px 60px;z-index:-1}
+nav{position:sticky;top:0;z-index:99;background:rgba(4,6,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.2rem}
+.nb{font-weight:900;font-size:.95rem;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nl{display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.na{color:var(--t2);text-decoration:none;padding:.3rem .65rem;border-radius:7px;font-size:.74rem;font-weight:500;white-space:nowrap;transition:all .2s}.na:hover{background:rgba(255,255,255,.06);color:var(--t1)}.na.act{background:rgba(236,72,153,.1);color:#f9a8d4;border:1px solid rgba(236,72,153,.25)}
+.explorable-card { background: rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; padding:1.4rem; backdrop-filter:blur(10px); box-shadow:0 8px 32px rgba(0,0,0,.15) }
+.wrap{max-width:1150px;margin:0 auto;padding:2.5rem 1.5rem}
+.pill{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem 1rem;border-radius:100px;background:rgba(236,72,153,.1);border:1px solid rgba(236,72,153,.3);color:#f9a8d4;font-size:.73rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem}
+h1{font-size:clamp(1.9rem,4.5vw,3.1rem);font-weight:900;letter-spacing:-.04em;margin-bottom:.75rem}
+.grad{background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--t2);font-size:.97rem;line-height:1.72;max-width:720px;margin-bottom:1.75rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+@media(max-width:850px){.grid{grid-template-columns:1fr}}
+
+/* Re-identification tool */
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.25rem;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.panel-title{font-weight:700;font-size:.9rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem}
+.field-row{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.field-label{font-size:.8rem;font-weight:600;color:var(--t2)}
+select,input[type=text]{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--t1);font-family:'Inter',sans-serif;font-size:.85rem;padding:.55rem .85rem;width:100%;outline:none;transition:border .2s}
+select:focus,input[type=text]:focus{border-color:var(--pink)}
+select option{background:#1a1a2e}
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.35rem;border-radius:9px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;font-size:.85rem;transition:all .25s}
+.btn-pink{background:linear-gradient(135deg,var(--pink),#be185d);color:#fff;box-shadow:0 0 20px rgba(236,72,153,.3)}
+.btn-pink:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(236,72,153,.5)}
+
+/* Risk meter */
+.risk-meter{text-align:center;padding:1.5rem}
+.risk-pct{font-size:4rem;font-weight:900;letter-spacing:-.06em;font-family:'JetBrains Mono',monospace;transition:color .5s}
+.risk-bar-wrap{width:100%;height:12px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin:.75rem auto;max-width:280px}
+.risk-bar{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.4,0,.2,1),background .5s}
+.risk-verdict{display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .95rem;border-radius:100px;font-size:.82rem;font-weight:700;transition:all .5s;margin-top:.4rem}
+.risk-explain{font-size:.8rem;color:var(--t2);margin-top:.75rem;line-height:1.6;text-align:left;background:rgba(255,255,255,.03);border-radius:10px;padding:.75rem 1rem;border:1px solid var(--border)}
+
+/* Record table */
+.record-table{width:100%;border-collapse:collapse;margin-top:.75rem;font-size:.8rem}
+.record-table th{background:rgba(255,255,255,.06);padding:.5rem .75rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.04em;color:var(--t2);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.record-table td{padding:.55rem .75rem;border-bottom:1px solid rgba(255,255,255,.05)}
+.redacted{background:rgba(255,255,255,.1);border-radius:4px;color:transparent;user-select:none;display:inline-block;min-width:60px}
+.exposed{color:var(--pink);font-weight:700;animation:highlight .5s ease}
+@keyframes highlight{from{background:rgba(236,72,153,.3)}to{background:transparent}}
+
+/* Privacy techniques */
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.tech-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:1rem}
+.tech-icon{font-size:1.5rem;margin-bottom:.4rem;display:block}
+.tech-name{font-weight:700;font-size:.85rem;margin-bottom:.3rem}
+.tech-desc{font-size:.75rem;color:var(--t2);line-height:1.55}
+
+.info-box{padding:.85rem 1.1rem;border-radius:10px;font-size:.82rem;line-height:1.65;border-left:3px solid;margin-top:.85rem}
+.info-warn{background:rgba(239,68,68,.07);border-color:var(--danger);color:#fee2e2}
+.info-info{background:rgba(236,72,153,.07);border-color:var(--pink);color:#fce7f3}
+footer{border-top:1px solid var(--border);background:rgba(255,255,255,.015);padding:1.5rem 2rem;text-align:center}
+.dn{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.28rem}
+.dc{font-size:.77rem;color:var(--t2);line-height:1.6;margin-bottom:.35rem}.cp{font-size:.7rem;color:var(--t3)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nb">⚕️ Ethical AI in Healthcare</div>
+  <div class="nl">
+    <a class="na" href="../index.html">🏠 Back to Dashboard</a>
+    <a class="na" href="index.html">🏠 Home</a>
+    <a class="na" href="bias.html">🎭 Clinical AI Bias</a>
+    <a class="na" href="hallucination.html">👻 AI Hallucination</a>
+    <a class="na" href="xai.html">🔍 AI Explainability</a>
+    <a class="na" href="fairness.html">⚖️ AI Fairness</a>
+    <a class="na" href="adversarial.html">🛡️ Adversarial AI</a>
+    <a class="na act" href="privacy.html">🔐 Patient Privacy</a>
+    <a class="na" href="consent.html">📋 Informed Consent</a>
+    <a class="na" href="regression.html">📉 Visual AI</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <span class="pill">🔐 Demo 06 — Patient Data Privacy</span>
+  <h1>Re-identifying <span class="grad">"Anonymous"</span> Patients</h1>
+  <p class="sub">This hospital dataset was <strong>"fully anonymized"</strong> before being shared for AI training. Select just 3 quasi-identifiers — and watch how many patients can be uniquely re-identified, violating their privacy.</p>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">🔍 Re-identification Attack</div>
+        <p style="font-size:.82rem;color:var(--t2);margin-bottom:1.25rem;line-height:1.6">The attacker has access to a "de-identified" hospital dataset. By combining publicly available information with quasi-identifiers, they can link records back to specific individuals.</p>
+        <div class="field-row">
+          <div class="field-label">Age Group</div>
+          <select id="ageGroup">
+            <option value="">— Select —</option>
+            <option value="1">20–30 years</option>
+            <option value="2">31–45 years</option>
+            <option value="3">46–60 years</option>
+            <option value="4">61–75 years</option>
+            <option value="5">75+ years</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">PIN Code / Zip Code Area</div>
+          <select id="zipArea">
+            <option value="">— Select —</option>
+            <option value="1">700001 (Central Kolkata)</option>
+            <option value="2">700019 (Ballygunge)</option>
+            <option value="3">110001 (Central Delhi)</option>
+            <option value="4">400001 (South Mumbai)</option>
+            <option value="5">600001 (Chennai)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Gender</div>
+          <select id="gender">
+            <option value="">— Select —</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Diagnosis Category (Optional)</div>
+          <select id="diag">
+            <option value="">— Not selected —</option>
+            <option value="1">Cardiac</option>
+            <option value="2">Oncology</option>
+            <option value="3">Endocrinology</option>
+            <option value="4">Neurology</option>
+          </select>
+        </div>
+        <button class="btn btn-pink" style="margin-top:.5rem" onclick="attackPrivacy()">🔍 Attempt Re-identification</button>
+        <button class="btn" style="background:rgba(255,255,255,.06);color:var(--t2);border:1px solid var(--border);margin-top:.5rem;margin-left:.5rem" onclick="resetPrivacy()">↺ Reset</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">🛡️ Privacy Protection Techniques</div>
+        <div class="tech-grid">
+          <div class="tech-card">
+            <span class="tech-icon">🎲</span>
+            <div class="tech-name">Differential Privacy</div>
+            <div class="tech-desc">Adds calibrated mathematical noise to query outputs so individual records cannot be inferred from aggregate results.</div>
+          </div>
+          <div class="tech-card">
+            <span class="tech-icon">🌐</span>
+            <div class="tech-name">Federated Learning</div>
+            <div class="tech-desc">AI trains on data across hospitals without the data leaving each institution — only model gradients are shared.</div>
+          </div>
+          <div class="tech-card">
+            <span class="tech-icon">🔒</span>
+            <div class="tech-name">k-Anonymity</div>
+            <div class="tech-desc">Ensures every record is indistinguishable from at least k-1 others across all quasi-identifiers.</div>
+          </div>
+          <div class="tech-card">
+            <span class="tech-icon">🔀</span>
+            <div class="tech-name">Synthetic Data</div>
+            <div class="tech-desc">AI generates statistically representative fake patient data for training, eliminating real-patient privacy risk entirely.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="risk-meter">
+          <div style="font-size:.75rem;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:.4rem">Re-identification Risk</div>
+          <div class="risk-pct" id="riskPct">—%</div>
+          <div class="risk-bar-wrap"><div class="risk-bar" id="riskBar" style="width:0%"></div></div>
+          <div class="risk-verdict" id="riskVerdict" style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--t2)">Select variables above</div>
+          <div class="risk-explain" id="riskExplain">Choose age group, location, and gender to begin the re-identification attack simulation.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📋 "Anonymized" Records — Matched Patients</div>
+        <div id="recordTable" style="font-size:.8rem;color:var(--t3)">Run the re-identification attack to see matched records.</div>
+      </div>
+
+      <div class="info-box info-warn">
+        🔬 <strong>Sweeney (2000):</strong> 87% of Americans can be uniquely identified using just Date of Birth + Gender + 5-digit ZIP code from "de-identified" health data. Today, with social media and location data, the risk is even higher.
+      </div>
+      <div class="info-box info-info">
+        ⚖️ <strong>Legal Framework:</strong> HIPAA (US) · GDPR Article 9 (EU — health data as "special category") · DPDP Act 2023 (India) · All require explicit consent for health data processing and impose heavy penalties for breaches.
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="dn">Dr. Arkaprabha Sau</div>
+  <div class="dc">MBBS, MD (Gold Medalist) · DPH · Dip. Geriatric Medicine · CCEBDM<br>Ph.D. (Computer Science & Engineering)</div>
+  <div class="cp">Ethical AI in Healthcare · Interactive Demo Suite for Postgraduate Education · 2025</div>
+</footer>
+
+<script>
+const sampleRecords=[
+  {age:'42',zip:'700001',gender:'M',diag:'Cardiac',condition:'Post-CABG, Hypertension, T2DM',ward:'Cardiology'},
+  {age:'38',zip:'700001',gender:'M',diag:'Cardiac',condition:'Atrial fibrillation, CKD',ward:'Cardiology'},
+  {age:'45',zip:'700001',gender:'M',diag:'Neuro',condition:'TIA, on anticoagulation',ward:'Neurology'},
+  {age:'40',zip:'700019',gender:'F',diag:'Oncology',condition:'Stage II breast Ca, chemotherapy',ward:'Oncology'},
+  {age:'35',zip:'400001',gender:'F',diag:'Endo',condition:'Graves\' disease, hyperthyroidism',ward:'Endocrinology'},
+];
+
+function attackPrivacy(){
+  const age=document.getElementById('ageGroup').value;
+  const zip=document.getElementById('zipArea').value;
+  const gender=document.getElementById('gender').value;
+  const diag=document.getElementById('diag').value;
+  const filled=[age,zip,gender].filter(Boolean).length;
+  if(filled<2){
+    alert('Select at least Age Group and Location to run the attack.');return;
+  }
+  let risk=0;
+  if(filled===2)risk=48;
+  if(filled===3)risk=87;
+  if(filled===3&&diag)risk=97;
+
+  document.getElementById('riskPct').textContent=risk+'%';
+  const bar=document.getElementById('riskBar');
+  bar.style.width=risk+'%';
+  let color,label,explain;
+  if(risk<50){color='#f59e0b';label='⚠️ Moderate Risk';explain=`With ${filled} quasi-identifiers, approximately ${risk}% of patients in this dataset can be uniquely identified. Adding even one more variable (e.g., exact admission date) would dramatically increase this.`;}
+  else if(risk<90){color='#ef4444';label='🚨 HIGH RISK';explain=`With Age + Location + Gender, <strong>${risk}% of the ${filled==='3'?'87':'70'}% matchable records are uniquely identifiable</strong>. An attacker with access to voter rolls or social media could link these records to real patient identities.`;}
+  else{color='#dc2626';label='💀 CRITICAL — RE-IDENTIFIED';explain=`<strong>${risk}% certainty of unique re-identification.</strong> With 4 quasi-identifiers, this patient record can almost certainly be matched to an individual — exposing their diagnosis, treatment history, and prescription records without their consent.`;}
+
+  bar.style.background=color;
+  document.getElementById('riskPct').style.color=color;
+  const verd=document.getElementById('riskVerdict');
+  verd.textContent=label;verd.style.background=color+'22';verd.style.border=`1px solid ${color}55`;verd.style.color=color;
+  document.getElementById('riskExplain').innerHTML=explain;
+
+  // Show fake records
+  const numMatch=risk>=90?1:risk>=50?2:3;
+  const rows=sampleRecords.slice(0,numMatch);
+  document.getElementById('recordTable').innerHTML=`
+    <div style="font-size:.75rem;color:${color};font-weight:700;margin-bottom:.7rem">⚠ ${numMatch} patient record(s) matched — identity exposed:</div>
+    <table class="record-table">
+      <tr><th>Record</th><th>Age</th><th>Location</th><th>Condition</th><th>Ward</th></tr>
+      ${rows.map((r,i)=>`<tr>
+        <td>#${String(i+1).padStart(4,'0')}</td>
+        <td class="exposed">${r.age}</td>
+        <td class="exposed">${r.zip}</td>
+        <td class="${risk>=90?'exposed':'redacted'}">${risk>=90?r.condition:'████████'}</td>
+        <td class="${risk>=90?'exposed':'redacted'}">${risk>=90?r.ward:'████'}</td>
+      </tr>`).join('')}
+    </table>
+    <div style="margin-top:.6rem;font-size:.73rem;color:var(--t2)">🔴 Red = data exposed by re-identification · █ = fields still protected</div>`;
+}
+
+function resetPrivacy(){
+  ['ageGroup','zipArea','gender','diag'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('riskPct').textContent='—%';
+  document.getElementById('riskBar').style.width='0';
+  document.getElementById('riskBar').style.background='';
+  document.getElementById('riskPct').style.color=getComputedStyle(document.documentElement).getPropertyValue('--t2');
+  document.getElementById('riskVerdict').textContent='Select variables above';
+  document.getElementById('riskVerdict').style.cssText='background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--t2)';
+  document.getElementById('riskExplain').textContent='Choose age group, location, and gender to begin the re-identification attack simulation.';
+  document.getElementById('recordTable').innerHTML='<div style="font-size:.8rem;color:var(--t3)">Run the re-identification attack to see matched records.</div>';
+}
+</script>
+</body>
+</html>

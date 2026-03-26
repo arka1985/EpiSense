@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bias vs Variance Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--glass-bg:rgba(255,255,255,0.07);--glass-border:rgba(255,255,255,0.15);--text-dim:#94a3b8;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#1e293b,#0f172a);color:#f8fafc;height:100vh;overflow:hidden;}
+        .blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:float 20s infinite alternate ease-in-out;}
+        .blob-blue{background:#007bff;top:-200px;left:-200px;}
+        .blob-pink{background:#e83e8c;bottom:-200px;right:-200px;animation-delay:-10s;}
+        @keyframes float{from{transform:translate(0,0)scale(1)}to{transform:translate(80px,80px)scale(1.1)}}
+        .back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:0.45rem;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:50px;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:600;padding:0.5rem 1rem;transition:all 0.25s;}
+        .back-btn:hover{background:rgba(255,255,255,0.14);transform:translateX(-3px);}
+        .app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+        /* Narrative */
+        .narrative{width:24%;min-width:210px;height:100%;overflow-y:auto;padding:4.5rem 1.5rem 3rem;border-right:1px solid rgba(255,255,255,0.1);scrollbar-width:none;flex-shrink:0;}
+        .narrative::-webkit-scrollbar{display:none;}
+        section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:0.22;transform:translateX(-8px);transition:opacity 0.4s,transform 0.4s;}
+        section.active{opacity:1;transform:none;}
+        .hero{font-size:1.9rem;font-weight:800;line-height:1.15;margin-bottom:1rem;letter-spacing:-0.03em;}
+        .hero span{background:linear-gradient(to right,#60a5fa,#f472b6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+        section h2{font-size:0.95rem;font-weight:700;color:#60a5fa;margin-bottom:0.7rem;}
+        section p{font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem;}
+        .cbox{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:0.75rem;line-height:1.85;margin:0.6rem 0;}
+        .ethical-box{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(232,62,140,0.05));border:1px solid rgba(239,68,68,0.28);border-radius:14px;padding:1rem;}
+        .ethical-box h2{color:#f87171;}
+        /* Lab */
+        .lab-scroll{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.4rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent;}
+        .lab-scroll::-webkit-scrollbar{width:5px;}
+        .lab-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:10px;}
+        .panels-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+        .glass-panel{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:1.3rem;display:flex;flex-direction:column;gap:0.85rem;}
+        .panel-label{font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:var(--text-dim);padding-bottom:0.6rem;border-bottom:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;gap:0.45rem;}
+        .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .dot-blue{background:#60a5fa;box-shadow:0 0 6px #60a5fa;}
+        .dot-pink{background:#f472b6;box-shadow:0 0 6px #f472b6;}
+        .dot-green{background:#34d399;box-shadow:0 0 6px #34d399;}
+        .dot-gold{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+        .slider-row{display:flex;flex-direction:column;gap:0.32rem;}
+        .slider-top{display:flex;justify-content:space-between;align-items:baseline;}
+        .s-label{font-size:0.7rem;font-weight:600;color:var(--text-dim);}
+        .s-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;color:#f8fafc;}
+        .s-hint{font-size:0.58rem;color:rgba(148,163,184,0.5);}
+        input[type="range"]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,0.08);cursor:pointer;outline:none;}
+        input[type="range"].blue::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#60a5fa;border:2px solid #fff;box-shadow:0 0 8px rgba(96,165,250,0.6);}
+        input[type="range"].pink::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#f472b6;border:2px solid #fff;box-shadow:0 0 8px rgba(244,114,182,0.6);}
+        input[type="range"].green::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#34d399;border:2px solid #fff;box-shadow:0 0 8px rgba(52,211,153,0.6);}
+        /* Status badge */
+        .status-badge{text-align:center;border-radius:14px;padding:0.9rem;border:1px solid;}
+        .status-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);}
+        .status-val{font-size:1.3rem;font-weight:800;margin-top:0.2rem;}
+        /* Equation row */
+        .eq-row{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:12px;padding:0.75rem;line-height:1.9;text-align:center;}
+        .mini-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;}
+        .mini-card{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:0.65rem;text-align:center;}
+        .mini-val{font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:800;}
+        .mini-label{font-size:0.5rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+        .btn-row{display:flex;gap:0.5rem;flex-wrap:wrap;}
+        .btn-primary{padding:0.6rem 1.1rem;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#007bff,#e83e8c);color:#fff;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;transition:all 0.2s;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,123,255,0.35);}
+        .btn-secondary{padding:0.6rem 1rem;border-radius:50px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.2s;}
+        .btn-secondary:hover{background:rgba(255,255,255,0.12);color:#fff;}
+        /* Viz panels */
+        .viz-row{display:grid;grid-template-columns:1.6fr 1fr;gap:1rem;}
+        .viz-panel{height:380px;flex-shrink:0;}
+        #fit-svg,#tradeoff-svg{width:100%;height:100%;display:block;}
+        .axis text{fill:rgba(148,163,184,0.7);font-family:'Outfit',sans-serif;font-size:10px;}
+        .axis path,.axis line{stroke:rgba(255,255,255,0.06);}
+    </style>
+</head>
+<body>
+<div class="blobs"><div class="blob blob-blue"></div><div class="blob blob-pink"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard
+</a>
+
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Bias vs Variance <span>Clinical Fit Lab</span></div>
+        <p>Every ML model makes an error. That error has two sources: <strong>Bias</strong> (systematic mistakes from oversimplification) and <strong>Variance</strong> (sensitivity to small changes in training data).</p>
+        <p>Adjust model complexity and watch both components change live.</p>
+    </section>
+    <section id="s2">
+        <h2>The Decomposition</h2>
+        <p>The expected total prediction error can be decomposed mathematically:</p>
+        <div class="cbox">Err(x) = Bias² + Variance + Noise
+
+Bias²   = (E[ŷ] − y_true)²
+         systematic error from wrong assumptions
+
+Variance = E[(ŷ − E[ŷ])²]
+         sensitivity to training data fluctuations
+
+Noise   = irreducible error in the data</div>
+        <p>These cannot both be minimised simultaneously — this is the <strong>Bias-Variance Tradeoff</strong>.</p>
+    </section>
+    <section id="s3">
+        <h2>Clinical Analogy</h2>
+        <p><strong>High Bias (Underfitting):</strong> Using only age to predict all cancer risk — ignores BMI, glucose, family history. Systematically wrong for every patient.</p>
+        <p><strong>High Variance (Overfitting):</strong> Memorising every outlier in training data — a rare elderly patient with low BMI "teaches" the model that all elderly patients are low-risk.</p>
+        <div class="cbox">Optimal model:
+— Polynomial degree 3-4 fits the true
+  non-linear clinical signal
+— Degree 1 = underfits (high bias)
+— Degree 9+ = overfits (high variance)</div>
+    </section>
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ Ethical Reality</h2>
+            <p>High-variance models overfit to majority-group noise and erase minority-group signals. A model trained mostly on male patients may appear accurate on average but be dangerously high-bias for female patients — whose patterns it never learned.</p>
+        </div>
+    </section>
+</aside>
+
+<div class="lab-scroll">
+    <!-- Row 1: Controls -->
+    <div class="panels-row">
+        <!-- Panel 1: Complexity -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>① Model Complexity</div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Polynomial Degree</span><span class="s-val" id="lbl-deg">3</span></div>
+                <input type="range" class="blue" id="sl-deg" min="1" max="12" value="3">
+                <span class="s-hint">1 = linear (high bias) · 12 = very complex (high variance)</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Noise Level (σ)</span><span class="s-val" id="lbl-noise">1.5</span></div>
+                <input type="range" class="pink" id="sl-noise" min="0.5" max="5" step="0.1" value="1.5">
+                <span class="s-hint">Irreducible measurement noise in data</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="btn-resample">⟳ New Sample</button>
+                <button class="btn-secondary" id="btn-reset">Reset</button>
+            </div>
+        </div>
+
+        <!-- Panel 2: Equation -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-pink"></span>② Error Decomposition</div>
+            <div class="eq-row">
+                Total Error = Bias² + Variance + Noise<br>
+                <span style="color:#f8fafc;font-size:0.85rem;font-weight:800;" id="eq-total">— = — + — + —</span>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card">
+                    <div class="mini-val" id="val-bias2" style="color:#f87171">—</div>
+                    <div class="mini-label">Bias²</div>
+                </div>
+                <div class="mini-card">
+                    <div class="mini-val" id="val-var" style="color:#60a5fa">—</div>
+                    <div class="mini-label">Variance</div>
+                </div>
+                <div class="mini-card">
+                    <div class="mini-val" id="val-noise" style="color:#94a3b8">—</div>
+                    <div class="mini-label">Noise</div>
+                </div>
+            </div>
+            <!-- Stacked bar -->
+            <div style="margin-top:0.2rem;">
+                <div style="font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:0.35rem;">Error Composition</div>
+                <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:1px;">
+                    <div id="bar-bias" style="background:#f87171;transition:width 0.4s;"></div>
+                    <div id="bar-var"  style="background:#60a5fa;transition:width 0.4s;"></div>
+                    <div id="bar-noi"  style="background:#475569;transition:width 0.4s;flex:1;"></div>
+                </div>
+                <div style="display:flex;gap:1rem;margin-top:0.4rem;font-size:0.6rem;color:var(--text-dim);">
+                    <span>🔴 Bias²</span><span>🔵 Variance</span><span>⬜ Noise</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Status -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-green"></span>③ Model Diagnosis</div>
+            <div id="status-badge" class="status-badge" style="border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);">
+                <div class="status-label">Clinical Fit Status</div>
+                <div class="status-val" id="status-val" style="color:#f87171">UNDERFITTING</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.8rem;">
+                <div style="font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:0.5rem;">What this means clinically</div>
+                <div id="status-desc" style="font-size:0.8rem;line-height:1.65;color:#94a3b8;">—</div>
+            </div>
+            <div class="mini-row" style="grid-template-columns:1fr 1fr;">
+                <div class="mini-card">
+                    <div class="mini-val" id="val-train" style="color:#34d399">—</div>
+                    <div class="mini-label">Training MSE</div>
+                </div>
+                <div class="mini-card">
+                    <div class="mini-val" id="val-test" style="color:#f472b6">—</div>
+                    <div class="mini-label">Test MSE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Visualizations -->
+    <div class="viz-row">
+        <!-- Left: Fit chart -->
+        <div class="glass-panel viz-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>④ Model Fit — training points (white) · true signal (green dashed) · fitted curve (gradient) · degree shown in title</div>
+            <svg id="fit-svg"></svg>
+        </div>
+        <!-- Right: Trade-off curve -->
+        <div class="glass-panel viz-panel">
+            <div class="panel-label"><span class="dot dot-gold"></span>⑤ Bias-Variance Tradeoff — current complexity marked with yellow dot</div>
+            <svg id="tradeoff-svg"></svg>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+// ── True signal: SBP ~ age + non-linear metabolic component ──────────
+// y_true(x) = moderate sine wave (represents true clinical relationship)
+const TRUE_FN = x => 20*Math.sin(x*0.55) + 0.9*x;
+const NOISE_SEED = 42;
+
+let state = { deg:3, noiseSig:1.5, seed:1 };
+
+// ── Data generation ───────────────────────────────────────────────────
+function seededRand(seed){ let s=seed; return ()=>{ s=(s*1103515245+12345)&0x7fffffff; return (s%1000)/1000*2-1; }; }
+
+function genData(noiseSig, seed, n=30){
+    const rand = seededRand(seed*999+7);
+    return Array.from({length:n},(_,i)=>{
+        const x = -5 + i*(10/(n-1));
+        const y = TRUE_FN(x) + rand()*noiseSig*3;
+        return {x,y};
+    });
+}
+
+// ── Polynomial fit via Vandermonde matrix (least squares) ─────────────
+function polyFit(pts, deg){
+    const n=pts.length, d=deg+1;
+    // Build Vandermonde matrix X
+    const X=[], Y=[];
+    pts.forEach(p=>{ const row=[]; for(let j=0;j<d;j++) row.push(Math.pow(p.x,j)); X.push(row); Y.push(p.y); });
+    // Normal equations: XtX * beta = Xt * Y
+    const XtX=Array.from({length:d},()=>Array(d).fill(0));
+    const XtY=Array(d).fill(0);
+    for(let i=0;i<n;i++){
+        for(let j=0;j<d;j++){
+            XtY[j]+=X[i][j]*Y[i];
+            for(let k=0;k<d;k++) XtX[j][k]+=X[i][j]*X[i][k];
+        }
+    }
+    // Gaussian elimination with partial pivot
+    const A=XtX.map((r,i)=>[...r,XtY[i]]);
+    for(let col=0;col<d;col++){
+        let maxRow=col;
+        for(let row=col+1;row<d;row++) if(Math.abs(A[row][col])>Math.abs(A[maxRow][col])) maxRow=row;
+        [A[col],A[maxRow]]=[A[maxRow],A[col]];
+        for(let row=col+1;row<d;row++){
+            const f=A[row][col]/A[col][col];
+            for(let k=col;k<=d;k++) A[row][k]-=f*A[col][k];
+        }
+    }
+    const beta=Array(d).fill(0);
+    for(let i=d-1;i>=0;i--){
+        beta[i]=A[i][d]/A[i][i];
+        for(let j=i-1;j>=0;j--) A[j][d]-=A[j][i]*beta[i];
+    }
+    return x=>beta.reduce((s,b,j)=>s+b*Math.pow(x,j),0);
+}
+
+function mse(pts, fn){ return d3.mean(pts, p=>(fn(p.x)-p.y)**2); }
+
+// ── Pre-compute tradeoff curve (B², Var across degrees) ──────────────
+const DEGREES = d3.range(1,13);
+function computeTradeoff(noiseSig){
+    return DEGREES.map(deg=>{
+        // Simulate across multiple bootstrap samples → estimate Bias, Variance
+        const xs = d3.range(-5,5.1,0.5);
+        const nIter=12;
+        const preds = xs.map(()=>[]); // preds[xi][iter]
+        for(let it=0;it<nIter;it++){
+            const pts=genData(noiseSig,it+1);
+            const fn=polyFit(pts,Math.min(deg,pts.length-2));
+            xs.forEach((xv,xi)=>preds[xi].push(fn(xv)));
+        }
+        let bias2=0, varr=0;
+        xs.forEach((xv,xi)=>{
+            const yTrue=TRUE_FN(xv);
+            const meanPred=d3.mean(preds[xi]);
+            bias2+=(meanPred-yTrue)**2;
+            varr+=d3.mean(preds[xi].map(p=>(p-meanPred)**2));
+        });
+        bias2/=xs.length; varr/=xs.length;
+        const noise=noiseSig**2;
+        return {deg,bias2,var:varr,noise,total:bias2+varr+noise};
+    });
+}
+
+let tradeoffData=computeTradeoff(state.noiseSig);
+
+function statusInfo(deg){
+    if(deg<=2)  return {label:"UNDERFITTING",color:"#f87171",border:"rgba(239,68,68,0.4)",bg:"rgba(239,68,68,0.08)",desc:"Model is too simple. A polynomial of degree "+deg+" cannot capture the non-linear relationship between age/BMI and disease risk. Predictions will be systematically wrong for all patients."};
+    if(deg<=4)  return {label:"GOOD FIT",color:"#34d399",border:"rgba(52,211,153,0.4)",bg:"rgba(52,211,153,0.08)",desc:"Model complexity matches signal complexity. The model generalises well — new patients will have similar prediction accuracy to training patients."};
+    if(deg<=7)  return {label:"SLIGHT OVERFIT",color:"#fbbf24",border:"rgba(251,191,36,0.4)",bg:"rgba(251,191,36,0.08)",desc:"Model begins to follow noise in training data. Predictions are slightly unstable — small changes in the patient cohort would alter the model substantially."};
+    return {label:"OVERFITTING",color:"#f472b6",border:"rgba(244,114,182,0.4)",bg:"rgba(244,114,182,0.08)",desc:"Model memorises training noise. It will perform excellently on training patients but fail badly on new patients. Every outlier in training data is treated as a real clinical signal."};
+}
+
+const fmL={top:22,right:20,bottom:40,left:50};
+const tL=    {top:22,right:20,bottom:40,left:50};
+const fSvg=d3.select("#fit-svg"), tSvg=d3.select("#tradeoff-svg");
+const fG=fSvg.append("g").attr("transform",`translate(${fmL.left},${fmL.top})`);
+const tG=tSvg.append("g").attr("transform",`translate(${tL.left},${tL.top})`);
+
+function fitDims(){const r=document.getElementById("fit-svg").getBoundingClientRect();return{W:r.width-fmL.left-fmL.right,H:r.height-fmL.top-fmL.bottom};}
+function tDims()  {const r=document.getElementById("tradeoff-svg").getBoundingClientRect();return{W:r.width-tL.left-tL.right,H:r.height-tL.top-tL.bottom};}
+
+function renderFit(pts, fn){
+    const {W,H}=fitDims();
+    if(!W||!H) return;
+    const xDom=[-5.2,5.2], yAll=[...pts.map(p=>p.y),...d3.range(-5,5.1,0.2).map(TRUE_FN),...d3.range(-5,5.1,0.2).map(fn)];
+    const yPad=(d3.max(yAll)-d3.min(yAll))*0.15;
+    const xSc=d3.scaleLinear().domain(xDom).range([0,W]);
+    const ySc=d3.scaleLinear().domain([d3.min(yAll)-yPad,d3.max(yAll)+yPad]).range([H,0]);
+
+    fG.selectAll("*").remove();
+    // Grid
+    fG.append("g").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(6).tickSize(-H).tickFormat("")).selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    fG.append("g").call(d3.axisLeft(ySc).ticks(5).tickSize(-W).tickFormat("")).selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    fG.append("g").attr("class","axis").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(6));
+    fG.append("g").attr("class","axis").call(d3.axisLeft(ySc).ticks(5));
+    fG.append("text").attr("x",W/2).attr("y",H+34).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",10).attr("font-family","Outfit").text("Patient Index (standardised age)");
+    fG.append("text").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",-40).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",10).attr("font-family","Outfit").text("Systolic BP (relative)");
+
+    const defs=fSvg.selectAll("defs").data([0]).join("defs");
+    const lg=defs.append("linearGradient").attr("id","fitGrad").attr("x1","0%").attr("y1","0%").attr("x2","100%").attr("y2","0%");
+    lg.append("stop").attr("offset","0%").attr("stop-color","#60a5fa");
+    lg.append("stop").attr("offset","100%").attr("stop-color","#f472b6");
+    const gf=defs.append("filter").attr("id","gf");
+    gf.append("feGaussianBlur").attr("stdDeviation","2.5").attr("result","blur");
+    const fm=gf.append("feMerge");fm.append("feMergeNode").attr("in","blur");fm.append("feMergeNode").attr("in","SourceGraphic");
+
+    // True signal (dashed green)
+    const truePts=d3.range(-5,5.1,0.1).map(x=>({x,y:TRUE_FN(x)}));
+    const trueLine=d3.line().x(d=>xSc(d.x)).y(d=>ySc(d.y));
+    fG.append("path").datum(truePts).attr("fill","none").attr("d",trueLine)
+        .attr("stroke","#34d399").attr("stroke-width",2).attr("stroke-dasharray","6,4").attr("opacity",0.7);
+    fG.append("text").attr("x",xSc(-5)+4).attr("y",ySc(TRUE_FN(-5))-6).attr("fill","#34d399").attr("font-size",8).attr("font-family","Outfit").text("True Signal");
+
+    // Fitted polynomial
+    const xRange=d3.range(-5,5.05,0.08);
+    const fitPts=xRange.map(x=>{try{const y=fn(x);return{x,y:isFinite(y)&&Math.abs(y)<500?y:NaN};}catch{return{x,y:NaN};}});
+    const validFit=[];let buf=[];
+    fitPts.forEach(p=>{if(!isNaN(p.y)){buf.push(p);}else{if(buf.length>1)validFit.push([...buf]);buf=[];}});
+    if(buf.length>1) validFit.push(buf);
+    const fitLine=d3.line().x(d=>xSc(d.x)).y(d=>ySc(d.y)).curve(d3.curveBasis);
+    validFit.forEach(seg=>{
+        fG.append("path").datum(seg).attr("fill","none").attr("d",fitLine)
+            .attr("stroke","url(#fitGrad)").attr("stroke-width",3)
+            .attr("filter","url(#gf)");
+    });
+
+    // Data points
+    fG.selectAll(".dp").data(pts).enter().append("circle").attr("r",4.5)
+        .attr("cx",d=>xSc(d.x)).attr("cy",d=>ySc(d.y))
+        .attr("fill","rgba(255,255,255,0.25)").attr("stroke","#fff").attr("stroke-width",1.2);
+
+    // Legend
+    fG.append("circle").attr("cx",W-80).attr("cy",14).attr("r",4).attr("fill","rgba(255,255,255,0.25)").attr("stroke","#fff").attr("stroke-width",1);
+    fG.append("text").attr("x",W-72).attr("y",17).attr("fill","rgba(148,163,184,0.7)").attr("font-size",8).attr("font-family","Outfit").text("Training pts");
+    fG.append("text").attr("x",W-72).attr("y",29).attr("fill","url(#fitGrad)").attr("font-size",8).attr("font-family","Outfit").attr("font-weight",700).text(`Degree-${state.deg} fit`);
+}
+
+function renderTradeoff(){
+    const {W,H}=tDims();
+    if(!W||!H) return;
+    const xSc=d3.scaleLinear().domain([1,12]).range([0,W]);
+    const yMax=d3.max(tradeoffData,d=>d.total)*1.1;
+    const ySc=d3.scaleLinear().domain([0,yMax]).range([H,0]);
+
+    tG.selectAll("*").remove();
+    tG.append("g").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(6).tickSize(-H).tickFormat("")).selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    tG.append("g").call(d3.axisLeft(ySc).ticks(5).tickSize(-W).tickFormat("")).selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    tG.append("g").attr("class","axis").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(6).tickFormat(d=>d));
+    tG.append("g").attr("class","axis").call(d3.axisLeft(ySc).ticks(4).tickFormat(d3.format(".1f")));
+    tG.append("text").attr("x",W/2).attr("y",H+34).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",10).attr("font-family","Outfit").text("Model Complexity (degree)");
+
+    const mkLine=(key,col)=>d3.line().x(d=>xSc(d.deg)).y(d=>ySc(d[key]));
+
+    // Variance
+    tG.append("path").datum(tradeoffData).attr("fill","none").attr("d",mkLine("var","#60a5fa"))
+        .attr("stroke","#60a5fa").attr("stroke-width",2.5).attr("stroke-dasharray","5,3").attr("opacity",0.8);
+    // Bias²
+    tG.append("path").datum(tradeoffData).attr("fill","none").attr("d",mkLine("bias2","#f87171"))
+        .attr("stroke","#f87171").attr("stroke-width",2.5).attr("stroke-dasharray","5,3").attr("opacity",0.8);
+    // Total
+    tG.append("path").datum(tradeoffData).attr("fill","none").attr("d",mkLine("total","#fff"))
+        .attr("stroke","rgba(255,255,255,0.8)").attr("stroke-width",3)
+        .attr("filter","drop-shadow(0 0 4px rgba(255,255,255,0.3))");
+
+    // Optimal marker
+    const opt=tradeoffData.reduce((b,d)=>d.total<b.total?d:b,tradeoffData[0]);
+    tG.append("line").attr("x1",xSc(opt.deg)).attr("x2",xSc(opt.deg)).attr("y1",0).attr("y2",H)
+        .attr("stroke","#34d399").attr("stroke-width",1.5).attr("stroke-dasharray","4,3").attr("opacity",0.5);
+    tG.append("text").attr("x",xSc(opt.deg)+4).attr("y",12)
+        .attr("fill","#34d399").attr("font-size",7.5).attr("font-family","Outfit").text("Optimal");
+
+    // Current complexity marker
+    const cur=tradeoffData.find(d=>d.deg===state.deg)||tradeoffData[0];
+    const defs=tSvg.selectAll("defs").data([0]).join("defs");
+    const gf=defs.append("filter").attr("id","tgf");
+    gf.append("feGaussianBlur").attr("stdDeviation","3").attr("result","blur");
+    const fm=gf.append("feMerge");fm.append("feMergeNode").attr("in","blur");fm.append("feMergeNode").attr("in","SourceGraphic");
+    tG.append("circle").attr("cx",xSc(cur.deg)).attr("cy",ySc(cur.total)).attr("r",10)
+        .attr("fill","none").attr("stroke","rgba(251,191,36,0.3)").attr("stroke-width",7);
+    tG.append("circle").attr("cx",xSc(cur.deg)).attr("cy",ySc(cur.total)).attr("r",6)
+        .attr("fill","#fbbf24").attr("stroke","#fff").attr("stroke-width",2).attr("filter","url(#tgf)");
+
+    // Legend
+    [{col:"#f87171",lbl:"Bias²"},{col:"#60a5fa",lbl:"Variance"},{col:"rgba(255,255,255,0.8)",lbl:"Total Error"}].forEach((it,i)=>{
+        tG.append("line").attr("x1",8).attr("x2",22).attr("y1",H-52+i*14).attr("y2",H-52+i*14)
+            .attr("stroke",it.col).attr("stroke-width",2).attr("stroke-dasharray",it.col.includes("255")?null:"5,3");
+        tG.append("text").attr("x",26).attr("y",H-48+i*14).attr("fill","rgba(148,163,184,0.8)").attr("font-size",7.5).attr("font-family","Outfit").text(it.lbl);
+    });
+}
+
+function render(){
+    const deg=state.deg;
+    document.getElementById("lbl-deg").textContent=deg;
+    document.getElementById("lbl-noise").textContent=state.noiseSig.toFixed(1);
+
+    const pts=genData(state.noiseSig,state.seed);
+    const fn=polyFit(pts,Math.min(deg,pts.length-2));
+
+    // MSE on training
+    const trainMSE=mse(pts,fn);
+    // Test on different sample
+    const testPts=genData(state.noiseSig,state.seed+99);
+    const testMSE=mse(testPts,fn);
+
+    const cur=tradeoffData.find(d=>d.deg===deg)||tradeoffData[2];
+    const total=cur.total, b2=cur.bias2, v=cur.var, nz=cur.noise;
+    const totalSafe=total||0.01;
+
+    document.getElementById("eq-total").textContent=`${total.toFixed(2)} = ${b2.toFixed(2)} + ${v.toFixed(2)} + ${nz.toFixed(2)}`;
+    document.getElementById("val-bias2").textContent=b2.toFixed(3);
+    document.getElementById("val-var").textContent=v.toFixed(3);
+    document.getElementById("val-noise").textContent=nz.toFixed(3);
+    document.getElementById("val-train").textContent=trainMSE.toFixed(2);
+    document.getElementById("val-test").textContent=testMSE.toFixed(2);
+
+    // Bar widths
+    document.getElementById("bar-bias").style.width=(b2/totalSafe*100).toFixed(1)+"%";
+    document.getElementById("bar-var").style.width=(v/totalSafe*100).toFixed(1)+"%";
+
+    const st=statusInfo(deg);
+    document.getElementById("status-val").textContent=st.label;
+    document.getElementById("status-val").style.color=st.color;
+    document.getElementById("status-badge").style.borderColor=st.border;
+    document.getElementById("status-badge").style.background=st.bg;
+    document.getElementById("status-desc").textContent=st.desc;
+
+    renderFit(pts,fn);
+    renderTradeoff();
+}
+
+document.getElementById("sl-deg").addEventListener("input",function(){state.deg=+this.value;render();});
+document.getElementById("sl-noise").addEventListener("input",function(){state.noiseSig=+this.value;tradeoffData=computeTradeoff(state.noiseSig);render();});
+document.getElementById("btn-resample").addEventListener("click",()=>{state.seed=Math.floor(Math.random()*9999)+1;render();});
+document.getElementById("btn-reset").addEventListener("click",()=>{
+    state={deg:3,noiseSig:1.5,seed:1};
+    document.getElementById("sl-deg").value=3;
+    document.getElementById("sl-noise").value=1.5;
+    tradeoffData=computeTradeoff(1.5);
+    render();
+});
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));e.target.classList.add("active");}});},{threshold:0.5});
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+window.addEventListener("resize",render);
+setTimeout(render,80);
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fairness in Pain Management AI — Ethical AI in Healthcare</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#04060f;--border:rgba(255,255,255,.09);--cyan:#00d4ff;--purple:#8b5cf6;--t1:#f0f4ff;--t2:#94a3b8;--t3:#475569;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 25%,rgba(34,197,94,.06),transparent 50%),radial-gradient(ellipse at 85% 75%,rgba(139,92,246,.06),transparent 50%);z-index:-2}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(34,197,94,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(34,197,94,.025) 1px,transparent 1px);background-size:60px 60px;z-index:-1}
+nav{position:sticky;top:0;z-index:99;background:rgba(4,6,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.2rem}
+.nb{font-weight:900;font-size:.95rem;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nl{display:flex;gap:.15rem;overflow-x:auto;scrollbar-width:none}
+.na{color:var(--t2);text-decoration:none;padding:.3rem .65rem;border-radius:7px;font-size:.74rem;font-weight:500;white-space:nowrap;transition:all .2s}.na:hover{background:rgba(255,255,255,.06);color:var(--t1)}.na.act{background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.25)}
+.explorable-card { background: rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; padding:1.4rem; backdrop-filter:blur(10px); box-shadow:0 8px 32px rgba(0,0,0,.15) }
+.wrap{max-width:1150px;margin:0 auto;padding:2.5rem 1.5rem}
+.pill{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem 1rem;border-radius:100px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#86efac;font-size:.73rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.25rem}
+h1{font-size:clamp(1.9rem,4.5vw,3rem);font-weight:900;letter-spacing:-.04em;margin-bottom:.75rem}
+.grad{background:linear-gradient(135deg,#22c55e,var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--t2);font-size:.97rem;line-height:1.72;max-width:720px;margin-bottom:1.75rem}
+.scenario-box{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:.9rem 1.25rem;font-size:.82rem;color:#dcfce7;margin-bottom:1.5rem;line-height:1.65}
+.metric-tabs{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:1.6rem}
+.mtab{padding:.48rem 1rem;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--t2);cursor:pointer;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;transition:all .25s}
+.mtab:hover{background:rgba(255,255,255,.05);color:var(--t1)}
+.mtab.active{background:rgba(34,197,94,.1);color:#86efac;border-color:rgba(34,197,94,.35)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+.panel{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:1.35rem;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.panel-title{font-weight:700;font-size:.88rem;margin-bottom:1.15rem;display:flex;align-items:center;gap:.5rem}
+.cm{display:grid;grid-template-columns:auto auto auto;gap:2px;background:var(--border);border-radius:10px;overflow:hidden;width:fit-content}
+.cm-cell{width:80px;height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cm-head{background:rgba(255,255,255,.04);color:var(--t3);font-size:.68rem;font-weight:600}
+.cm-tp,.cm-tn{background:rgba(34,197,94,.18);color:#86efac}
+.cm-fp{background:rgba(239,68,68,.15);color:#fca5a5}
+.cm-fn{background:rgba(245,158,11,.12);color:#fcd34d}
+.cm-val{font-size:1.3rem;font-weight:900;font-family:'JetBrains Mono',monospace}
+.cm-lbl{font-size:.62rem;color:var(--t3);margin-top:.1rem}
+.mstat-grid{display:flex;flex-direction:column;gap:.55rem;margin-top:.9rem}
+.mstat{display:flex;justify-content:space-between;align-items:center;padding:.5rem .7rem;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--border)}
+.mstat-name{font-size:.78rem;color:var(--t2);font-weight:500}
+.mstat-val{font-family:'JetBrains Mono',monospace;font-size:.86rem;font-weight:700}
+.impossible-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:.9rem}
+.impossible-card{background:rgba(255,255,255,.03);border:1.5px solid var(--border);border-radius:12px;padding:.9rem;text-align:center;transition:all .3s}
+.impossible-card:hover{transform:translateY(-3px)}
+.ic-icon{font-size:1.4rem;margin-bottom:.35rem}
+.ic-name{font-size:.8rem;font-weight:700;margin-bottom:.3rem}
+.ic-def{font-size:.7rem;color:var(--t2);line-height:1.5}
+.ic-satisfied{display:inline-block;margin-top:.45rem;padding:.15rem .5rem;border-radius:6px;font-size:.67rem;font-weight:700}
+.yes{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+.no{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.info-box{padding:.85rem 1.1rem;border-radius:10px;font-size:.8rem;line-height:1.65;border-left:3px solid;margin-top:.85rem}
+.info-warn{background:rgba(245,158,11,.07);border-color:var(--warn);color:#fef3c7}
+.info-info{background:rgba(34,197,94,.07);border-color:var(--success);color:#dcfce7}
+footer{border-top:1px solid var(--border);background:rgba(255,255,255,.015);padding:1.5rem 2rem;text-align:center}
+.dn{font-size:1rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.28rem}
+.dc{font-size:.77rem;color:var(--t2);line-height:1.6;margin-bottom:.35rem}.cp{font-size:.7rem;color:var(--t3)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nb">⚕️ Ethical AI in Healthcare</div>
+  <div class="nl">
+    <a class="na" href="../index.html">🏠 Back to Dashboard</a>
+    <a class="na" href="index.html">🏠 Home</a>
+    <a class="na" href="bias.html">🎭 Clinical AI Bias</a>
+    <a class="na" href="hallucination.html">👻 AI Hallucination</a>
+    <a class="na" href="xai.html">🔍 AI Explainability</a>
+    <a class="na act" href="fairness.html">⚖️ AI Fairness</a>
+    <a class="na" href="adversarial.html">🛡️ Adversarial AI</a>
+    <a class="na" href="privacy.html">🔐 Patient Privacy</a>
+    <a class="na" href="consent.html">📋 Informed Consent</a>
+    <a class="na" href="regression.html">📉 Visual AI</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <span class="pill">⚖️ Demo 04 — Fairness in Clinical AI</span>
+  <h1>The <span class="grad">Pain Management</span> Fairness Crisis</h1>
+  <p class="sub">An AI pain management system recommends opioid dosing for chronic pain patients. <strong>Both groups report identical pain scores (7/10)</strong> — but the AI treats them differently based on demographic patterns in training data.</p>
+
+  <div class="scenario-box">
+    🏥 <strong>Scenario:</strong> 2,000 Bengali patients at a Kolkata hospital with chronic pain (NRS 7/10, same vitals, same comorbidities, same socioeconomic status).
+    Group A = Patients whose first names begin with <strong>A–D</strong> (e.g. Ayan, Ananya, Biswanath — n=1,000) · Group B = Patients whose first names begin with <strong>S–T</strong> (e.g. Subhrajit, Tapasi, Soma — n=1,000).
+    The AI was trained on 10 years of alphabetically-indexed hospital records — encoding a positional artifact where early-alphabet patients historically received faster and more complete care.
+  </div>
+
+  <div class="metric-tabs">
+    <button class="mtab active" onclick="setMetric('dp')">📊 Demographic Parity</button>
+    <button class="mtab" onclick="setMetric('eo')">⚖️ Equalized Odds</button>
+    <button class="mtab" onclick="setMetric('pp')">🎯 Predictive Parity</button>
+    <button class="mtab" onclick="setMetric('if')">👤 Individual Fairness</button>
+  </div>
+
+  <div class="grid2" style="margin-bottom:1.6rem">
+    <div class="panel">
+      <div class="panel-title">🅰️ Group A — Name initials A–D (Ayan, Ananya, Biswanath...)</div>
+      <div id="cmA"></div>
+      <div class="mstat-grid" id="statsA"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🅱️ Group B — Name initials S–T (Subhrajit, Tapasi, Soma...)</div>
+      <div id="cmB"></div>
+      <div class="mstat-grid" id="statsB"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:1.6rem">
+    <div class="panel-title">📐 Fairness Criterion Analysis</div>
+    <div id="criterionExplain"></div>
+    <div class="impossible-grid" id="impossibleGrid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">📈 Adequate Pain Rx Rate by Group</div>
+    <canvas id="approvalChart" height="110"></canvas>
+  </div>
+
+  <div class="info-box info-warn" style="margin-top:1rem">
+    ⚠️ <strong>Real Evidence:</strong> A NEJM 2022 study found a widely used pain management algorithm consistently recommended less pain medication for Black patients with identical pain scores than for white patients — a direct result of biased training data encoding historical prescribing disparities.
+  </div>
+  <div class="info-box info-info" style="margin-top:.75rem">
+    📐 <strong>Chouldechova's Impossibility Theorem (2017):</strong> When base rates differ between groups, it is mathematically impossible to simultaneously satisfy Demographic Parity, Equalized Odds, AND Predictive Parity. You must decide which type of unfairness is least harmful.
+  </div>
+</div>
+
+<footer>
+  <div class="dn">Dr. Arkaprabha Sau</div>
+  <div class="dc">MBBS, MD (Gold Medalist) · DPH · Dip. Geriatric Medicine · CCEBDM<br>Ph.D. (Computer Science & Engineering)</div>
+  <div class="cp">Ethical AI in Healthcare · Interactive Demo Suite for Postgraduate Education · 2025</div>
+</footer>
+
+<script>
+const scenarios={
+  dp:{aTP:350,aFP:100,aFN:50,aTN:500,bTP:280,bFP:100,bFN:220,bTN:400,
+    title:'Demographic Parity',def:'Equal adequate-Rx rates across groups (Positive = adequate pain treatment recommended).',
+    formula:'P(Ŷ=1|GroupA) = P(Ŷ=1|GroupB)',
+    satisfies:{dp:true,eo:false,pp:false},
+    explain:'To equalise treatment rates for Group B, the AI approved more patients — including some where evidence-based dosing was lower. Demographic Parity is achieved but Predictive Parity is broken.'},
+  eo:{aTP:350,aFP:70,aFN:50,aTN:530,bTP:220,bFP:45,bFN:280,bTN:455,
+    title:'Equalized Odds',def:'Equal True Positive Rate (sensitivity) AND False Positive Rate across groups.',
+    formula:'TPR_A = TPR_B  AND  FPR_A = FPR_B',
+    satisfies:{dp:false,eo:true,pp:false},
+    explain:'The sensitivity (correctly identifying undertreated patients) is equalized. But because Group B has historically received less treatment, their overall adequate-Rx rate is still lower — Demographic Parity is violated.'},
+  pp:{aTP:350,aFP:55,aFN:50,aTN:545,bTP:160,bFP:40,bFN:340,bTN:460,
+    title:'Predictive Parity',def:'Equal Positive Predictive Value — when AI recommends adequate Rx, it is right equally often for both groups.',
+    formula:'PPV_A = PPV_B',
+    satisfies:{dp:false,eo:false,pp:true},
+    explain:'Precision is equalized — the AI is equally accurate when it recommends adequate dosing. However, the False Negative Rate for Group B is very high (340 undertreated patients), violating Equalized Odds.'},
+  if:{aTP:340,aFP:90,aFN:60,aTN:510,bTP:235,bFP:85,bFN:265,bTN:415,
+    title:'Individual Fairness',def:'Patients with similar clinical profiles should receive similar recommendations, regardless of demographic group.',
+    formula:'d(x,y) ≤ ε ⟹ |f(x) − f(y)| ≤ δ',
+    satisfies:{dp:false,eo:false,pp:false},
+    explain:'Individual Fairness requires a rigorous patient similarity metric. In pain management, this means identical pain scores, vitals, and history should produce identical recommendations. No group-level fairness criterion can guarantee this — and all three group-level metrics remain violated.'}
+};
+
+const mDefs=[
+  {key:'dp',name:'Demographic Parity',icon:'📊',def:'Equal Rx rates'},
+  {key:'eo',name:'Equalized Odds',icon:'⚖️',def:'Equal TPR & FPR'},
+  {key:'pp',name:'Predictive Parity',icon:'🎯',def:'Equal PPV'},
+];
+
+let chart;
+
+function cm(c){return`<div class="cm">
+  <div class="cm-cell cm-head"></div><div class="cm-cell cm-head">Pred Adequate</div><div class="cm-cell cm-head">Pred Under-Rx</div>
+  <div class="cm-cell cm-head">Actually Adequate</div>
+  <div class="cm-cell cm-tp"><div class="cm-val">${c.tp}</div><div class="cm-lbl">TP</div></div>
+  <div class="cm-cell cm-fn"><div class="cm-val">${c.fn}</div><div class="cm-lbl">FN</div></div>
+  <div class="cm-cell cm-head">Actually Under-Rx</div>
+  <div class="cm-cell cm-fp"><div class="cm-val">${c.fp}</div><div class="cm-lbl">FP</div></div>
+  <div class="cm-cell cm-tn"><div class="cm-val">${c.tn}</div><div class="cm-lbl">TN</div></div>
+</div>`;}
+
+function stats(tp,fp,fn,tn){
+  const n=tp+fp+fn+tn;
+  const tpr=(tp/(tp+fn)*100).toFixed(1);
+  const fpr=(fp/(fp+tn)*100).toFixed(1);
+  const ppv=(tp/(tp+fp)*100).toFixed(1);
+  const apr=((tp+fp)/n*100).toFixed(1);
+  return`<div class="mstat"><span class="mstat-name">Adequate Rx Rate</span><span class="mstat-val" style="color:#00d4ff">${apr}%</span></div>
+  <div class="mstat"><span class="mstat-name">Sensitivity (Recall)</span><span class="mstat-val" style="color:#22c55e">${tpr}%</span></div>
+  <div class="mstat"><span class="mstat-name">False Positive Rate</span><span class="mstat-val" style="color:#ef4444">${fpr}%</span></div>
+  <div class="mstat"><span class="mstat-name">Precision (PPV)</span><span class="mstat-val" style="color:#f59e0b">${ppv}%</span></div>`;
+}
+
+function setMetric(key){
+  document.querySelectorAll('.mtab').forEach((b,i)=>{
+    b.className='mtab'+(['dp','eo','pp','if'][i]===key?' active':'');
+  });
+  const s=scenarios[key];
+  document.getElementById('cmA').innerHTML=cm({tp:s.aTP,fp:s.aFP,fn:s.aFN,tn:s.aTN});
+  document.getElementById('cmB').innerHTML=cm({tp:s.bTP,fp:s.bFP,fn:s.bFN,tn:s.bTN});
+  document.getElementById('statsA').innerHTML=stats(s.aTP,s.aFP,s.aFN,s.aTN);
+  document.getElementById('statsB').innerHTML=stats(s.bTP,s.bFP,s.bFN,s.bTN);
+  document.getElementById('criterionExplain').innerHTML=`<div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:.84rem;line-height:1.65;color:var(--t2)">
+    <div style="font-weight:700;color:var(--t1);margin-bottom:.5rem">${s.title}: <code style="background:rgba(255,255,255,.07);padding:.15rem .5rem;border-radius:5px;font-size:.78rem;color:#00d4ff">${s.formula}</code></div>
+    <div style="margin-bottom:.55rem"><em>${s.def}</em></div>
+    <div style="color:#fef3c7">⚠️ ${s.explain}</div>
+  </div>`;
+  document.getElementById('impossibleGrid').innerHTML=mDefs.map(m=>{
+    const sat=s.satisfies[m.key];
+    return`<div class="impossible-card" style="${sat?'border-color:rgba(34,197,94,.35)':'border-color:rgba(239,68,68,.2)'}">
+      <div class="ic-icon">${m.icon}</div><div class="ic-name">${m.name}</div>
+      <div class="ic-def">${m.def}</div>
+      <span class="ic-satisfied ${sat?'yes':'no'}">${sat?'✓ Satisfied':'✗ Violated'}</span>
+    </div>`;
+  }).join('');
+  const aprA=((s.aTP+s.aFP)/(s.aTP+s.aFP+s.aFN+s.aTN)*100).toFixed(1);
+  const aprB=((s.bTP+s.bFP)/(s.bTP+s.bFP+s.bFN+s.bTN)*100).toFixed(1);
+  if(chart)chart.destroy();
+  chart=new Chart(document.getElementById('approvalChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:['Group A (Names A–D)','Group B (Names S–T)'],datasets:[{label:'Adequate Pain Rx Rate %',data:[parseFloat(aprA),parseFloat(aprB)],backgroundColor:['rgba(0,212,255,.3)','rgba(139,92,246,.3)'],borderColor:['#00d4ff','#8b5cf6'],borderWidth:2,borderRadius:8}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#94a3b8',callback:v=>v+'%'}},x:{grid:{display:false},ticks:{color:'#94a3b8'}}}}
+  });
+}
+setMetric('dp');
+</script>
+</body>
+</html>

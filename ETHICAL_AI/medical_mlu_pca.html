@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCA Dimensionality Lab | EpiSense</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:rgba(255,255,255,0.07);--b:rgba(255,255,255,0.15);--d:#94a3b8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#0f172a,#1e1b4b);color:#f8fafc;height:100vh;overflow:hidden;}
+.blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.blob{position:absolute;width:550px;height:550px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:fl 20s infinite alternate ease-in-out;}
+.be{background:#3b82f6;top:-180px;left:-180px;} .bp_{background:#ec4899;bottom:-180px;right:-180px;animation-delay:-10s;}
+@keyframes fl{from{transform:translate(0,0)scale(1)}to{transform:translate(70px,70px)scale(1.1)}}
+.back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:.45rem;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);border-radius:50px;color:#fff;text-decoration:none;font-size:.82rem;font-weight:600;padding:.5rem 1rem;transition:all .25s;}
+.back-btn:hover{background:rgba(255,255,255,.14);transform:translateX(-3px);}
+.app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+.nar{width:24%;min-width:200px;height:100%;overflow-y:auto;padding:4.5rem 1.4rem 3rem;border-right:1px solid rgba(255,255,255,.1);scrollbar-width:none;flex-shrink:0;}
+.nar::-webkit-scrollbar{display:none;}
+section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:.22;transform:translateX(-8px);transition:opacity .4s,transform .4s;}
+section.active{opacity:1;transform:none;}
+.hero{font-size:1.85rem;font-weight:800;line-height:1.15;margin-bottom:.9rem;letter-spacing:-.03em;}
+.hero span{background:linear-gradient(to right,#3b82f6,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+section h2{font-size:.92rem;font-weight:700;color:#3b82f6;margin-bottom:.6rem;}
+section p{font-size:.86rem;line-height:1.7;color:var(--d);margin-bottom:.55rem;}
+.cb{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#ec4899;background:rgba(0,0,0,.28);border:1px solid rgba(236,72,153,.18);border-radius:10px;padding:.7rem;line-height:1.85;margin:.5rem 0;}
+.eb{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(236,72,153,.05));border:1px solid rgba(59,130,246,.28);border-radius:14px;padding:.9rem;}
+.eb h2{color:#60a5fa;font-size:.92rem;font-weight:700;margin-bottom:.5rem;}
+.ls{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.3rem;display:flex;flex-direction:column;gap:1.2rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent;}
+.ls::-webkit-scrollbar{width:5px;} .ls::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:10px;}
+.pr{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+.gp{background:var(--g);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--b);border-radius:20px;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem;}
+.pl{font-size:.57rem;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:var(--d);padding-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.09);display:flex;align-items:center;gap:.4rem;}
+.dt{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.db{background:#3b82f6;box-shadow:0 0 6px #3b82f6;} .dp{background:#ec4899;box-shadow:0 0 6px #ec4899;} .dy{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+input[type=range]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,.08);cursor:pointer;outline:none;}
+input.be::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 0 7px rgba(59,130,246,.6);}
+input.pi::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#ec4899;border:2px solid #fff;box-shadow:0 0 7px rgba(236,72,153,.6);}
+.sr{display:flex;flex-direction:column;gap:.28rem;}
+.st{display:flex;justify-content:space-between;align-items:baseline;}
+.sl{font-size:.68rem;font-weight:600;color:var(--d);} .sv{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:800;color:#f8fafc;}
+.sh{font-size:.57rem;color:rgba(148,163,184,.5);}
+.ob{background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(236,72,153,.06));border:1px solid rgba(59,130,246,.22);border-radius:16px;padding:1rem;text-align:center;}
+.ol{font-size:.57rem;text-transform:uppercase;letter-spacing:.14em;color:var(--d);}
+.ov{font-family:'JetBrains Mono',monospace;font-size:2.4rem;font-weight:800;background:linear-gradient(to right,#3b82f6,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin:.1rem 0;}
+.mr{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.mc{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:.65rem;text-align:center;}
+.mv{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:800;}
+.lml{font-size:.52rem;color:var(--d);text-transform:uppercase;letter-spacing:.08em;margin-top:.18rem;}
+.br{display:flex;gap:.5rem;flex-wrap:wrap;}
+.bp{padding:.55rem 1rem;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#2563eb,#db2777);color:#fff;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;transition:all .2s;}
+.bp:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(59,130,246,.35);}
+.bs{padding:.55rem .9rem;border-radius:50px;border:1px solid rgba(255,255,255,.15);cursor:pointer;background:rgba(255,255,255,.06);color:var(--d);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:600;transition:all .2s;}
+.bs:hover{background:rgba(255,255,255,.12);color:#fff;}
+.vr{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+.vp{height:380px;flex-shrink:0;}
+svg{width:100%;height:100%;display:block;}
+.axis text{fill:rgba(148,163,184,.7);font-family:'Outfit',sans-serif;font-size:9px;}
+.axis path,.axis line{stroke:rgba(255,255,255,.06);}
+</style>
+</head>
+<body>
+<div class="blobs"><div class="blob be"></div><div class="blob bp_"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard</a>
+<div class="app">
+<aside class="nar">
+  <section id="s1" class="active">
+    <div class="hero">PCA Dimensionality <span>Lab</span></div>
+    <p>Principal Component Analysis (PCA) simplifies complex datasets by finding new directions (components) that capture the maximum <strong>variance</strong> in clinical data.</p>
+  </section>
+  <section id="s2">
+    <h2>The Math of PCA</h2>
+    <div class="cb">1. Centre data (mean = 0)
+2. Calc Covariance Matrix: Σ = (1/n)XᵀX
+3. Find Eigenvectors (v) & Eigenvalues (λ):
+   Σv = λv
+4. Project data onto top K eigenvectors:
+   z = Xv₁..ₖ
+
+λᵢ represents variance captured by PCᵢ.</div>
+  </section>
+  <section id="s3">
+    <h2>Interpreting PCs</h2>
+    <p><strong>PC1</strong> follows the direction of greatest spread. <strong>PC2</strong> is orthogonal to PC1 and captures the next most variance. Often, 2-3 PCs can describe 90%+ of clinical information from dozens of biomarkers.</p>
+  </section>
+  <section id="s4">
+    <div class="eb"><h2>⚖️ Ethical Reality</h2>
+    <p>PCA ignores labels (Unsupervised). If a small minority group has distinct biological features but low "variance" in the overall cohort, PCA may compress their unique signal into noise, leading to invisible healthcare disparities in the reduced feature space.</p></div>
+  </section>
+</aside>
+<div class="ls">
+  <div class="pr">
+    <div class="gp">
+      <div class="pl"><span class="dt db"></span>① PCA Configuration</div>
+      <div class="sr">
+        <div class="st"><span class="sl">Biomarker Correlation</span><span class="sv" id="lbl-corr">0.8</span></div>
+        <input type="range" class="be" id="sl-corr" min="0" max="1" step="0.1" value="0.8">
+        <span class="sh">linear relationship between metrics</span>
+      </div>
+      <div class="sr">
+        <div class="st"><span class="sl">Patient Count (N)</span><span class="sv" id="lbl-n">60</span></div>
+        <input type="range" class="pi" id="sl-n" min="20" max="120" step="10" value="60">
+        <span class="sh">size of clinical cohort</span>
+      </div>
+      <div class="bc">
+        <button class="bp" id="btn-reset">⟳ Resample Data</button>
+      </div>
+    </div>
+    <div class="gp">
+      <div class="pl"><span class="dt dp"></span>② Variance Formula</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:#ec4899;background:rgba(0,0,0,.28);border:1px solid rgba(236,72,153,.18);border-radius:12px;padding:.75rem;line-height:1.9;">
+        Total Var = Σ λᵢ<br>
+        Explained Ratioᵢ = λᵢ / Σ λⱼ<br>
+        Loadings = Eigenvectors scaled by √λ<br>
+        <span style="color:#f8fafc;">PC1 Variance: <span id="lbl-pc1-v">—</span>%</span><br>
+        <span style="color:#f8fafc;">PC2 Variance: <span id="lbl-pc2-v">—</span>%</span>
+      </div>
+    </div>
+    <div class="gp">
+      <div class="pl"><span class="dt dy"></span>③ Component Statistics</div>
+      <div class="ob"><div class="ol">Explained Cumulative Variance</div><div class="ov" id="out-total">—</div></div>
+      <div class="mr">
+        <div class="mc"><div class="mv" id="val-eigen" style="color:#3b82f6">—</div><div class="lml">Eigenvalue 1</div></div>
+        <div class="mc"><div class="mv" id="val-ratio" style="color:#ec4899">—</div><div class="lml">Dim Reduction</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="vr">
+    <div class="gp vp">
+      <div class="pl"><span class="dt db"></span>④ Original Feature Space — Glucose vs BMI · line = PC1 vector · width = PC2 spread</div>
+      <svg id="feat-svg"></svg>
+    </div>
+    <div class="gp vp">
+      <div class="pl"><span class="dt dp"></span>⑤ Principal Component Projection — transformed space (PC1 vs PC2) · axes are decorrelated</div>
+      <svg id="pc-svg"></svg>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+let sd=42;function rng(){sd=(sd*1103515245+12345)&0x7fffffff;return sd/0x7fffffff;}function rseed(s){sd=s;}
+function boxMuller(){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2.0*Math.log(u))*Math.cos(2.0*Math.PI*v);}
+
+let pts=[],state={corr:.8,N:60},pcaData={};
+
+function genData(N,corr){
+    rseed(42);
+    const data=[];
+    for(let i=0;i<N;i++){
+        let x=boxMuller();
+        let y=corr*x+Math.sqrt(1-corr*corr)*boxMuller();
+        data.push({x:x*15+110, y:y*5+26}); // Glucose and BMI scales
+    }
+    return data;
+}
+
+function solvePCA(d){
+    const mx=d3.mean(d,p=>p.x),my=d3.mean(d,p=>p.y);
+    const xc=d.map(p=>p.x-mx),yc=d.map(p=>p.y-my);
+    let sXX=0,sXY=0,sYY=0;
+    for(let i=0;i<d.length;i++){sXX+=xc[i]**2;sXY+=xc[i]*yc[i];sYY+=yc[i]**2;}
+    sXX/=(d.length-1);sXY/=(d.length-1);sYY/=(d.length-1);
+    
+    // Covariance matrix eigenvalues for 2x2
+    const trace=sXX+sYY,det=sXX*sYY-sXY*sXY;
+    const common=Math.sqrt((trace/2)**2-det);
+    const l1=trace/2+common,l2=trace/2-common;
+    
+    // Eigenvector for l1
+    let v1x,v1y;
+    if(sXY!==0){v1x=l1-sYY;v1y=sXY;}else{v1x=1;v1y=0;}
+    const mag=Math.sqrt(v1x**2+v1y**2);
+    v1x/=mag;v1y/=mag;
+    const v2x=-v1y,v2y=v1x;
+    
+    const projected=d.map(p=>{
+        const dx=p.x-mx,dy=p.y-my;
+        return{pc1:dx*v1x+dy*v1y,pc2:dx*v2x+dy*v2y};
+    });
+    
+    return {l1,l2,v1:[v1x,v1y],v2:[v2x,v2y],mx,my,projected};
+}
+
+const M={top:22,right:25,bottom:40,left:45};
+
+function renderFeat(){
+    const svg=d3.select('#feat-svg');svg.selectAll('*').remove();
+    const r=document.getElementById('feat-svg').getBoundingClientRect();
+    const W=r.width-M.left-M.right,H=r.height-M.top-M.bottom;
+    if(W<=0||H<=0)return;
+    const g=svg.append('g').attr('transform',`translate(${M.left},${M.top})`);
+    
+    const xs=d3.scaleLinear().domain([60,160]).range([0,W]);
+    const ys=d3.scaleLinear().domain([15,40]).range([H,0]);
+    
+    g.append('g').attr('class','axis').attr('transform',`translate(0,${H})`).call(d3.axisBottom(xs).ticks(5));
+    g.append('g').attr('class','axis').call(d3.axisLeft(ys).ticks(5));
+    g.append('text').attr('x',W/2).attr('y',H+34).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',9).text('Fasting Glucose (mg/dL)');
+    g.append('text').attr('transform','rotate(-90)').attr('x',-H/2).attr('y',-35).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',9).text('BMI (kg/m²)');
+
+    pts.forEach(p=>g.append('circle').attr('cx',xs(p.x)).attr('cy',ys(p.y)).attr('r',4).attr('fill','#3b82f6').attr('opacity',.6).attr('stroke','rgba(255,255,255,.1)'));
+    
+    const {v1,mx,my,l1}=pcaData;
+    const len=Math.sqrt(l1)*2;
+    g.append('line').attr('x1',xs(mx-v1[0]*len)).attr('y1',ys(my-v1[1]*len)).attr('x2',xs(mx+v1[0]*len)).attr('y2',ys(my+v1[1]*len)).attr('stroke','#ec4899').attr('stroke-width',2.5).attr('stroke-dasharray','4,2');
+}
+
+function renderPC(){
+    const svg=d3.select('#pc-svg');svg.selectAll('*').remove();
+    const r=document.getElementById('pc-svg').getBoundingClientRect();
+    const W=r.width-M.left-M.right,H=r.height-M.top-M.bottom;
+    const g=svg.append('g').attr('transform',`translate(${M.left},${M.top})`);
+    
+    const d=pcaData.projected;
+    const m=d3.max(d,p=>Math.max(Math.abs(p.pc1),Math.abs(p.pc2)))*1.1;
+    const xs=d3.scaleLinear().domain([-m,m]).range([0,W]);
+    const ys=d3.scaleLinear().domain([-m,m]).range([H,0]);
+    
+    g.append('g').attr('class','axis').attr('transform',`translate(0,${H/2})`).call(d3.axisBottom(xs).ticks(0));
+    g.append('g').attr('class','axis').attr('transform',`translate(${W/2},0)`).call(d3.axisLeft(ys).ticks(0));
+    g.append('text').attr('x',W-5).attr('y',H/2+12).attr('text-anchor','end').attr('fill','#ec4899').attr('font-size',10).attr('font-weight',700).text('PC1');
+    g.append('text').attr('x',W/2+5).attr('y',10).attr('fill','#3b82f6').attr('font-size',10).attr('font-weight',700).text('PC2');
+
+    d.forEach(p=>g.append('circle').attr('cx',xs(p.pc1)).attr('cy',ys(p.pc2)).attr('r',4.5).attr('fill',d3.interpolate('#3b82f6','#ec4899')(0.5+p.pc1/m/2)).attr('opacity',.8).attr('stroke','rgba(255,255,255,.2)'));
+}
+
+function init(){
+    pts=genData(state.N,state.corr);
+    pcaData=solvePCA(pts);
+    const p1r=(pcaData.l1/(pcaData.l1+pcaData.l2)*100).toFixed(1);
+    const p2r=(pcaData.l2/(pcaData.l1+pcaData.l2)*100).toFixed(1);
+    document.getElementById('lbl-pc1-v').textContent=p1r;
+    document.getElementById('lbl-pc2-v').textContent=p2r;
+    document.getElementById('out-total').textContent=(+p1r+ +p2r).toFixed(1)+'%';
+    document.getElementById('val-eigen').textContent=pcaData.l1.toFixed(2);
+    document.getElementById('val-ratio').textContent=(1-p2r/100).toFixed(2);
+    renderFeat();renderPC();
+}
+
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));e.target.classList.add('active');}});},{threshold:0.5});
+document.querySelectorAll('section').forEach(s=>obs.observe(s));
+
+document.getElementById('sl-corr').addEventListener('input',function(){state.corr=+this.value;document.getElementById('lbl-corr').textContent=this.value;init();});
+document.getElementById('sl-n').addEventListener('input',function(){state.N=+this.value;document.getElementById('lbl-n').textContent=this.value;init();});
+document.getElementById('btn-reset').addEventListener('click',()=>init());
+window.addEventListener('resize',init);
+setTimeout(init,80);
+</script>
+</body>
+</html>

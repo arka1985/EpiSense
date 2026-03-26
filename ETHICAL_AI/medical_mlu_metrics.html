@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROC & AUC: Diagnostic Accuracy | EpiSense MLU</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05070a;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --accent: #fbbf24;
+            --secondary: #f472b6;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(15, 23, 42, 0.8);
+            --tp: #10b981;
+            --fp: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: var(--bg); color: var(--text); 
+            font-family: 'Inter', sans-serif; line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container { display: flex; position: relative; }
+        .narrative { width: 45%; padding: 0 5% 50vh 5%; z-index: 2; }
+        .visuals { 
+            width: 55%; height: 100vh; position: sticky; top: 0; 
+            display: flex; align-items: center; justify-content: center; 
+            border-left: 1px solid var(--border);
+            background: radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.05), transparent);
+        }
+
+        section { 
+            min-height: 100vh; display: flex; flex-direction: column; 
+            justify-content: center; opacity: 0.3; transition: opacity 0.5s; 
+            margin-bottom: 5rem; 
+        }
+        section.active { opacity: 1; }
+
+        h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.02em; }
+        h1 span { color: var(--accent); }
+        h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--accent); }
+        p { font-size: 1.1rem; color: var(--text); margin-bottom: 1.5rem; }
+
+        .math { 
+            font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.05); 
+            padding: 1rem; border-radius: 8px; font-size: 0.9rem; 
+            border-left: 4px solid var(--accent); margin: 1rem 0; 
+        }
+
+        #viz-container { width: 90%; height: 80%; position: relative; }
+        .roc-path { fill: none; stroke: var(--accent); stroke-width: 3; filter: drop-shadow(0 0 8px var(--accent)); }
+        .auc-fill { fill: rgba(251, 191, 36, 0.1); }
+        .axis-label { fill: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
+
+        .back-link {
+            position: fixed; top: 20px; left: 20px; z-index: 100;
+            color: var(--muted); text-decoration: none; font-size: 0.8rem; font-weight: 700;
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem; background: var(--glass); border-radius: 100px;
+            border: 1px solid var(--border); backdrop-filter: blur(10px);
+        }
+        .back-link:hover { color: #fff; border-color: var(--accent); }
+
+        .ethical-spotlight {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(244, 114, 182, 0.05));
+            border: 1px solid var(--accent); padding: 1.5rem; border-radius: 20px; margin-top: 2rem;
+        }
+
+        /* Distribution Chart */
+        .dist-label { font-size: 10px; font-weight: 800; fill: #fff; }
+    </style>
+</head>
+<body>
+
+    <a href="../ml_basics.html" class="back-link">← Visual Understanding Hub</a>
+
+    <div class="container">
+        <article class="narrative">
+            <section id="sec-intro" class="active">
+                <h1>ROC & AUC <span>Benchmarking</span></h1>
+                <p>Imagine a new diagnostic test for a rare lung disease. How do we know if it's "good enough" for clinical use?</p>
+                <p>The **Receiver Operating Characteristic (ROC)** curve is the gold standard for measuring a model's ability to distinguish between healthy and sick patients.</p>
+            </section>
+
+            <section id="sec-overlap">
+                <h2>The Overlap Problem</h2>
+                <p>In the real world, "Sick" and "Healthy" markers often overlap. There is no perfect cut-off point.</p>
+                <p>If we set the threshold too low, we catch everyone (High Sensitivity) but flag many healthy people (False Positives). If we set it too high, we miss sick people (False Negatives).</p>
+            </section>
+
+            <section id="sec-curve">
+                <h2>The ROC Curve</h2>
+                <p>By moving our threshold through every possible value, we trace a path: The **ROC Curve**.</p>
+                <p>We plot the **True Positive Rate** (Sensitivity) against the **False Positive Rate** (1 - Specificity). A perfect model hugs the top-left corner.</p>
+            </section>
+
+            <section id="sec-auc">
+                <h2>Area Under the Curve (AUC)</h2>
+                <p>The **AUC** is a single number that summarizes the entire curve. 
+                    <br>• **1.0**: Perfect Discrimination.
+                    <br>• **0.5**: No better than a coin flip.
+                </p>
+                <div class="math">AUC = Probability(Model ranks a random sick patient higher than a healthy one)</div>
+            </section>
+
+            <section id="sec-ethics">
+                <div class="ethical-spotlight">
+                    <h2>⚖️ Ethical AI Spotlight</h2>
+                    <p><strong>The "Sensitivity Gap":</strong> A model can have a high overall AUC but still perform poorly for minority subgroups. Aggregated metrics like AUC can hide the fact that a test is significantly more accurate for one demographic than another.</p>
+                    <p>Clinicians must audit "Disaggregated AUC" to ensure diagnostic parity across all patient populations.</p>
+                </div>
+            </section>
+        </article>
+
+        <div class="visuals">
+            <div id="viz-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const width = 600, height = 500;
+        const margin = { top: 50, right: 50, bottom: 60, left: 70 };
+
+        const svg = d3.select("#viz-container").append("svg")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("width", "100%").attr("height", "100%");
+
+        const xScale = d3.scaleLinear().domain([0, 1]).range([margin.left, width - margin.right]);
+        const yScale = d3.scaleLinear().domain([0, 1]).range([height - margin.bottom, margin.top]);
+
+        // Axes
+        svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(d3.axisBottom(xScale).ticks(5)).attr("class", "axis");
+        svg.append("g").attr("transform", `translate(${margin.left},0)`)
+            .call(d3.axisLeft(yScale).ticks(5)).attr("class", "axis");
+
+        svg.append("text").attr("class", "axis-label")
+            .attr("x", width/2).attr("y", height - 15).attr("text-anchor", "middle")
+            .text("False Positive Rate (1 - Specificity)");
+        svg.append("text").attr("class", "axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -height/2).attr("y", 25).attr("text-anchor", "middle")
+            .text("True Positive Rate (Sensitivity)");
+
+        const rocLine = d3.line().x(d => xScale(d.fpr)).y(d => yScale(d.tpr)).curve(d3.curveBasis);
+        const rocArea = d3.area().x(d => xScale(d.fpr)).y0(yScale(0)).y1(d => yScale(d.tpr)).curve(d3.curveBasis);
+
+        const curveData = d3.range(0, 1.05, 0.05).map(f => ({
+            fpr: f,
+            tpr: Math.pow(f, 0.3) // Simulated good model
+        }));
+
+        const areaPath = svg.append("path").datum(curveData).attr("class", "auc-fill").attr("d", rocArea).attr("opacity", 0);
+        const path = svg.append("path").datum(curveData).attr("class", "roc-path").attr("d", rocLine).attr("opacity", 0);
+        
+        const diagonal = svg.append("line")
+            .attr("x1", xScale(0)).attr("y1", yScale(0))
+            .attr("x2", xScale(1)).attr("y2", yScale(1))
+            .attr("stroke", "rgba(255,255,255,0.1)").attr("stroke-dasharray", "4");
+
+        // ══ SCROLL LOGIC ══
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    d3.selectAll("section").classed("active", false);
+                    d3.select(`#${entry.target.id}`).classed("active", true);
+                    updateViz(entry.target.id);
+                }
+            });
+        }, { threshold: 0.6 });
+
+        document.querySelectorAll("section").forEach(s => observer.observe(s));
+
+        function updateViz(step) {
+            switch(step) {
+                case 'sec-intro':
+                    path.transition().duration(500).attr("opacity", 0);
+                    areaPath.transition().duration(500).attr("opacity", 0);
+                    break;
+                case 'sec-overlap':
+                    showDistributions();
+                    break;
+                case 'sec-curve':
+                    svg.selectAll(".dist-group").remove();
+                    path.transition().duration(1000).attr("opacity", 1);
+                    break;
+                case 'sec-auc':
+                    areaPath.transition().duration(1000).attr("opacity", 1);
+                    break;
+            }
+        }
+
+        function showDistributions() {
+            svg.select(".dist-group").remove();
+            const g = svg.append("g").attr("class", "dist-group").attr("opacity", 0);
+            
+            const dx = d3.scaleLinear().domain([0, 100]).range([margin.left, width - margin.right]);
+            const dy = d3.scaleLinear().domain([0, 0.1]).range([height - margin.bottom, margin.top + 100]);
+
+            const normal = (x, mu, sigma) => Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2)) / (sigma * Math.sqrt(2 * Math.PI));
+
+            const healthyData = d3.range(0, 100).map(x => ({ x, y: normal(x, 35, 10) }));
+            const sickData = d3.range(0, 100).map(x => ({ x, y: normal(x, 65, 12) }));
+
+            const lineDist = d3.line().x(d => dx(d.x)).y(d => dy(d.y));
+
+            g.append("path").datum(healthyData).attr("fill", "rgba(16, 185, 129, 0.2)").attr("stroke", "var(--tp)").attr("d", lineDist);
+            g.append("path").datum(sickData).attr("fill", "rgba(239, 68, 68, 0.2)").attr("stroke", "var(--fp)").attr("d", lineDist);
+            
+            g.append("text").attr("x", dx(30)).attr("y", dy(0.05)).attr("class", "dist-label").text("HEALTHY");
+            g.append("text").attr("x", dx(70)).attr("y", dy(0.05)).attr("class", "dist-label").text("SICK");
+
+            // Moving Threshold
+            const thr = g.append("line").attr("x1", dx(50)).attr("x2", dx(50)).attr("y1", margin.top + 50).attr("y2", height - margin.bottom)
+                .attr("stroke", "#fff").attr("stroke-dasharray", "4");
+
+            thr.transition().duration(3000).attr("x1", dx(80)).attr("x2", dx(80))
+                .transition().duration(3000).attr("x1", dx(20)).attr("x2", dx(20));
+
+            g.transition().duration(800).attr("opacity", 1);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformer Attention Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--glass-bg:rgba(255,255,255,0.07);--glass-border:rgba(255,255,255,0.15);--text-dim:#94a3b8;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#0c1a2e,#0f172a);color:#f8fafc;height:100vh;overflow:hidden;}
+        .blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:float 20s infinite alternate ease-in-out;}
+        .blob-amber{background:#f59e0b;top:-200px;left:-200px;}
+        .blob-teal{background:#0d9488;bottom:-200px;right:-200px;animation-delay:-10s;}
+        @keyframes float{from{transform:translate(0,0)scale(1)}to{transform:translate(80px,80px)scale(1.1)}}
+        .back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:0.45rem;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:50px;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:600;padding:0.5rem 1rem;transition:all 0.25s;}
+        .back-btn:hover{background:rgba(255,255,255,0.14);transform:translateX(-3px);}
+        .app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+        .narrative{width:24%;min-width:210px;height:100%;overflow-y:auto;padding:4.5rem 1.5rem 3rem;border-right:1px solid rgba(255,255,255,0.1);scrollbar-width:none;flex-shrink:0;}
+        .narrative::-webkit-scrollbar{display:none;}
+        section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:0.22;transform:translateX(-8px);transition:opacity 0.4s,transform 0.4s;}
+        section.active{opacity:1;transform:none;}
+        .hero{font-size:1.9rem;font-weight:800;line-height:1.15;margin-bottom:1rem;letter-spacing:-0.03em;}
+        .hero span{background:linear-gradient(to right,#fbbf24,#2dd4bf);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+        section h2{font-size:0.95rem;font-weight:700;color:#fbbf24;margin-bottom:0.7rem;}
+        section p{font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem;}
+        .cbox{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#2dd4bf;background:rgba(0,0,0,0.28);border:1px solid rgba(45,212,191,0.18);border-radius:10px;padding:0.75rem;line-height:1.85;margin:0.6rem 0;}
+        .ethical-box{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(245,158,11,0.05));border:1px solid rgba(239,68,68,0.28);border-radius:14px;padding:1rem;}
+        .ethical-box h2{color:#f87171;}
+        .lab-scroll{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.4rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent;}
+        .lab-scroll::-webkit-scrollbar{width:5px;}
+        .lab-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:10px;}
+        .panels-row{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:1rem;}
+        .glass-panel{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:1.3rem;display:flex;flex-direction:column;gap:0.85rem;}
+        .panel-label{font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:var(--text-dim);padding-bottom:0.6rem;border-bottom:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;gap:0.45rem;}
+        .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .dot-amber{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+        .dot-teal{background:#2dd4bf;box-shadow:0 0 6px #2dd4bf;}
+        .dot-green{background:#34d399;box-shadow:0 0 6px #34d399;}
+        .dot-gold{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+        input[type="range"]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,0.08);cursor:pointer;outline:none;}
+        input[type="range"].amber::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#fbbf24;border:2px solid #fff;box-shadow:0 0 8px rgba(251,191,36,0.6);}
+        input[type="range"].teal::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#2dd4bf;border:2px solid #fff;box-shadow:0 0 8px rgba(45,212,191,0.6);}
+        .slider-row{display:flex;flex-direction:column;gap:0.32rem;}
+        .slider-top{display:flex;justify-content:space-between;align-items:baseline;}
+        .s-label{font-size:0.7rem;font-weight:600;color:var(--text-dim);}
+        .s-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;color:#f8fafc;}
+        .s-hint{font-size:0.58rem;color:rgba(148,163,184,0.5);}
+        .output-big{background:linear-gradient(135deg,rgba(251,191,36,0.1),rgba(45,212,191,0.06));border:1px solid rgba(251,191,36,0.22);border-radius:16px;padding:1.1rem;text-align:center;}
+        .out-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim);}
+        .out-value{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:800;background:linear-gradient(to right,#fbbf24,#2dd4bf);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2;margin:0.3rem 0;}
+        .mini-row{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;}
+        .mini-card{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:0.7rem;text-align:center;}
+        .mini-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;}
+        .mini-label{font-size:0.54rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+        .btn-row{display:flex;gap:0.5rem;flex-wrap:wrap;}
+        .btn-primary{padding:0.6rem 1.1rem;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#b45309,#0d9488);color:#fff;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;transition:all 0.2s;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,158,11,0.4);}
+        .btn-secondary{padding:0.6rem 1rem;border-radius:50px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.2s;}
+        .btn-secondary:hover{background:rgba(255,255,255,0.12);color:#fff;}
+        .token-wrap{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.3rem;}
+        .token{padding:0.35rem 0.65rem;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all 0.2s;font-family:'JetBrains Mono',monospace;}
+        .token.selected{border-color:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,0.5);}
+        .viz-panel{height:400px;flex-shrink:0;}
+        #attn-svg{width:100%;height:100%;display:block;}
+    </style>
+</head>
+<body>
+<div class="blobs"><div class="blob blob-amber"></div><div class="blob blob-teal"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard
+</a>
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Transformer <span>Attention Lab</span></div>
+        <p>Transformers process clinical notes token-by-token but use <strong>Attention</strong> to focus on the most diagnostically relevant terms regardless of where they appear.</p>
+        <p>Click any <strong>token below</strong> to see its full attention pattern across the clinical note.</p>
+    </section>
+    <section id="s2">
+        <h2>Self-Attention Mechanism</h2>
+        <p>Each token creates Query (Q), Key (K), Value (V) vectors. Attention score between token i and j:</p>
+        <div class="cbox">Attention(Q,K,V) = softmax(QKᵀ/√d_k)·V
+
+score(i,j) = (Qᵢ · Kⱼ) / √d_k
+α(i,j)     = softmax of scores
+output_i   = Σⱼ α(i,j)·Vⱼ
+
+High α(i,j) → token i "attends to" j
+Low temperature → sharper focus</div>
+    </section>
+    <section id="s3">
+        <h2>Multi-Head Attention</h2>
+        <p>Multiple heads run in parallel, each learning different clinical relationships:</p>
+        <div class="cbox">MultiHead(Q,K,V) = Concat(h₁…hₙ)·Wᵒ
+
+Head 1 → negation ("no fever", "denies")
+Head 2 → entity co-reference
+Head 3 → temporal patterns ("worsening")
+Head 4 → numerical associations</div>
+        <p>Adjust <strong>Temperature</strong> to see how focused vs diffuse attention patterns change diagnostic confidence.</p>
+    </section>
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ Ethical Reality</h2>
+            <p>Clinical NLP models trained on US hospital notes fail on notes from other regions due to different abbreviations and documentation styles. "Non-compliant patient" carries different clinical and socioeconomic implications across contexts.</p>
+        </div>
+    </section>
+</aside>
+<div class="lab-scroll">
+    <div class="panels-row">
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-amber"></span>① Clinical Note Tokens</div>
+            <div style="font-size:0.68rem;color:var(--text-dim);margin-bottom:0.2rem;">Click a token to see its attention pattern:</div>
+            <div class="token-wrap" id="token-wrap"></div>
+            <div class="slider-row" style="margin-top:0.6rem;">
+                <div class="slider-top"><span class="s-label">Attention Heads</span><span class="s-val" id="lbl-heads">4</span></div>
+                <input type="range" class="amber" id="sl-heads" min="1" max="8" value="4">
+                <span class="s-hint">parallel attention heads</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Temperature (1/sharpness)</span><span class="s-val" id="lbl-temp">1.0</span></div>
+                <input type="range" class="teal" id="sl-temp" min="1" max="30" value="10">
+                <span class="s-hint">low = sharp focus · high = diffuse</span>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-teal"></span>② Attention Formula</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#2dd4bf;background:rgba(0,0,0,0.28);border:1px solid rgba(45,212,191,0.18);border-radius:12px;padding:0.8rem;line-height:1.9;">
+                score(i,j) = Qᵢ·Kⱼ / √d_k<br>
+                α(i,j) = exp(score/T) / Σ<br>
+                output_i = Σⱼ α(i,j)·Vⱼ<br>
+                <span style="color:#f8fafc;">d_k = embed_dim / num_heads</span>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-dim);line-height:1.8;">
+                Query token: <span id="span-query" style="color:#fbbf24;font-weight:700;">—</span><br>
+                Max attention to: <span id="span-max" style="color:#2dd4bf;font-weight:700;">—</span><br>
+                Attn entropy: <span id="span-ent" style="color:#a78bfa;font-weight:700;">—</span> bits
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="btn-rand">⟳ New Weights</button>
+                <button class="btn-secondary" id="btn-all">Show All Rows</button>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-green"></span>③ Diagnostic Output</div>
+            <div class="output-big">
+                <div class="out-label">Clinical Assessment</div>
+                <div class="out-value" id="out-dx">Sepsis Risk</div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-conf" style="color:#fbbf24">—</div><div class="mini-label">Confidence</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-heads" style="color:#2dd4bf">—</div><div class="mini-label">Active Heads</div></div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-params" style="color:#a78bfa">—</div><div class="mini-label">Attn Params</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-dk" style="color:#34d399">—</div><div class="mini-label">d_k / Head</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel viz-panel">
+        <div class="panel-label"><span class="dot dot-gold"></span>④ Attention Heatmap — row = query token · column = key token · brightness = attention weight · highlighted row = selected token</div>
+        <svg id="attn-svg"></svg>
+    </div>
+</div>
+</div>
+<script>
+const TOKENS=[
+    {text:"Patient",col:"rgba(148,163,184,0.25)",w:0.1},
+    {text:"fever",col:"rgba(248,113,113,0.35)",w:0.9},
+    {text:"38.9°C",col:"rgba(248,113,113,0.4)",w:0.95},
+    {text:"tachycardia",col:"rgba(248,113,113,0.35)",w:0.85},
+    {text:"HR=118",col:"rgba(248,113,113,0.38)",w:0.88},
+    {text:"no",col:"rgba(251,191,36,0.3)",w:0.4},
+    {text:"cough",col:"rgba(96,165,250,0.25)",w:0.3},
+    {text:"WBC",col:"rgba(45,212,191,0.35)",w:0.9},
+    {text:"14.2k",col:"rgba(45,212,191,0.4)",w:0.92},
+    {text:"cultures",col:"rgba(248,113,113,0.3)",w:0.7},
+    {text:"pending",col:"rgba(148,163,184,0.2)",w:0.2},
+];
+const N=TOKENS.length;
+let state={sel:0,heads:4,temp:1.0,seed:42,showAll:false};
+let attnMat=[];
+
+function sr(seed){let s=seed;return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};}
+
+function computeAttn(){
+    const rand=sr(state.seed);
+    const dk=Math.sqrt(4);
+    const Qs=TOKENS.map(t=>Array.from({length:4},()=>(rand()-0.5)*t.w*2));
+    const Ks=TOKENS.map(t=>Array.from({length:4},()=>(rand()-0.5)*t.w*2));
+    attnMat=TOKENS.map((_,i)=>{
+        const scores=TOKENS.map((_,j)=>{let d=0;for(let k=0;k<4;k++)d+=Qs[i][k]*Ks[j][k];return d/dk/state.temp;});
+        const mx=Math.max(...scores);
+        const ex=scores.map(s=>Math.exp(s-mx));
+        const sm=ex.reduce((a,b)=>a+b,0);
+        return ex.map(e=>e/sm);
+    });
+}
+
+function entropy(row){return-row.reduce((s,p)=>s+(p>1e-9?p*Math.log2(p):0),0);}
+
+function buildTokens(){
+    const wrap=document.getElementById("token-wrap");
+    wrap.innerHTML="";
+    TOKENS.forEach((t,i)=>{
+        const el=document.createElement("div");
+        el.className="token"+(i===state.sel?" selected":"");
+        el.style.background=t.col;el.style.color="#f8fafc";el.textContent=t.text;
+        el.addEventListener("click",()=>{state.sel=i;state.showAll=false;renderAll();});
+        wrap.appendChild(el);
+    });
+}
+
+function renderHeatmap(){
+    const el=document.getElementById("attn-svg");
+    const r=el.getBoundingClientRect();
+    const mL={top:18,right:16,bottom:85,left:78};
+    const W=r.width-mL.left-mL.right,H=r.height-mL.top-mL.bottom;
+    if(W<=0||H<=0) return;
+    const svg=d3.select("#attn-svg");svg.selectAll("*").remove();
+    const g=svg.append("g").attr("transform",`translate(${mL.left},${mL.top})`);
+    const cW=W/N,cH=H/N;
+    const si=state.sel;
+
+    TOKENS.forEach((_,row)=>{
+        TOKENS.forEach((_,col)=>{
+            const v=attnMat[row][col];
+            const sel=state.showAll||row===si;
+            const fill=d3.interpolate("rgba(13,23,46,1)",`rgba(251,191,36,1)`)(v);
+            g.append("rect").attr("x",col*cW).attr("y",row*cH).attr("width",cW-1).attr("height",cH-1).attr("rx",3)
+                .attr("fill",fill).attr("opacity",sel?1:0.2)
+                .attr("stroke",row===si?"rgba(251,191,36,0.4)":"none").attr("stroke-width",1.5);
+            if((state.showAll||row===si)&&cW>24&&cH>16)
+                g.append("text").attr("x",col*cW+cW/2).attr("y",row*cH+cH/2+3)
+                    .attr("text-anchor","middle").attr("fill",v>0.2?"#000":"rgba(255,255,255,0.4)")
+                    .attr("font-size",Math.min(cW*0.28,8)).attr("font-family","JetBrains Mono").attr("font-weight",700)
+                    .text(v.toFixed(2));
+        });
+    });
+
+    TOKENS.forEach((t,i)=>{
+        g.append("text").attr("x",-5).attr("y",i*cH+cH/2+4)
+            .attr("text-anchor","end").attr("fill",i===si?"#fbbf24":"rgba(148,163,184,0.5)")
+            .attr("font-size",i===si?8.5:7).attr("font-family","Outfit").attr("font-weight",i===si?700:400)
+            .text(t.text);
+    });
+    TOKENS.forEach((t,j)=>{
+        g.append("text").attr("x",j*cW+cW/2).attr("y",H+12)
+            .attr("transform",`rotate(38,${j*cW+cW/2},${H+12})`)
+            .attr("text-anchor","start").attr("fill","rgba(148,163,184,0.5)")
+            .attr("font-size",7.5).attr("font-family","Outfit").text(t.text);
+    });
+    g.append("text").attr("x",-58).attr("y",H/2).attr("transform",`rotate(-90,-58,${H/2})`).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.4)").attr("font-size",8.5).attr("font-family","Outfit").text("Query →");
+    g.append("text").attr("x",W/2).attr("y",-5).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.4)").attr("font-size",8.5).attr("font-family","Outfit").text("← Key");
+}
+
+function updatePanel(){
+    const si=state.sel;
+    const row=attnMat[si]||[];
+    const maxIdx=row.indexOf(Math.max(...row));
+    const ent=entropy(row);
+    const ds=(TOKENS[si].w*0.8+Math.max(...row)*0.2);
+    const dxList=["Sepsis Risk","Pneumonia Risk","Bacteraemia","Febrile Neutropenia","Metabolic Sepsis"];
+    document.getElementById("out-dx").textContent=dxList[Math.floor(ds*(dxList.length-0.01))];
+    document.getElementById("val-conf").textContent=(ds*100).toFixed(0)+"%";
+    document.getElementById("val-heads").textContent=state.heads+"/"+state.heads;
+    document.getElementById("span-query").textContent=TOKENS[si].text;
+    document.getElementById("span-max").textContent=TOKENS[maxIdx]?TOKENS[maxIdx].text:"—";
+    document.getElementById("span-ent").textContent=ent.toFixed(2);
+    const dEmbed=64,dk=Math.max(1,Math.floor(dEmbed/state.heads));
+    document.getElementById("val-params").textContent=(N*dEmbed*3*state.heads).toLocaleString();
+    document.getElementById("val-dk").textContent=dk;
+}
+
+function renderAll(){buildTokens();computeAttn();renderHeatmap();updatePanel();}
+
+document.getElementById("sl-heads").addEventListener("input",function(){state.heads=+this.value;document.getElementById("lbl-heads").textContent=this.value;renderAll();});
+document.getElementById("sl-temp").addEventListener("input",function(){state.temp=+this.value/10;document.getElementById("lbl-temp").textContent=state.temp.toFixed(1);renderAll();});
+document.getElementById("btn-rand").addEventListener("click",()=>{state.seed=Math.floor(Math.random()*99999);renderAll();});
+document.getElementById("btn-all").addEventListener("click",()=>{state.showAll=!state.showAll;renderAll();});
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));e.target.classList.add("active");}});},{threshold:0.5});
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+window.addEventListener("resize",renderAll);
+setTimeout(renderAll,80);
+</script>
+</body>
+</html>

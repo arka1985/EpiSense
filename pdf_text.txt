@@ -1,0 +1,355 @@
+ 
+  
+BHASHINI TRANSLATION PLUGIN v3 
+Usage Documentation   
+  
+  
+  
+  
+  
+  
+  
+  
+Digital India Bhashini Division  
+  
+  
+  
+Version: 3.0  Date:  
+  14-05-2025  
+ 
+ 
+ 
+  
+  
+
+                       
+  
+1  
+Table of Contents  
+  
+Sl. No  Title  Page Number  
+1  Introduction   2  
+2  Translation Plugin Implementation Steps   3  
+4  Additional Features   12 
+5  FAQs   13  
+6  Contact Us   15  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+ 
+ 
+  
+                       
+  
+2  
+Introduction  
+  
+This comprehensive guide provides all the information you need to seamlessly integrate Version 
+3 of our powerful translation plugin into your website, enabling smooth translation between 
+English and Bhartiya languages.   
+  
+Key Features:  
+  
+1. Seamless Translation : Effortlessly translate your website content between English and 
+Bhartiya languages with high accuracy.   
+2. Glossary Addition : Utilise glossary for domain specific translations, enabling accurate and 
+context aware translations.   
+3. Selective Translati on: Skip translation for specific text enclosed within certain tags, ensuring 
+precise control over what gets translated.   
+4. Customizable Placement:  Position the translation plugin widget on your website's bottom 
+left or bottom right, tailored to your design  preferences.  
+5. Preferred Language Storage:  Remember the language used for translating a page in a 
+website and auto -translate any page from the website to the previously translated language 
+when opened in a browser.  
+  
+By following this guide, you'll be abl e to leverage the full potential of the BHASHINI Translation 
+Plugin, making your website more accessible and user -friendly for a multilingual audience.  
+  
+  
+ 
+ 
+ 
+ 
+                       
+  
+3  
+Translation Plugin Implementation Steps  
+  
+The Bhashini Plugin can be embedded in any website using the following approach. The 
+integration behaviour may differ based on the framework being used.   
+ 
+For Vanilla JS / Static HTML Sites  
+Step 1: Add the plugin script at the bottom of the <body> tag in index.html  
+<script src="https://translation -
+plugin.bhashini.co.in/v 3/website_translation_ utility.js"></script>   
+Properties of the Script Tag  
+1. src :  
+○ Definition : The src  attribute specifies the URL of an external script file to be 
+executed.  
+○ Explanation : In this case,  
+https://translation -plugin.bhashini.co.in/v 3/website_t  
+ranslation_utility.js  is the URL that points to the JavaScript file for 
+the BHASHINI Translation Plugin. This file contains the necessary code to enable 
+translation functionality on yo ur website.  
+ 
+Step 2: Wherever you want the plugin to appear, add a container with the class bhashini -
+plugin -container:  
+ 
+<div class="bhashini -plugin-container"></div>  
+ 
+ 
+                       
+  
+4  
+Since vanilla JS sites load and render DOM synchronously, the plugin script will immediately find 
+the target container and mount itself without issues.  
+ 
+ 
+ 
+ 
+For React / Next.js or other SPA frameworks  
+ 
+Add  useEffect inside the last component, such  as Footer  
+ 
+useEffect(() => {  
+     const script = document.createElement("script");  
+     script.src = "  https://translation -plugin.bhashini.co.in/v3/website_t  
+ranslation_utility.js ";  
+     script.async = true;  
+    document.body.appendChild(script);  
+  }, []);  
+ 
+This ensures the plugin is injected only after  the component is mounted and the target DOM 
+element exists.  
+ 
+ 
+2. In Next.js, place the script inside useEffect or load it using next/script with 
+strategy="afterInteractive"  to avoid hydration issues
+                       
+5  
+ 
+ The plugin is visible in the website as shown 
+here. It will be visible within the  container 
+having the class . Users can click the Select 
+button and identify the language to 
+translate to.  
+Placement of the Script Tag  
+For optimal performance and easier management, it is recommended to place this script tag at 
+the end of the body tag:  
+<body>   
+<!-- Your website content goes here -->  <!-- 
+BHASHINI Translation Plugin Script -->   
+<script src="https://translation -
+plugin.b hashini.co.in/v 3/website_transla 
+tion_utility.js"></script>   
+</body>   
+  
+  
+To utilise the BHASHINI Translation Plugin within your application, you would need to register 
+within the onboarding application for BHASHINI service  
+(https://dashboard.bhashini.co.in/user/register ) or login if you already have an accou nt  
+(https://dashboard.bhashini.co.in/user/login )  
+ 
+ 
+ 
+ 
+ 
+ 
+
+                       
+6  
+Once logged in, you can request for access to the Translation Plugin Application by following 
+the following steps:  
+Click on View Parikshan Applications  
+ 
+ 
+Click on Request Application button for Bhashini Translation Plugin  
+ 
+
+                       
+7  
+On clicking the Request Applica tion button, a pop -up appears prompting you to select a 
+manager from the ‘Select Onboarding Manager’ dropdown where you may select the name 
+of Onboarding Manager you may be in touch with. Alternately, if you are unsure, please 
+select NA/Others and click on  Request Access button.  
+ 
+ 
+Next you will b e shown a pop up to enter your Host Name URL (your website URL  for which 
+you require  the trans lation plugin ) 
+ 
+ 
+
+                       
+8  
+Click on the Domain Environment dropdown and select the environment of the website 
+(hostname URL) for which  you are requesting the tra nslation plugin. You can choose from 
+Test, UAT or Production  
+ 
+ 
+Next enter the we bsite URL as shown in example below.  
+Enter the hostname of your website [Only the d omain name such as bhashini.gov.in if your 
+website is https://www.bhashini.gov.in /home  for instance]. https://www . Or /home path 
+should not be a part of the Hostname.  
+ 
+ 
+
+                       
+9  
+ 
+Your request for Translation Plugin is successfully submitted and assigned to the chosen 
+Manager.  Request will look like below with Request Raised as green on timeline. Please  
+allow a few days’ time  for app roval process w hich is twofold  that is  manager approves a nd 
+then the CEO approves . You can track the progress of your request any time by loggin g into 
+your account .  
+ 
+ 
+What if you need to request for another websi te URL? Simply click on Add Host Name /URL 
+button and repeat the above steps . This can be done at any time . 
+ 
+ 
+
+                       
+10  
+Once CEO approves  or rejects  the request you will be able to see the domain mapping 
+requests in below stat es (Approved o r Rejected)  
+ 
+ 
+Noti ce the  User I D visi ble on the s creen above.  
+Also Note that on Approval of Host N ame URL mapping request, you will be able to see 
+the API key in a masked state for data privacy.  
+Click on the eye icon to view the key  and click on t he copy icon next to it to copy the key 
+and use it.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+                       
+11  
+ 
+ 
+ 
+  
+Additional Features  
+  
+Skip Translation:   
+By adding the class bhashini -skip-translation  to any HTML element, you can  
+exclude that specific element from being translated by the BHASHINI Translation Plugin. This is 
+useful for text that should remain in its original language, such as b rand names, technical terms, 
+or any other content you want to keep unchanged.  
+Below is an example that demonstrates how to use the BHASHINI Translation Plugin on your 
+webpage and how to skip the translation of certain text by using the class “bhashini -skip-
+translation”.  
+  
+<body>   
+<!-- Your website content goes here -->   
+<!-- BHASHINI Translation Plugin Script -->   
+ <p> Translate This </p>         
+<p class="bhashini -skip-translation" >Skip Translating This</p>  
+<script src="https://translation -
+plugin.bhashini.co.in/v 3/website_transla 
+tion_utility.js"></script> </script>   
+</body>  
+  
+Glossary:  
+  
+
+                       
+12  
+Once logged into BHASHINI’s onboarding application and your host name - domain 
+mapping is performed, the glossary entries mappe d to the API Key within Udyat 
+application will be used to perform replacements when the BHASHINI translation plugin is 
+used within your website. To create these glossary entries, kindly contact your 
+onboarding manager for a glossary list to be uploaded bet ween English and Indic 
+languages accordingly.  
+  
+ 
+Preferred Language Storage:  
+  
+Whenever a user utilizes your website and translates a specific page to an Indic language 
+and moves to a different webpage in your site, the new webpage gets translated to the  
+previously translated Indic language by keeping a track of preferred language storage 
+system in the browser’s local storage.  
+  
+FAQs  
+  
+1. How do I display Manipuri (Meetei) Font if it’s not installed on the user’s computer?   
+To ensure the Manipuri (Meetei) font is displayed correctly even if it’s not installed on the user's 
+computer, you can import the necessary font from Google Fonts. Add the following line of code 
+to your CSS file:  
+@import  
+url('https://fonts.googleapis.com/css2?family=Noto+Sans+Meetei+Mayek:wght@100..90  
+0&display=swap');  
+This will load the "Noto Sans Meetei Mayek" font, which supports the Manipuri (Meetei) script, 
+ensuring it displays correctly on your website regardless of the  fonts installed on the user's 
+device.  
+
+                       
+13  
+As a fallback option, you can specify alternative fonts in case the primary font fails to load.  
+Here's an example of how to set up your CSS to include a fallback: 
+body {   font-family: ‘Arial', 'sans -serif','Noto Sa ns Meetei 
+Mayek', ;  
+}  
+In this example, if the "Arial" font or a generic sans -serif font cannot be loaded, the browser will 
+attempt to use "Noto Sans Meetei Mayek" font as a backup. This ensures that text is always 
+displayed, even if the preferred font is n't available.  
+  
+2. Is it possible to skip translation for any specific tags?   
+Yes, as specified in the Implementation Steps section, you can skip tags to be translated by using 
+“bhashini -skip-translation” class for the specific tag.   
+  
+3. I have the plugin retranslating the page in certain circumstances. For example, when a 
+dropdown menu is hovered on, it retranslates that content, even though it doesn’t change. 
+How do I resolve this?  
+This issue occurs because the plugin detects a DOM reload, where the text content is internally 
+replaced even if it hasn't changed visibly. When the DOM is reloaded, the plugin treats it as new 
+content and retranslates it.  
+To avoid this, you should minimize D OM reloads by ensuring that the content is managed in a 
+way that doesn’t trigger these reloads. One effective approach is to style the content using inline 
+CSS. By doing so, you reduce the chances of the DOM being reloaded when interacting with 
+elements li ke dropdown menus, which in turn prevents unnecessary retranslations.  
+                       
+14  
+4. How to change the color of the icon  
+To change the color of the icon, “language -icon-color” has to beed passed in the script tag  
+ 
+For eg:  <script src= https://translation -
+plugin.bhashini.co.in/v3/website_translation_ utility.js  
+language -icon-color= “#fff”  
+></script>   
+ 
+  
+3. Certain keywords are translated wrongly. How do I resolve this?  
+BHASHINI offers Translation Plugin services with Glossary System to override default translations 
+with domain specific translations.  
+Example:  
+● Default Translation: "Digital India Bhashini  Division" is translated to " डिजटल  इं िया भै 
+सनी प्रभाग ".  
+● With Glossary Term: If the glossary term between English and Hindi is entered as 
+"डिजटल  इं िया भा षणी िवीज़न ", this will override the default translation.  
+To utilize glossary within your system, please reach out to your onboarding manager.  
+  
+Contact Us  
+For any further information, please email to ceo -dibd@digitalindia.gov.in  

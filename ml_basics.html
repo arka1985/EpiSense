@@ -30,6 +30,35 @@
             color: var(--text-white);
         }
 
+        @media (max-width: 768px) {
+            .module-container {
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+            h1 {
+                font-size: 2rem !important;
+            }
+            .pipeline-card {
+                padding: 1.2rem;
+            }
+            .card-header h2 {
+                font-size: 1.4rem;
+            }
+            .stepper {
+                overflow-x: auto;
+                padding-bottom: 2.5rem;
+                justify-content: flex-start;
+                gap: 3rem;
+            }
+            .stepper::-webkit-scrollbar {
+                height: 4px;
+            }
+            .stepper::-webkit-scrollbar-thumb {
+                background: var(--primary-pink);
+                border-radius: 10px;
+            }
+        }
+
         .back-btn {
             display: inline-flex;
             align-items: center;

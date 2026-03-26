@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinforcement Learning Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--glass-bg:rgba(255,255,255,0.07);--glass-border:rgba(255,255,255,0.15);--text-dim:#94a3b8;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#0a1a0a,#0f172a);color:#f8fafc;height:100vh;overflow:hidden;}
+        .blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:float 20s infinite alternate ease-in-out;}
+        .blob-emerald{background:#10b981;top:-200px;left:-200px;}
+        .blob-rose{background:#f43f5e;bottom:-200px;right:-200px;animation-delay:-10s;}
+        @keyframes float{from{transform:translate(0,0)scale(1)}to{transform:translate(80px,80px)scale(1.1)}}
+        .back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:0.45rem;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:50px;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:600;padding:0.5rem 1rem;transition:all 0.25s;}
+        .back-btn:hover{background:rgba(255,255,255,0.14);transform:translateX(-3px);}
+        .app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+        .narrative{width:24%;min-width:210px;height:100%;overflow-y:auto;padding:4.5rem 1.5rem 3rem;border-right:1px solid rgba(255,255,255,0.1);scrollbar-width:none;flex-shrink:0;}
+        .narrative::-webkit-scrollbar{display:none;}
+        section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:0.22;transform:translateX(-8px);transition:opacity 0.4s,transform 0.4s;}
+        section.active{opacity:1;transform:none;}
+        .hero{font-size:1.9rem;font-weight:800;line-height:1.15;margin-bottom:1rem;letter-spacing:-0.03em;}
+        .hero span{background:linear-gradient(to right,#34d399,#f43f5e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+        section h2{font-size:0.95rem;font-weight:700;color:#34d399;margin-bottom:0.7rem;}
+        section p{font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem;}
+        .cbox{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:0.75rem;line-height:1.85;margin:0.6rem 0;}
+        .ethical-box{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(16,185,129,0.05));border:1px solid rgba(239,68,68,0.28);border-radius:14px;padding:1rem;}
+        .ethical-box h2{color:#f87171;}
+        .lab-scroll{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.4rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent;}
+        .lab-scroll::-webkit-scrollbar{width:5px;}
+        .lab-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:10px;}
+        .panels-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+        .glass-panel{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:1.3rem;display:flex;flex-direction:column;gap:0.85rem;}
+        .panel-label{font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:var(--text-dim);padding-bottom:0.6rem;border-bottom:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;gap:0.45rem;}
+        .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .dot-emerald{background:#34d399;box-shadow:0 0 6px #34d399;}
+        .dot-rose{background:#f87171;box-shadow:0 0 6px #f87171;}
+        .dot-gold{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+        .dot-blue{background:#60a5fa;box-shadow:0 0 6px #60a5fa;}
+        input[type="range"]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,0.08);cursor:pointer;outline:none;}
+        input[type="range"].emerald::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#34d399;border:2px solid #fff;box-shadow:0 0 8px rgba(52,211,153,0.6);}
+        input[type="range"].rose::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#f43f5e;border:2px solid #fff;box-shadow:0 0 8px rgba(244,63,94,0.6);}
+        input[type="range"].blue::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#60a5fa;border:2px solid #fff;box-shadow:0 0 8px rgba(96,165,250,0.6);}
+        .slider-row{display:flex;flex-direction:column;gap:0.3rem;}
+        .slider-top{display:flex;justify-content:space-between;align-items:baseline;}
+        .s-label{font-size:0.7rem;font-weight:600;color:var(--text-dim);}
+        .s-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;color:#f8fafc;}
+        .s-hint{font-size:0.58rem;color:rgba(148,163,184,0.5);}
+        .output-big{background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(244,63,94,0.06));border:1px solid rgba(52,211,153,0.22);border-radius:16px;padding:1.1rem;text-align:center;}
+        .out-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim);}
+        .out-value{font-family:'JetBrains Mono',monospace;font-size:2.3rem;font-weight:800;background:linear-gradient(to right,#34d399,#f43f5e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin:0.2rem 0;}
+        .mini-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+        .mini-card{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:0.65rem;text-align:center;}
+        .mini-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;}
+        .mini-label{font-size:0.54rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.15rem;}
+        .btn-row{display:flex;gap:0.5rem;flex-wrap:wrap;}
+        .btn-primary{padding:0.6rem 1.1rem;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#059669,#f43f5e);color:#fff;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;transition:all 0.2s;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(16,185,129,0.4);}
+        .btn-secondary{padding:0.6rem 1rem;border-radius:50px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.2s;}
+        .btn-secondary:hover{background:rgba(255,255,255,0.12);color:#fff;}
+        .viz-panel{height:380px;flex-shrink:0;}
+        #rl-svg{width:100%;height:100%;display:block;}
+        .axis text{fill:rgba(148,163,184,0.7);font-family:'Outfit',sans-serif;font-size:10px;}
+        .axis path,.axis line{stroke:rgba(255,255,255,0.06);}
+    </style>
+</head>
+<body>
+<div class="blobs"><div class="blob blob-emerald"></div><div class="blob blob-rose"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard
+</a>
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Reinforcement Learning <span>Sepsis Treatment Lab</span></div>
+        <p>An RL agent learns the optimal <strong>vasopressor dosing protocol</strong> for septic patients by receiving a reward (+1 for survival, −1 for deterioration) at each timestep.</p>
+        <p>Press <strong>▶ Train Agent</strong> to watch cumulative rewards increase as the agent learns.</p>
+    </section>
+    <section id="s2">
+        <h2>The MDP Framework</h2>
+        <p>RL models clinical decision-making as a <strong>Markov Decision Process</strong>:</p>
+        <div class="cbox">State (s):  MAP, lactate, vasopressor dose
+Action (a): Increase / Hold / Decrease dose
+Reward (r): +1 survival · −1 deterioration
+              0 neutral step
+
+Q(s,a) = Expected cumulative reward
+         when taking action a in state s
+
+Bellman: Q(s,a) = r + γ·max Q(s',a')</div>
+    </section>
+    <section id="s3">
+        <h2>Exploration vs Exploitation</h2>
+        <p>Early in training, the agent must <strong>explore</strong> unknown actions randomly. Over time it <strong>exploits</strong> known good strategies:</p>
+        <div class="cbox">ε-greedy policy:
+  With prob ε  → random action (explore)
+  With prob 1-ε → argmax Q(s,a)  (exploit)
+
+ε decays from 1.0 → 0.05 during training
+Learning rate α controls Q-table update speed
+Discount γ controls future reward weighting</div>
+    </section>
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ Ethical Reality</h2>
+            <p>RL agents trained on historical ICU data learn from past physician decisions — including their biases. An agent trained predominantly on male sepsis patients may recommend sub-therapeutic vasopressor doses for female patients, who present differently. Reward functions must explicitly penalise demographic disparities.</p>
+        </div>
+    </section>
+</aside>
+<div class="lab-scroll">
+    <div class="panels-row">
+        <!-- Panel 1 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-emerald"></span>① RL Parameters</div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Learning Rate (α)</span><span class="s-val" id="lbl-alpha">0.10</span></div>
+                <input type="range" class="emerald" id="sl-alpha" min="1" max="50" value="10">
+                <span class="s-hint">Q-table update step size</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Discount Factor (γ)</span><span class="s-val" id="lbl-gamma">0.95</span></div>
+                <input type="range" class="blue" id="sl-gamma" min="50" max="99" value="95">
+                <span class="s-hint">future reward weighting</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Exploration ε₀</span><span class="s-val" id="lbl-eps">1.0</span></div>
+                <input type="range" class="rose" id="sl-eps" min="50" max="100" value="100">
+                <span class="s-hint">initial exploration rate</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Episodes</span><span class="s-val" id="lbl-ep">200</span></div>
+                <input type="range" class="emerald" id="sl-ep" min="50" max="500" step="10" value="200">
+                <span class="s-hint">training episodes (patient encounters)</span>
+            </div>
+        </div>
+        <!-- Panel 2 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-rose"></span>② Bellman Equation</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:12px;padding:0.8rem;line-height:1.9;">
+                Q(s,a) ← Q(s,a) + α·δ<br>
+                δ = r + γ·max Q(s',a') − Q(s,a)<br>
+                <span style="color:#fbbf24;">δ = Temporal Difference Error</span><br>
+                <span style="color:#f8fafc;">Policy π(s) = argmax_a Q(s,a)</span>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-dim);line-height:1.8;">
+                State space: <span style="color:#34d399;font-weight:700;">MAP × Lactate = 25 states</span><br>
+                Actions: <span style="color:#60a5fa;font-weight:700;">↑ dose · hold · ↓ dose</span><br>
+                Episode: <span id="lbl-epcur" style="color:#fbbf24;font-weight:700;">—</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="btn-train">▶ Train Agent</button>
+                <button class="btn-secondary" id="btn-reset">Reset</button>
+            </div>
+        </div>
+        <!-- Panel 3 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-gold"></span>③ Agent Performance</div>
+            <div class="output-big">
+                <div class="out-label">Mean Survival Reward</div>
+                <div class="out-value" id="out-reward">—</div>
+                <div style="font-size:0.68rem;color:var(--text-dim);" id="out-trend">—</div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-surv" style="color:#34d399">—</div><div class="mini-label">Survival Rate</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-eps" style="color:#fbbf24">—</div><div class="mini-label">Final ε</div></div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-qtd" style="color:#60a5fa">—</div><div class="mini-label">Avg |TD Error|</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-policy" style="color:#f87171">—</div><div class="mini-label">Policy Stability</div></div>
+            </div>
+        </div>
+    </div>
+    <!-- Viz -->
+    <div class="glass-panel viz-panel">
+        <div class="panel-label"><span class="dot dot-gold"></span>④ Training Curve — cumulative reward per episode (green) · ε-exploration decay (amber) · TD error (red) · rolling average (bright green)</div>
+        <svg id="rl-svg"></svg>
+    </div>
+</div>
+</div>
+<script>
+const S=25, A=3; // 5x5 state space, 3 actions (inc/hold/dec)
+let state={alpha:0.1,gamma:0.95,eps0:1.0,episodes:200};
+let animTimer=null,animating=false;
+
+function seededRand(seed){ let s=seed; return ()=>{ s=(s*1103515245+12345)&0x7fffffff; return s/0x7fffffff; }; }
+
+function simulateRL(alpha,gamma,eps0,episodes){
+    const rand=seededRand(12345);
+    const Q=Array.from({length:S},()=>Array(A).fill(0));
+    const rewards=[],epsilons=[],tdErrors=[];
+    const epsMin=0.05, epsDecay=(eps0-epsMin)/episodes;
+
+    for(let ep=0;ep<episodes;ep++){
+        let eps=Math.max(epsMin,eps0-epsDecay*ep);
+        let s=Math.floor(rand()*S), totalR=0, tdSum=0, steps=0;
+
+        for(let t=0;t<20;t++){
+            // Action selection (ε-greedy)
+            let a;
+            if(rand()<eps) a=Math.floor(rand()*A);
+            else{ let best=-Infinity; a=0; Q[s].forEach((v,i)=>{if(v>best){best=v;a=i;}}); }
+
+            // Simulate environment (sepsis treatment dynamics)
+            const baseOK=s>S*0.4?0.5:0.3; // harder states harder
+            const actionBonus=[0.1,-0.02,-0.05][a]; // increase dose helps more
+            const survived=rand()<baseOK+actionBonus;
+            const r=survived?1:-1;
+            totalR+=r;
+
+            // Next state (random walk with bias based on action)
+            const ds=a===0?1:a===2?-1:0;
+            const sNext=Math.max(0,Math.min(S-1,s+ds+Math.round((rand()-0.5)*2)));
+
+            // Q update
+            const maxQ=Math.max(...Q[sNext]);
+            const td=r+gamma*maxQ-Q[s][a];
+            Q[s][a]+=alpha*td;
+            tdSum+=Math.abs(td); steps++;
+            s=sNext;
+            if(!survived&&t>10) break;
+        }
+        rewards.push(totalR/Math.max(steps,1));
+        epsilons.push(eps);
+        tdErrors.push(tdSum/Math.max(steps,1));
+    }
+    // Rolling average
+    const roll=rewards.map((_,i)=>d3.mean(rewards.slice(Math.max(0,i-9),i+1)));
+    return{rewards,epsilons,tdErrors,roll,Q};
+}
+
+let rlResults=null;
+
+function renderCurve(res,upTo){
+    const svgEl=document.getElementById("rl-svg");
+    const r=svgEl.getBoundingClientRect();
+    const mL={top:22,right:60,bottom:40,left:52};
+    const W=r.width-mL.left-mL.right, H=r.height-mL.top-mL.bottom;
+    if(W<=0||H<=0) return;
+    const E=Math.min(upTo||res.rewards.length,res.rewards.length);
+    const ep=d3.range(E);
+    const svg=d3.select("#rl-svg"); svg.selectAll("*").remove();
+    const g=svg.append("g").attr("transform",`translate(${mL.left},${mL.top})`);
+    const defs=svg.append("defs");
+    const gf=defs.append("filter").attr("id","rlgf");
+    gf.append("feGaussianBlur").attr("stdDeviation","2.5").attr("result","blur");
+    const fm=gf.append("feMerge");fm.append("feMergeNode").attr("in","blur");fm.append("feMergeNode").attr("in","SourceGraphic");
+
+    const xSc=d3.scaleLinear().domain([0,res.rewards.length-1]).range([0,W]);
+    const ySc=d3.scaleLinear().domain([-1,1]).range([H,0]);
+    const eSc=d3.scaleLinear().domain([0,1]).range([H,0]);
+
+    // Grid + Axes
+    g.append("g").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(6).tickSize(-H).tickFormat("")).selectAll("line").attr("stroke","rgba(255,255,255,0.04)");
+    g.append("g").attr("class","axis").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).ticks(6).tickFormat(d=>"E"+(d+1)));
+    g.append("g").attr("class","axis").call(d3.axisLeft(ySc).ticks(5).tickFormat(d3.format(".1f")));
+    const rAxis=g.append("g").attr("class","axis").attr("transform",`translate(${W},0)`).call(d3.axisRight(eSc).ticks(4).tickFormat(d3.format(".0%")));
+    rAxis.selectAll("text").attr("fill","rgba(251,191,36,0.7)");
+    g.append("text").attr("x",-H/2).attr("y",-40).attr("transform","rotate(-90)").attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",10).attr("font-family","Outfit").text("Reward");
+    g.append("text").attr("x",W/2).attr("y",H+34).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",10).attr("font-family","Outfit").text("Training Episode");
+
+    // Zero line
+    g.append("line").attr("x1",0).attr("x2",W).attr("y1",ySc(0)).attr("y2",ySc(0)).attr("stroke","rgba(255,255,255,0.1)").attr("stroke-width",1).attr("stroke-dasharray","4,4");
+
+    const mkLine=(arr,sc)=>d3.line().x((_,i)=>xSc(i)).y(d=>sc(d)).curve(d3.curveBasis);
+
+    // TD error (faint red)
+    g.append("path").datum(res.tdErrors.slice(0,E)).attr("fill","none")
+        .attr("d",d3.line().x((_,i)=>xSc(i)).y(d=>ySc(Math.min(1,d)-1+0.1)).curve(d3.curveBasis))
+        .attr("stroke","rgba(248,113,113,0.4)").attr("stroke-width",1.5);
+    // Raw reward (faint green)
+    g.append("path").datum(res.rewards.slice(0,E)).attr("fill","none")
+        .attr("d",mkLine(null,ySc)).attr("stroke","rgba(52,211,153,0.25)").attr("stroke-width",1);
+    // ε decay (amber on right axis)
+    g.append("path").datum(res.epsilons.slice(0,E)).attr("fill","none")
+        .attr("d",mkLine(null,eSc)).attr("stroke","#fbbf24").attr("stroke-width",2).attr("stroke-dasharray","5,3").attr("opacity",0.8);
+    // Rolling avg (bright green)
+    g.append("path").datum(res.roll.slice(0,E)).attr("fill","none")
+        .attr("d",mkLine(null,ySc)).attr("stroke","#34d399").attr("stroke-width",3).attr("filter","url(#rlgf)");
+
+    // Current point
+    if(E>0){
+        g.append("circle").attr("cx",xSc(E-1)).attr("cy",ySc(res.roll[E-1])).attr("r",6)
+            .attr("fill","#34d399").attr("stroke","#fff").attr("stroke-width",2).attr("filter","url(#rlgf)");
+    }
+
+    // Legend
+    [{col:"#34d399",lbl:"Avg Reward"},{col:"#fbbf24",lbl:"ε (exploration)"},{col:"rgba(248,113,113,0.8)",lbl:"|TD Error|"}].forEach((it,i)=>{
+        g.append("line").attr("x1",8).attr("x2",22).attr("y1",H-52+i*15).attr("y2",H-52+i*15).attr("stroke",it.col).attr("stroke-width",2);
+        g.append("text").attr("x",26).attr("y",H-48+i*15).attr("fill","rgba(148,163,184,0.8)").attr("font-size",8).attr("font-family","Outfit").text(it.lbl);
+    });
+}
+
+function updatePanel(res,upTo){
+    const E=Math.min(upTo||res.rewards.length,res.rewards.length);
+    const slice=res.rewards.slice(Math.max(0,E-20),E);
+    const meanR=d3.mean(slice);
+    const survRate=slice.filter(r=>r>0).length/slice.length;
+    document.getElementById("out-reward").textContent=(meanR>=0?"+":"")+meanR.toFixed(3);
+    document.getElementById("out-trend").textContent=meanR>0?"Agent learning survival strategies":"Still exploring — reward negative";
+    document.getElementById("val-surv").textContent=(survRate*100).toFixed(0)+"%";
+    document.getElementById("val-eps").textContent=res.epsilons[E-1].toFixed(3);
+    document.getElementById("val-qtd").textContent=d3.mean(res.tdErrors.slice(Math.max(0,E-10),E)).toFixed(3);
+    const policyStab=Math.min(100,((E/res.rewards.length)*100)).toFixed(0)+"%";
+    document.getElementById("val-policy").textContent=policyStab;
+    document.getElementById("lbl-epcur").textContent=E+"/"+res.rewards.length;
+}
+
+function trainAnimated(){
+    if(animating) return; animating=true;
+    rlResults=simulateRL(state.alpha,state.gamma,state.eps0,state.episodes);
+    let e=1;
+    const step=()=>{
+        renderCurve(rlResults,e); updatePanel(rlResults,e);
+        e+=3;
+        if(e<=rlResults.rewards.length&&animating) animTimer=setTimeout(step,35);
+        else{ animating=false; renderCurve(rlResults); updatePanel(rlResults); }
+    };
+    step();
+}
+
+function syncUI(){
+    state.alpha=+document.getElementById("sl-alpha").value/100;
+    state.gamma=+document.getElementById("sl-gamma").value/100;
+    state.eps0=+document.getElementById("sl-eps").value/100;
+    state.episodes=+document.getElementById("sl-ep").value;
+    document.getElementById("lbl-alpha").textContent=state.alpha.toFixed(2);
+    document.getElementById("lbl-gamma").textContent=state.gamma.toFixed(2);
+    document.getElementById("lbl-eps").textContent=state.eps0.toFixed(1);
+    document.getElementById("lbl-ep").textContent=state.episodes;
+}
+
+["sl-alpha","sl-gamma","sl-eps","sl-ep"].forEach(id=>document.getElementById(id).addEventListener("input",syncUI));
+document.getElementById("btn-train").addEventListener("click",trainAnimated);
+document.getElementById("btn-reset").addEventListener("click",()=>{
+    animating=false; if(animTimer) clearTimeout(animTimer);
+    document.getElementById("sl-alpha").value=10; document.getElementById("sl-gamma").value=95;
+    document.getElementById("sl-eps").value=100; document.getElementById("sl-ep").value=200;
+    syncUI(); rlResults=null; d3.select("#rl-svg").selectAll("*").remove();
+    ["out-reward","out-trend","val-surv","val-eps","val-qtd","val-policy","lbl-epcur"].forEach(id=>document.getElementById(id).textContent="—");
+});
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));e.target.classList.add("active");}});},{threshold:0.5});
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+window.addEventListener("resize",()=>rlResults&&renderCurve(rlResults));
+syncUI();
+</script>
+</body>
+</html>

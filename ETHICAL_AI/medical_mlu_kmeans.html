@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Means Clustering Lab | EpiSense</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:rgba(255,255,255,0.07);--b:rgba(255,255,255,0.15);--d:#94a3b8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#0f1e2e,#0f172a);color:#f8fafc;height:100vh;overflow:hidden;}
+.blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.blob{position:absolute;width:550px;height:550px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:fl 20s infinite alternate ease-in-out;}
+.bo{background:#f97316;top:-180px;left:-180px;} .bi{background:#6366f1;bottom:-180px;right:-180px;animation-delay:-10s;}
+@keyframes fl{from{transform:translate(0,0)scale(1)}to{transform:translate(70px,70px)scale(1.1)}}
+.back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:.45rem;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);border-radius:50px;color:#fff;text-decoration:none;font-size:.82rem;font-weight:600;padding:.5rem 1rem;transition:all .25s;}
+.back-btn:hover{background:rgba(255,255,255,.14);transform:translateX(-3px);}
+.app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+.nar{width:24%;min-width:200px;height:100%;overflow-y:auto;padding:4.5rem 1.4rem 3rem;border-right:1px solid rgba(255,255,255,.1);scrollbar-width:none;flex-shrink:0;}
+.nar::-webkit-scrollbar{display:none;}
+section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:.22;transform:translateX(-8px);transition:opacity .4s,transform .4s;}
+section.active{opacity:1;transform:none;}
+.hero{font-size:1.85rem;font-weight:800;line-height:1.15;margin-bottom:.9rem;letter-spacing:-.03em;}
+.hero span{background:linear-gradient(to right,#fb923c,#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+section h2{font-size:.92rem;font-weight:700;color:#fb923c;margin-bottom:.6rem;}
+section p{font-size:.86rem;line-height:1.7;color:var(--d);margin-bottom:.55rem;}
+.cb{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#818cf8;background:rgba(0,0,0,.28);border:1px solid rgba(129,140,248,.18);border-radius:10px;padding:.7rem;line-height:1.85;margin:.5rem 0;}
+.eb{background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(249,115,22,.05));border:1px solid rgba(239,68,68,.28);border-radius:14px;padding:.9rem;}
+.eb h2{color:#f87171;font-size:.92rem;font-weight:700;margin-bottom:.5rem;}
+.ls{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.3rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent;}
+.ls::-webkit-scrollbar{width:5px;} .ls::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:10px;}
+.pr{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+.gp{background:var(--g);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--b);border-radius:20px;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem;}
+.pl{font-size:.57rem;font-weight:800;text-transform:uppercase;letter-spacing:.16em;color:var(--d);padding-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.09);display:flex;align-items:center;gap:.4rem;}
+.dt{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.do{background:#fb923c;box-shadow:0 0 6px #fb923c;} .di{background:#818cf8;box-shadow:0 0 6px #818cf8;} .dg{background:#34d399;box-shadow:0 0 6px #34d399;} .dd{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+input[type=range]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,.08);cursor:pointer;outline:none;}
+input.or::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#fb923c;border:2px solid #fff;box-shadow:0 0 7px rgba(251,146,60,.6);}
+input.in::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:#818cf8;border:2px solid #fff;box-shadow:0 0 7px rgba(129,140,248,.6);}
+.sr{display:flex;flex-direction:column;gap:.28rem;}
+.st{display:flex;justify-content:space-between;align-items:baseline;}
+.sl{font-size:.68rem;font-weight:600;color:var(--d);} .sv{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:800;color:#f8fafc;}
+.sh{font-size:.57rem;color:rgba(148,163,184,.5);}
+.ob{background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(129,140,248,.06));border:1px solid rgba(251,146,60,.22);border-radius:16px;padding:1rem;text-align:center;}
+.ol{font-size:.57rem;text-transform:uppercase;letter-spacing:.14em;color:var(--d);}
+.ov{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:800;background:linear-gradient(to right,#fb923c,#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin:.1rem 0;}
+.mr{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.mc{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:.65rem;text-align:center;}
+.mv{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:800;}
+.lml{font-size:.52rem;color:var(--d);text-transform:uppercase;letter-spacing:.08em;margin-top:.18rem;}
+.br{display:flex;gap:.5rem;flex-wrap:wrap;}
+.bp{padding:.55rem 1rem;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#ea580c,#4f46e5);color:#fff;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;transition:all .2s;}
+.bp:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(249,115,22,.35);}
+.bs{padding:.55rem .9rem;border-radius:50px;border:1px solid rgba(255,255,255,.15);cursor:pointer;background:rgba(255,255,255,.06);color:var(--d);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:600;transition:all .2s;}
+.bs:hover{background:rgba(255,255,255,.12);color:#fff;}
+.vr{display:grid;grid-template-columns:1.4fr 1fr;gap:1rem;}
+.vp{height:360px;flex-shrink:0;}
+svg{width:100%;height:100%;display:block;}
+.axis text{fill:rgba(148,163,184,.7);font-family:'Outfit',sans-serif;font-size:9px;}
+.axis path,.axis line{stroke:rgba(255,255,255,.06);}
+</style>
+</head>
+<body>
+<div class="blobs"><div class="blob bo"></div><div class="blob bi"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard</a>
+<div class="app">
+<aside class="nar">
+  <section id="s1" class="active">
+    <div class="hero">K-Means <span>Clustering Lab</span></div>
+    <p>K-Means groups patients into <strong>K clusters</strong> purely from their measurements — no diagnosis labels required. Watch centroids converge step-by-step.</p>
+  </section>
+  <section id="s2">
+    <h2>The Algorithm</h2>
+    <div class="cb">1. Place K centroids randomly
+2. Assign each patient to nearest centroid:
+   cluster(x) = argminₖ ‖x − μₖ‖²
+3. Update: μₖ = mean(Cₖ)
+4. Repeat 2-3 until convergence
+
+WCSS = Σₖ Σxᵢ∈Cₖ ‖xᵢ − μₖ‖²
+(lower = tighter clusters)</div>
+  </section>
+  <section id="s3">
+    <h2>Elbow Method</h2>
+    <p>WCSS always falls as K rises. Choose K at the <strong>elbow bend</strong> — where additional clusters give diminishing returns.</p>
+    <div class="cb">K too small → underfitting (groups mixed)
+K too large → overfitting (trivial clusters)
+K optimal  → elbow in WCSS-vs-K curve</div>
+  </section>
+  <section id="s4">
+    <div class="eb"><h2>⚖️ Ethical Reality</h2>
+    <p>K-Means uses Euclidean distance — so unscaled features (e.g., Glucose in mg/dL vs BMI) distort cluster shapes. Always <strong>standardise</strong> features before clustering to prevent spurious patient groupings.</p></div>
+  </section>
+</aside>
+<div class="ls">
+  <div class="pr">
+    <div class="gp">
+      <div class="pl"><span class="dt do"></span>① Clustering Configuration</div>
+      <div class="sr">
+        <div class="st"><span class="sl">Number of Clusters (K)</span><span class="sv" id="lbl-k">3</span></div>
+        <input type="range" class="or" id="sl-k" min="2" max="6" value="3">
+        <span class="sh">patient subgroups to discover</span>
+      </div>
+      <div class="sr">
+        <div class="st"><span class="sl">Patient Cohort Size (N)</span><span class="sv" id="lbl-n">80</span></div>
+        <input type="range" class="in" id="sl-n" min="30" max="150" step="10" value="80">
+        <span class="sh">total patients in dataset</span>
+      </div>
+      <div class="br">
+        <button class="bp" id="btn-anim">▶ Animate</button>
+        <button class="bs" id="btn-step">Step</button>
+        <button class="bs" id="btn-reset">⟳ Resample</button>
+      </div>
+    </div>
+    <div class="gp">
+      <div class="pl"><span class="dt di"></span>② Algorithm Formula</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:#818cf8;background:rgba(0,0,0,.28);border:1px solid rgba(129,140,248,.18);border-radius:12px;padding:.75rem;line-height:1.9;">
+        Assign: c(x)=argminₖ‖x−μₖ‖²<br>Update: μₖ=(1/|Cₖ|)Σxᵢ<br>WCSS=Σₖ Σᵢ∈Cₖ ‖xᵢ−μₖ‖²<br>
+        <span style="color:#f8fafc;">Iter: <span id="lbl-iter">0</span></span>
+      </div>
+      <div style="font-size:.68rem;color:var(--d);line-height:1.8;">
+        x-axis: <span style="color:#fb923c;font-weight:700;">Fasting Glucose (mg/dL)</span><br>
+        y-axis: <span style="color:#818cf8;font-weight:700;">BMI (kg/m²)</span><br>
+        ✦ = centroid &nbsp;·&nbsp; colour = cluster
+      </div>
+    </div>
+    <div class="gp">
+      <div class="pl"><span class="dt dg"></span>③ Cluster Metrics</div>
+      <div class="ob"><div class="ol">Within-Cluster Sum of Squares</div><div class="ov" id="out-wcss">—</div></div>
+      <div class="mr">
+        <div class="mc"><div class="mv" id="val-status" style="color:#34d399">—</div><div class="lml">Status</div></div>
+        <div class="mc"><div class="mv" id="val-iters" style="color:#fbbf24">—</div><div class="lml">Iterations</div></div>
+      </div>
+      <div class="mr">
+        <div class="mc"><div class="mv" id="val-avg" style="color:#fb923c">—</div><div class="lml">Avg Cluster Size</div></div>
+        <div class="mc"><div class="mv" id="val-kv" style="color:#818cf8">—</div><div class="lml">K Used</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="vr">
+    <div class="gp vp">
+      <div class="pl"><span class="dt dd"></span>④ Patient Scatter — colour=cluster · ✦=centroid · Voronoi background=decision regions · watch centroids migrate on Animate</div>
+      <svg id="sc-svg"></svg>
+    </div>
+    <div class="gp vp">
+      <div class="pl"><span class="dt do"></span>⑤ Elbow Curve — WCSS vs K · highlighted = current K · optimal at elbow bend</div>
+      <svg id="el-svg"></svg>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+const C=['#f87171','#34d399','#818cf8','#fbbf24','#22d3ee','#f472b6'];
+let sd=42;
+function rng(){sd=(sd*1103515245+12345)&0x7fffffff;return sd/0x7fffffff;}
+function rseed(s){sd=s;}
+
+let pts=[],cens=[],asgn=[],state={K:3,N:80},iter=0,animTimer=null,anim=false;
+
+function genPts(N,seed){
+    rseed(seed);
+    const bases=[{g:95,b:22},{g:130,b:29},{g:175,b:35},{g:110,b:26},{g:155,b:32}];
+    return Array.from({length:N},(_,i)=>{const c=bases[i%bases.length];return{g:c.g+(rng()-.5)*26,b:c.b+(rng()-.5)*5.5};});
+}
+function initC(p,K,seed){rseed(seed+100);return [...p].sort(()=>rng()-.5).slice(0,K).map(p=>({g:p.g,b:p.b}));}
+function dst(a,b){return Math.sqrt((a.g-b.g)**2+(a.b-b.b)**2);}
+function assign(p,c){return p.map(pt=>{let bi=0,bd=Infinity;c.forEach((cc,k)=>{const d=dst(pt,cc);if(d<bd){bd=d;bi=k;}});return bi;});}
+function updateC(p,a,K){return Array.from({length:K},(_,k)=>{const m=p.filter((_,i)=>a[i]===k);return m.length?{g:d3.mean(m,x=>x.g),b:d3.mean(m,x=>x.b)}:cens[k];});}
+function wcss(p,a,c){return p.reduce((s,pt,i)=>{const cc=c[a[i]];return s+(pt.g-cc.g)**2+(pt.b-cc.b)**2;},0);}
+
+function doStep(){
+    const na=assign(pts,cens),nc=updateC(pts,na,state.K);
+    const mv=cens.some((c,k)=>dst(c,nc[k])>0.01);
+    asgn=na;cens=nc;iter++;
+    document.getElementById('lbl-iter').textContent=iter;
+    updateMet();renderSc();return mv;
+}
+
+function updateMet(){
+    const w=wcss(pts,asgn,cens);
+    document.getElementById('out-wcss').textContent=w.toFixed(0);
+    document.getElementById('val-iters').textContent=iter;
+    document.getElementById('val-kv').textContent=state.K;
+    const sz=Array.from({length:state.K},(_,k)=>asgn.filter(a=>a===k).length);
+    document.getElementById('val-avg').textContent=Math.round(d3.mean(sz));
+}
+
+function init(seed){
+    iter=0;
+    pts=genPts(state.N,seed);
+    cens=initC(pts,state.K,seed);
+    asgn=assign(pts,cens);
+    document.getElementById('val-status').textContent='Ready';
+    updateMet();renderSc(true);renderElbow(seed);
+}
+
+const sm={top:14,right:14,bottom:40,left:46};
+function renderSc(){
+    const el=document.getElementById('sc-svg');
+    const r=el.getBoundingClientRect();
+    const W=r.width-sm.left-sm.right,H=r.height-sm.top-sm.bottom;
+    if(W<=0||H<=0)return;
+    const svg=d3.select('#sc-svg');svg.selectAll('*').remove();
+    const g=svg.append('g').attr('transform',`translate(${sm.left},${sm.top})`);
+    const defs=svg.append('defs');
+    const gf=defs.append('filter').attr('id','kgf');gf.append('feGaussianBlur').attr('stdDeviation','3').attr('result','blur');
+    const fm=gf.append('feMerge');fm.append('feMergeNode').attr('in','blur');fm.append('feMergeNode').attr('in','SourceGraphic');
+
+    const gx=d3.scaleLinear().domain([d3.min(pts,p=>p.g)-6,d3.max(pts,p=>p.g)+6]).range([0,W]);
+    const gy=d3.scaleLinear().domain([d3.min(pts,p=>p.b)-1,d3.max(pts,p=>p.b)+1]).range([H,0]);
+
+    g.append('g').attr('class','axis').attr('transform',`translate(0,${H})`).call(d3.axisBottom(gx).ticks(5));
+    g.append('g').attr('class','axis').call(d3.axisLeft(gy).ticks(5));
+    g.append('text').attr('x',W/2).attr('y',H+34).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',8.5).attr('font-family','Outfit').text('Fasting Glucose (mg/dL)');
+    g.append('text').attr('transform','rotate(-90)').attr('x',-H/2).attr('y',-36).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',8.5).attr('font-family','Outfit').text('BMI (kg/m²)');
+
+    // Voronoi tint
+    const grid=8;
+    for(let x=0;x<=W;x+=grid)for(let y=0;y<=H;y+=grid){
+        const pt={g:gx.invert(x),b:gy.invert(y)};
+        let bi=0,bd=Infinity;cens.forEach((c,k)=>{const d=dst(pt,c);if(d<bd){bd=d;bi=k;}});
+        g.append('rect').attr('x',x).attr('y',y).attr('width',grid).attr('height',grid).attr('fill',C[bi]).attr('opacity',.075);
+    }
+
+    // Patient dots
+    pts.forEach((p,i)=>{g.append('circle').attr('cx',gx(p.g)).attr('cy',gy(p.b)).attr('r',5).attr('fill',C[asgn[i]]).attr('opacity',.88).attr('stroke','rgba(0,0,0,.3)').attr('stroke-width',.5);});
+
+    // Centroids as stars
+    cens.forEach((c,k)=>{
+        const cx=gx(c.g),cy=gy(c.b);
+        const r1=10,r2=5;
+        const spts=d3.range(10).map(i=>{const a=(i*Math.PI/5)-Math.PI/2,r=i%2?r2:r1;return[cx+r*Math.cos(a),cy+r*Math.sin(a)];});
+        g.append('polygon').attr('points',spts.map(p=>p.join(',')).join(' ')).attr('fill',C[k]).attr('filter','url(#kgf)').attr('stroke','#fff').attr('stroke-width',1.5);
+        g.append('text').attr('x',cx).attr('y',cy-14).attr('text-anchor','middle').attr('fill',C[k]).attr('font-size',7.5).attr('font-family','Outfit').attr('font-weight',700).text(`C${k+1}`);
+    });
+}
+
+const em={top:14,right:14,bottom:38,left:46};
+function renderElbow(seed){
+    const el=document.getElementById('el-svg');
+    const r=el.getBoundingClientRect();
+    const W=r.width-em.left-em.right,H=r.height-em.top-em.bottom;
+    if(W<=0||H<=0)return;
+    const svg=d3.select('#el-svg');svg.selectAll('*').remove();
+    const g=svg.append('g').attr('transform',`translate(${em.left},${em.top})`);
+    const maxK=6,wl=[];
+    for(let k=1;k<=maxK;k++){
+        let c=initC(pts,k,seed+k*7),a=assign(pts,c);
+        for(let it=0;it<12;it++){a=assign(pts,c);c=updateC(pts,a,k);}
+        wl.push({k,w:wcss(pts,a,c)});
+    }
+    const xs=d3.scaleLinear().domain([1,maxK]).range([0,W]);
+    const ys=d3.scaleLinear().domain([0,d3.max(wl,d=>d.w)*1.06]).range([H,0]);
+    g.append('g').attr('class','axis').attr('transform',`translate(0,${H})`).call(d3.axisBottom(xs).ticks(maxK).tickFormat(d=>'K='+d));
+    g.append('g').attr('class','axis').call(d3.axisLeft(ys).ticks(4).tickFormat(d3.format('.2s')));
+    g.append('text').attr('x',W/2).attr('y',H+32).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',8.5).attr('font-family','Outfit').text('Number of Clusters K');
+    g.append('text').attr('transform','rotate(-90)').attr('x',-H/2).attr('y',-38).attr('text-anchor','middle').attr('fill','rgba(148,163,184,.6)').attr('font-size',8.5).attr('font-family','Outfit').text('WCSS');
+    const defs=svg.append('defs');const gf=defs.append('filter').attr('id','egf');
+    gf.append('feGaussianBlur').attr('stdDeviation','2').attr('result','blur');
+    const fm=gf.append('feMerge');fm.append('feMergeNode').attr('in','blur');fm.append('feMergeNode').attr('in','SourceGraphic');
+    g.append('path').datum(wl).attr('fill','none').attr('d',d3.line().x(d=>xs(d.k)).y(d=>ys(d.w)).curve(d3.curveCatmullRom)).attr('stroke','#fb923c').attr('stroke-width',2.5).attr('filter','url(#egf)');
+    wl.forEach(d=>{
+        const ic=d.k===state.K;
+        g.append('circle').attr('cx',xs(d.k)).attr('cy',ys(d.w)).attr('r',ic?7:4).attr('fill',ic?'#fb923c':'rgba(251,146,60,.5)').attr('stroke',ic?'#fff':'none').attr('stroke-width',ic?2:0).attr('filter',ic?'url(#egf)':null);
+        if(ic)g.append('text').attr('x',xs(d.k)).attr('y',ys(d.w)-12).attr('text-anchor','middle').attr('fill','#fb923c').attr('font-size',7.5).attr('font-family','Outfit').attr('font-weight',700).text('← K='+state.K);
+    });
+}
+
+let curSeed=42;
+document.getElementById('sl-k').addEventListener('input',function(){state.K=+this.value;document.getElementById('lbl-k').textContent=this.value;init(curSeed);});
+document.getElementById('sl-n').addEventListener('input',function(){state.N=+this.value;document.getElementById('lbl-n').textContent=this.value;init(curSeed);});
+document.getElementById('btn-anim').addEventListener('click',()=>{
+    if(anim)return;anim=true;
+    document.getElementById('val-status').textContent='Running';
+    const go=()=>{const mv=doStep();if(mv&&anim&&iter<30)animTimer=setTimeout(go,500);else{anim=false;document.getElementById('val-status').textContent=mv?'Max iter':'Converged ✓';}};go();
+});
+document.getElementById('btn-step').addEventListener('click',()=>{const mv=doStep();if(!mv)document.getElementById('val-status').textContent='Converged ✓';});
+document.getElementById('btn-reset').addEventListener('click',()=>{anim=false;if(animTimer)clearTimeout(animTimer);curSeed=Math.random()*99999|0;init(curSeed);});
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));e.target.classList.add('active');}});},{threshold:0.5});
+document.querySelectorAll('section').forEach(s=>obs.observe(s));
+window.addEventListener('resize',()=>{renderSc();renderElbow(curSeed);});
+setTimeout(()=>init(curSeed),80);
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--glass-bg:rgba(255,255,255,0.07);--glass-border:rgba(255,255,255,0.15);--text-dim:#94a3b8;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#1e293b,#0f172a);color:#f8fafc;height:100vh;overflow:hidden;}
+        .blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:float 20s infinite alternate ease-in-out;}
+        .blob-blue{background:#007bff;top:-200px;left:-200px;}
+        .blob-pink{background:#e83e8c;bottom:-200px;right:-200px;animation-delay:-10s;}
+        @keyframes float{from{transform:translate(0,0)scale(1)}to{transform:translate(80px,80px)scale(1.1)}}
+        .back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:0.45rem;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:50px;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:600;padding:0.5rem 1rem;transition:all 0.25s;}
+        .back-btn:hover{background:rgba(255,255,255,0.14);transform:translateX(-3px);}
+        .app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+        .narrative{width:24%;min-width:210px;height:100%;overflow-y:auto;padding:4.5rem 1.5rem 3rem;border-right:1px solid rgba(255,255,255,0.1);scrollbar-width:none;flex-shrink:0;}
+        .narrative::-webkit-scrollbar{display:none;}
+        section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:0.22;transform:translateX(-8px);transition:opacity 0.4s,transform 0.4s;}
+        section.active{opacity:1;transform:none;}
+        .hero{font-size:1.9rem;font-weight:800;line-height:1.15;margin-bottom:1rem;letter-spacing:-0.03em;}
+        .hero span{background:linear-gradient(to right,#60a5fa,#f472b6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+        section h2{font-size:0.95rem;font-weight:700;color:#60a5fa;margin-bottom:0.7rem;}
+        section p{font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem;}
+        .cbox{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:0.75rem;line-height:1.85;margin:0.6rem 0;}
+        .ethical-box{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(232,62,140,0.05));border:1px solid rgba(239,68,68,0.28);border-radius:14px;padding:1rem;}
+        .ethical-box h2{color:#f87171;}
+        .lab-scroll{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.4rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent;}
+        .lab-scroll::-webkit-scrollbar{width:5px;}
+        .lab-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:10px;}
+        .panels-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+        .glass-panel{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:1.3rem;display:flex;flex-direction:column;gap:0.85rem;}
+        .panel-label{font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:var(--text-dim);padding-bottom:0.6rem;border-bottom:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;gap:0.45rem;}
+        .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .dot-blue{background:#60a5fa;box-shadow:0 0 6px #60a5fa;}
+        .dot-pink{background:#f472b6;box-shadow:0 0 6px #f472b6;}
+        .dot-green{background:#34d399;box-shadow:0 0 6px #34d399;}
+        .dot-gold{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+        .num-field{display:flex;flex-direction:column;gap:0.32rem;}
+        .num-field .fl{font-size:0.68rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;}
+        .num-field input[type="number"]{width:100%;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;padding:0.5rem 0.8rem;text-align:center;outline:none;}
+        .num-field input[type="number"]:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,0.15);}
+        .num-field .fu{font-size:0.62rem;color:rgba(148,163,184,0.6);text-align:center;font-weight:600;text-transform:uppercase;}
+        input[type="number"]::-webkit-inner-spin-button{opacity:0.25;}
+        .slider-row{display:flex;flex-direction:column;gap:0.32rem;}
+        .slider-top{display:flex;justify-content:space-between;align-items:baseline;}
+        .s-label{font-size:0.7rem;font-weight:600;color:var(--text-dim);}
+        .s-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;color:#f8fafc;}
+        .s-hint{font-size:0.58rem;color:rgba(148,163,184,0.5);}
+        input[type="range"]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,0.08);cursor:pointer;outline:none;}
+        input[type="range"].blue::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#60a5fa;border:2px solid #fff;box-shadow:0 0 8px rgba(96,165,250,0.6);}
+        input[type="range"].pink::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#f472b6;border:2px solid #fff;box-shadow:0 0 8px rgba(244,114,182,0.6);}
+        input[type="range"].green::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#34d399;border:2px solid #fff;box-shadow:0 0 8px rgba(52,211,153,0.6);}
+        .output-big{background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(244,114,182,0.06));border:1px solid rgba(96,165,250,0.22);border-radius:16px;padding:1.1rem;text-align:center;}
+        .out-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim);}
+        .out-verdict{font-size:1.3rem;font-weight:800;padding:0.4rem 1.2rem;border-radius:50px;display:inline-block;margin:0.4rem 0 0.2rem;}
+        .verdict-mal{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#f87171;}
+        .verdict-ben{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);color:#34d399;}
+        .mini-row{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;}
+        .mini-card{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:0.7rem;text-align:center;}
+        .mini-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;}
+        .mini-label{font-size:0.54rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+        .eq-row{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:12px;padding:0.7rem;line-height:1.85;}
+        .btn-row{display:flex;gap:0.5rem;flex-wrap:wrap;}
+        .btn-primary{padding:0.6rem 1.1rem;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#007bff,#e83e8c);color:#fff;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;transition:all 0.2s;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,123,255,0.35);}
+        .btn-secondary{padding:0.6rem 1rem;border-radius:50px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.2s;}
+        .btn-secondary:hover{background:rgba(255,255,255,0.12);color:#fff;}
+        .viz-panel{height:430px;flex-shrink:0;}
+        #nn-svg{width:100%;height:100%;display:block;}
+        .axis text{fill:rgba(148,163,184,0.7);font-family:'Outfit',sans-serif;font-size:10px;}
+        .axis path,.axis line{stroke:rgba(255,255,255,0.06);}
+        @keyframes pulse{0%,100%{r:14;opacity:0.7}50%{r:18;opacity:1}}
+        @keyframes flowAnim{0%{stroke-dashoffset:100}100%{stroke-dashoffset:0}}
+    </style>
+</head>
+<body>
+<div class="blobs"><div class="blob blob-blue"></div><div class="blob blob-pink"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard
+</a>
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Neural Network <span>Pattern Lab</span></div>
+        <p>A Neural Network recognises cancer from tumour measurements the way a radiologist recognises patterns from a scan — by extracting increasingly abstract features through <strong>layers of neurons</strong>.</p>
+        <p>Enter patient data and press <strong>▶ Forward Pass</strong> to watch signals flow through the network.</p>
+    </section>
+    <section id="s2">
+        <h2>Forward Pass &amp; Activation</h2>
+        <p>Each neuron computes a weighted sum of its inputs, then applies an <strong>activation function</strong> to introduce non-linearity:</p>
+        <div class="cbox">z = Σ (wᵢ · xᵢ) + b    [weighted sum]
+
+ReLU(z) = max(0, z)        [hidden layers]
+σ(z) = 1/(1+e⁻ᶻ)          [output layer]
+
+Output = probability of malignancy</div>
+    </section>
+    <section id="s3">
+        <h2>Backpropagation &amp; Learning</h2>
+        <p>After a forward pass, if the prediction is wrong, the error is <strong>propagated backwards</strong> to adjust every weight via gradient descent:</p>
+        <div class="cbox">Loss = −[y·log(ŷ) + (1−y)·log(1−ŷ)]
+         (Binary Cross-Entropy)
+
+∂Loss/∂w = chain rule of calculus
+
+w ← w − η · ∂Loss/∂w
+         (gradient descent update)</div>
+    </section>
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ The Black Box Problem</h2>
+            <p>A neural network with 3 hidden layers and 512 parameters cannot explain <em>why</em> it flagged a patient as malignant. A clinician cannot use "the third hidden neuron fired strongly" as a medical justification. This is the core challenge of clinical AI explainability.</p>
+        </div>
+    </section>
+</aside>
+<div class="lab-scroll">
+    <div class="panels-row">
+        <!-- Panel 1 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>① Patient Input</div>
+            <div class="num-field">
+                <div class="fl">Tumour Size</div>
+                <input type="number" id="in-size" value="5.5" min="0" max="10" step="0.1">
+                <div class="fu">centimetres (cm)</div>
+            </div>
+            <div class="num-field">
+                <div class="fl">Cell Uniformity</div>
+                <input type="number" id="in-unif" value="6" min="1" max="10" step="1">
+                <div class="fu">score 1 – 10</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Hidden Layers</span><span class="s-val" id="lbl-layers">2</span></div>
+                <input type="range" class="blue" id="sl-layers" min="1" max="4" value="2">
+                <span class="s-hint">neurons per layer: 4</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Learning Rate (η)</span><span class="s-val" id="lbl-lr">0.01</span></div>
+                <input type="range" class="pink" id="sl-lr" min="1" max="100" value="10">
+                <span class="s-hint">step size for weight updates</span>
+            </div>
+        </div>
+        <!-- Panel 2 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-pink"></span>② Network Architecture</div>
+            <div class="eq-row">
+                Layer computation:<br>
+                z = Σ wᵢ·xᵢ + b<br>
+                a = ReLU(z) = max(0, z)<br>
+                <span style="color:#f8fafc;">Output: σ(z) = 1/(1+e⁻ᶻ)</span>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-dim);line-height:1.75;">
+                Input: <span style="color:#60a5fa">size, uniformity</span><br>
+                Hidden: <span id="arch-desc" style="color:#f472b6">2 × 4 neurons (ReLU)</span><br>
+                Output: <span style="color:#34d399">1 neuron (Sigmoid)</span><br>
+                Parameters: <span id="param-count" style="color:#fbbf24">—</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="btn-fwd">▶ Forward Pass</button>
+                <button class="btn-secondary" id="btn-reset">Reset Weights</button>
+            </div>
+        </div>
+        <!-- Panel 3 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-green"></span>③ Prediction Output</div>
+            <div class="output-big">
+                <div class="out-label">Malignancy Probability</div>
+                <div class="out-verdict verdict-mal" id="out-verdict">MALIGNANT</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:800;color:#f8fafc;margin-top:0.3rem;" id="out-prob">—</div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-z" style="color:#60a5fa">—</div><div class="mini-label">Output z-score</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-loss" style="color:#f87171">—</div><div class="mini-label">BCE Loss</div></div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-h1" style="color:#f472b6">—</div><div class="mini-label">Layer 1 Max Act</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-h2" style="color:#34d399">—</div><div class="mini-label">Layer 2 Max Act</div></div>
+            </div>
+        </div>
+    </div>
+    <!-- Viz -->
+    <div class="glass-panel viz-panel">
+        <div class="panel-label"><span class="dot dot-gold"></span>④ Network Visualization — node brightness = activation level · edge thickness = weight magnitude · animated signal flow on Forward Pass</div>
+        <svg id="nn-svg"></svg>
+    </div>
+</div>
+</div>
+
+<script>
+const sig=z=>1/(1+Math.exp(-z));
+const relu=z=>Math.max(0,z);
+
+// ── Network state ──────────────────────────────────────────────
+let state={size:5.5,unif:6,layers:2,lr:0.01,activations:[],weights:[],biases:[],animating:false};
+
+function initWeights(layers){
+    // Simple Xavier-ish init with fixed seed for repeatability
+    let s=12345;
+    const rand=()=>{ s=(s*1103515245+12345)&0x7fffffff; return (s/0x7fffffff)*2-1; };
+    const arch=[2,...Array(layers).fill(4),1];
+    state.weights=[];state.biases=[];
+    for(let l=0;l<arch.length-1;l++){
+        const scale=Math.sqrt(2/arch[l]);
+        state.weights.push(Array.from({length:arch[l+1]},()=>Array.from({length:arch[l]},()=>rand()*scale)));
+        state.biases.push(Array.from({length:arch[l+1]},()=>rand()*0.1));
+    }
+}
+
+function forwardPass(size,unif){
+    const arch=[2,...Array(state.layers).fill(4),1];
+    const xs=[size/10,unif/10]; // normalise to [0,1]
+    state.activations=[[...xs]];
+    let cur=xs;
+    for(let l=0;l<arch.length-1;l++){
+        const next=state.weights[l].map((wRow,j)=>{
+            const z=wRow.reduce((s,w,i)=>s+w*cur[i],0)+state.biases[l][j];
+            return l===arch.length-2?sig(z):relu(z);
+        });
+        state.activations.push(next);
+        cur=next;
+    }
+    return cur[0];
+}
+
+function paramCount(layers){
+    const arch=[2,...Array(layers).fill(4),1];
+    let p=0;
+    for(let l=0;l<arch.length-1;l++) p+=arch[l]*arch[l+1]+arch[l+1];
+    return p;
+}
+
+// ── D3 Network Render ──────────────────────────────────────────
+const margin={top:22,right:55,bottom:32,left:70};
+const svg=d3.select("#nn-svg");
+
+function renderNN(highlightLayer=-1){
+    const r=document.getElementById("nn-svg").getBoundingClientRect();
+    const W=r.width-margin.left-margin.right, H=r.height-margin.top-margin.bottom;
+    if(W<=0||H<=0) return;
+    svg.selectAll("*").remove();
+    const g=svg.append("g").attr("transform",`translate(${margin.left},${margin.top})`);
+
+    const defs=svg.append("defs");
+    const glow=defs.append("filter").attr("id","ng");
+    glow.append("feGaussianBlur").attr("stdDeviation","4").attr("result","blur");
+    const fm=glow.append("feMerge");fm.append("feMergeNode").attr("in","blur");fm.append("feMergeNode").attr("in","SourceGraphic");
+
+    const arch=[2,...Array(state.layers).fill(4),1];
+    const acts=state.activations.length?state.activations:arch.map(n=>Array(n).fill(0));
+
+    const layerX=arch.map((_,l)=>l*(W/(arch.length-1)));
+    const nodeR=16;
+
+    // Compute node positions
+    const pos=arch.map((n,l)=>Array.from({length:n},(_,i)=>({
+        x:layerX[l], y:(H/2)+(i-(n-1)/2)*Math.min(H/(n+0.5),55)
+    })));
+
+    // Draw edges
+    for(let l=0;l<arch.length-1;l++){
+        for(let j=0;j<arch[l+1];j++){
+            for(let i=0;i<arch[l];i++){
+                const w=state.weights[l]?state.weights[l][j][i]:0.5;
+                const a=acts[l]?acts[l][i]:0;
+                const isActive=highlightLayer===l;
+                const opacity=isActive?0.85:0.15+Math.abs(w)*0.25;
+                const col=w>0?"rgba(96,165,250,":"rgba(244,114,182,";
+                g.append("line")
+                    .attr("x1",pos[l][i].x).attr("y1",pos[l][i].y)
+                    .attr("x2",pos[l+1][j].x).attr("y2",pos[l+1][j].y)
+                    .attr("stroke",col+(isActive?0.9:opacity)+")")
+                    .attr("stroke-width",isActive?Math.abs(w)*4+1:Math.abs(w)*2+0.5)
+                    .attr("stroke-dasharray",isActive?"8,4":null)
+                    .style("animation",isActive?"flowAnim 0.6s linear infinite":null);
+            }
+        }
+    }
+
+    // Draw nodes
+    pos.forEach((layer,l)=>{
+        layer.forEach((nd,i)=>{
+            const act=acts[l]?acts[l][i]:0;
+            const isInput=l===0, isOutput=l===arch.length-1;
+            const isHighlight=highlightLayer===l;
+            // Output node colour = red (malignant) or green (benign) based on prob
+            const outProb=acts[arch.length-1]?acts[arch.length-1][0]:0;
+            const isMal=outProb>=0.5;
+            const col=isInput?"#60a5fa":isOutput?(isMal?"#f87171":"#34d399"):"#f472b6";
+            const alpha=0.2+Math.abs(act)*0.8;
+
+            g.append("circle").attr("cx",nd.x).attr("cy",nd.y).attr("r",nodeR+2)
+                .attr("fill","none").attr("stroke",col).attr("stroke-opacity",alpha*0.3).attr("stroke-width",6);
+            g.append("circle").attr("cx",nd.x).attr("cy",nd.y).attr("r",nodeR)
+                .attr("fill",`rgba(${isInput?"96,165,250":isOutput?(isMal?"248,113,113":"52,211,153"):"244,114,182"},${alpha.toFixed(2)})`)
+                .attr("stroke",col).attr("stroke-width",isHighlight?2.5:1.5)
+                .attr("filter",act>0.3||isHighlight?"url(#ng)":null);
+
+            // Activation value
+            const label=act!==0?(act<1?act.toFixed(2):act.toFixed(1)):"0";
+            g.append("text").attr("x",nd.x).attr("y",nd.y+4)
+                .attr("text-anchor","middle").attr("fill","#fff")
+                .attr("font-size",8).attr("font-family","JetBrains Mono").attr("font-weight",700)
+                .text(label);
+
+            // Node name labels — placed BELOW node to stay within SVG bounds
+            if(isInput){
+                const lbl=i===0?"Tumour Size":"Cell Uniformity";
+                g.append("text").attr("x",nd.x).attr("y",nd.y+nodeR+13)
+                    .attr("text-anchor","middle").attr("fill","rgba(96,165,250,0.85)")
+                    .attr("font-size",8).attr("font-family","Outfit").attr("font-weight",600)
+                    .text(lbl);
+            }
+            if(isOutput){
+                const verdict=isMal?"MALIGNANT":"BENIGN";
+                g.append("text").attr("x",nd.x).attr("y",nd.y+nodeR+13)
+                    .attr("text-anchor","middle").attr("fill",isMal?"#f87171":"#34d399")
+                    .attr("font-size",7.5).attr("font-family","Outfit").attr("font-weight",700)
+                    .text(verdict);
+            }
+        });
+    });
+
+    // Layer labels
+    ["Input","Hidden","Output"].forEach((lbl,i)=>{
+        const idx=i===2?arch.length-1:i;
+        g.append("text").attr("x",layerX[idx]).attr("y",-4)
+            .attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.5)")
+            .attr("font-size",7.5).attr("font-family","Outfit")
+            .text(i===1&&state.layers>1?`Hidden (×${state.layers})`:lbl);
+    });
+}
+
+function updateMetrics(prob){
+    const verdict=document.getElementById("out-verdict");
+    if(prob>=0.5){verdict.textContent="MALIGNANT";verdict.className="out-verdict verdict-mal";}
+    else{verdict.textContent="BENIGN";verdict.className="out-verdict verdict-ben";}
+    document.getElementById("out-prob").textContent=(prob*100).toFixed(1)+"%";
+    const z=Math.log(prob/(1-prob+1e-9));
+    document.getElementById("val-z").textContent=z.toFixed(3);
+    const gt=prob>=0.5?1:0; // pseudo ground truth = prediction (demo)
+    const loss=-(gt*Math.log(prob+1e-9)+(1-gt)*Math.log(1-prob+1e-9));
+    document.getElementById("val-loss").textContent=loss.toFixed(3);
+    const a=state.activations;
+    if(a.length>1) document.getElementById("val-h1").textContent=d3.max(a[1]).toFixed(3);
+    if(a.length>2) document.getElementById("val-h2").textContent=d3.max(a[2]).toFixed(3);
+    else document.getElementById("val-h2").textContent="—";
+}
+
+function runForwardPass(){
+    if(state.animating) return;
+    state.animating=true;
+    const arch=[2,...Array(state.layers).fill(4),1];
+    const prob=forwardPass(state.size,state.unif);
+    updateMetrics(prob);
+    // Animate layer by layer
+    let l=-1;
+    const step=()=>{
+        l++;
+        if(l<arch.length){renderNN(l);setTimeout(step,450);}
+        else{renderNN(-1);state.animating=false;}
+    };
+    step();
+}
+
+function render(){
+    const layers=state.layers;
+    document.getElementById("lbl-layers").textContent=layers;
+    document.getElementById("lbl-lr").textContent=state.lr.toFixed(2);
+    document.getElementById("arch-desc").textContent=`${layers} × 4 neurons (ReLU)`;
+    document.getElementById("param-count").textContent=paramCount(layers)+" params";
+    initWeights(layers);
+    const prob=forwardPass(state.size,state.unif);
+    updateMetrics(prob);
+    renderNN(-1);
+}
+
+document.getElementById("in-size").addEventListener("input",e=>{state.size=+e.target.value||0;render();});
+document.getElementById("in-unif").addEventListener("input",e=>{state.unif=+e.target.value||1;render();});
+document.getElementById("sl-layers").addEventListener("input",function(){state.layers=+this.value;render();});
+document.getElementById("sl-lr").addEventListener("input",function(){state.lr=+this.value/1000;document.getElementById("lbl-lr").textContent=state.lr.toFixed(3);});
+document.getElementById("btn-fwd").addEventListener("click",runForwardPass);
+document.getElementById("btn-reset").addEventListener("click",()=>{initWeights(state.layers);forwardPass(state.size,state.unif);renderNN(-1);});
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));e.target.classList.add("active");}});},{threshold:0.5});
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+window.addEventListener("resize",render);
+setTimeout(render,80);
+</script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Validation Lab | EpiSense</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--glass-bg:rgba(255,255,255,0.07);--glass-border:rgba(255,255,255,0.15);--text-dim:#94a3b8;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Outfit',sans-serif;background:radial-gradient(circle at top left,#1e293b,#0f172a);color:#f8fafc;height:100vh;overflow:hidden;}
+        .blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(100px);opacity:0.2;animation:float 20s infinite alternate ease-in-out;}
+        .blob-blue{background:#007bff;top:-200px;left:-200px;}
+        .blob-pink{background:#e83e8c;bottom:-200px;right:-200px;animation-delay:-10s;}
+        @keyframes float{from{transform:translate(0,0)scale(1)}to{transform:translate(80px,80px)scale(1.1)}}
+        .back-btn{position:fixed;top:1.1rem;left:1.1rem;z-index:200;display:inline-flex;align-items:center;gap:0.45rem;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:50px;color:#fff;text-decoration:none;font-size:0.82rem;font-weight:600;padding:0.5rem 1rem;transition:all 0.25s;}
+        .back-btn:hover{background:rgba(255,255,255,0.14);transform:translateX(-3px);}
+        .app{position:relative;z-index:1;display:flex;height:100vh;overflow:hidden;}
+        .narrative{width:24%;min-width:210px;height:100%;overflow-y:auto;padding:4.5rem 1.5rem 3rem;border-right:1px solid rgba(255,255,255,0.1);scrollbar-width:none;flex-shrink:0;}
+        .narrative::-webkit-scrollbar{display:none;}
+        section{min-height:72vh;display:flex;flex-direction:column;justify-content:center;opacity:0.22;transform:translateX(-8px);transition:opacity 0.4s,transform 0.4s;}
+        section.active{opacity:1;transform:none;}
+        .hero{font-size:1.9rem;font-weight:800;line-height:1.15;margin-bottom:1rem;letter-spacing:-0.03em;}
+        .hero span{background:linear-gradient(to right,#60a5fa,#f472b6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+        section h2{font-size:0.95rem;font-weight:700;color:#60a5fa;margin-bottom:0.7rem;}
+        section p{font-size:0.88rem;line-height:1.7;color:var(--text-dim);margin-bottom:0.6rem;}
+        .cbox{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:0.75rem;line-height:1.85;margin:0.6rem 0;}
+        .ethical-box{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(232,62,140,0.05));border:1px solid rgba(239,68,68,0.28);border-radius:14px;padding:1rem;}
+        .ethical-box h2{color:#f87171;}
+        .lab-scroll{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:1.4rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent;}
+        .lab-scroll::-webkit-scrollbar{width:5px;}
+        .lab-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:10px;}
+        .panels-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1rem;}
+        .glass-panel{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:1.3rem;display:flex;flex-direction:column;gap:0.85rem;}
+        .panel-label{font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.16em;color:var(--text-dim);padding-bottom:0.6rem;border-bottom:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;gap:0.45rem;}
+        .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .dot-blue{background:#60a5fa;box-shadow:0 0 6px #60a5fa;}
+        .dot-pink{background:#f472b6;box-shadow:0 0 6px #f472b6;}
+        .dot-green{background:#34d399;box-shadow:0 0 6px #34d399;}
+        .dot-gold{background:#fbbf24;box-shadow:0 0 6px #fbbf24;}
+        .slider-row{display:flex;flex-direction:column;gap:0.32rem;}
+        .slider-top{display:flex;justify-content:space-between;align-items:baseline;}
+        .s-label{font-size:0.7rem;font-weight:600;color:var(--text-dim);}
+        .s-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;color:#f8fafc;}
+        .s-hint{font-size:0.58rem;color:rgba(148,163,184,0.5);}
+        input[type="range"]{width:100%;height:5px;appearance:none;border-radius:10px;background:rgba(255,255,255,0.08);cursor:pointer;outline:none;}
+        input[type="range"].blue::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#60a5fa;border:2px solid #fff;box-shadow:0 0 8px rgba(96,165,250,0.6);}
+        input[type="range"].pink::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#f472b6;border:2px solid #fff;box-shadow:0 0 8px rgba(244,114,182,0.6);}
+        input[type="range"].green::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:#34d399;border:2px solid #fff;box-shadow:0 0 8px rgba(52,211,153,0.6);}
+        .output-big{background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(244,114,182,0.06));border:1px solid rgba(96,165,250,0.22);border-radius:16px;padding:1.1rem;text-align:center;}
+        .out-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim);}
+        .out-value{font-family:'JetBrains Mono',monospace;font-size:2.6rem;font-weight:800;background:linear-gradient(to right,#60a5fa,#f472b6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin:0.1rem 0;}
+        .out-sub{font-size:0.7rem;color:var(--text-dim);}
+        .mini-row{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;}
+        .mini-card{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:0.7rem;text-align:center;}
+        .mini-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:800;}
+        .mini-label{font-size:0.54rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.2rem;}
+        .eq-row{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#34d399;background:rgba(0,0,0,0.28);border:1px solid rgba(52,211,153,0.18);border-radius:12px;padding:0.75rem;line-height:1.9;text-align:center;}
+        .btn-row{display:flex;gap:0.5rem;flex-wrap:wrap;}
+        .btn-primary{padding:0.6rem 1.1rem;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#007bff,#e83e8c);color:#fff;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;transition:all 0.2s;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,123,255,0.35);}
+        .btn-secondary{padding:0.6rem 1rem;border-radius:50px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.2s;}
+        .btn-secondary:hover{background:rgba(255,255,255,0.12);color:#fff;}
+        .viz-row{display:grid;grid-template-columns:1.5fr 1fr;gap:1rem;}
+        .viz-panel{height:360px;flex-shrink:0;}
+        #fold-svg,#bar-svg{width:100%;height:100%;display:block;}
+        .axis text{fill:rgba(148,163,184,0.7);font-family:'Outfit',sans-serif;font-size:10px;}
+        .axis path,.axis line{stroke:rgba(255,255,255,0.06);}
+        /* Fold animation */
+        .fold-rect{transition:all 0.5s cubic-bezier(0.4,0,0.2,1);}
+    </style>
+</head>
+<body>
+<div class="blobs"><div class="blob blob-blue"></div><div class="blob blob-pink"></div></div>
+<a href="../ml_basics.html#path-ethics" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Dashboard
+</a>
+<div class="app">
+<aside class="narrative">
+    <section id="s1" class="active">
+        <div class="hero">Cross-Validation <span>Trial Stability Lab</span></div>
+        <p>How do we trust a model's performance if it was evaluated on the same data it was trained on? <strong>K-Fold Cross-Validation</strong> prevents this by rotating the test set.</p>
+        <p>Press <strong>▶ Animate</strong> to watch each fold rotate through the test position one-by-one.</p>
+    </section>
+    <section id="s2">
+        <h2>How K-Fold Works</h2>
+        <p>The dataset is split into <strong>K equal folds</strong>. In each of K rounds, one fold becomes the test set and the remaining K−1 folds train the model.</p>
+        <div class="cbox">For K=5, 100 patients:
+— Fold 1 (pts 1-20)   → Test
+— Folds 2-5 (pts 21-100) → Train
+
+Round 2:
+— Fold 2 (pts 21-40)  → Test
+— Folds 1,3-5         → Train
+
+...repeat K times
+
+CV Score = mean(Accuracy across K rounds)</div>
+    </section>
+    <section id="s3">
+        <h2>Stability &amp; Standard Deviation</h2>
+        <p>A well-generalising model produces <strong>consistent</strong> accuracy across all K folds. High variance between fold scores signals:</p>
+        <div class="cbox">σ(CV scores) is low → stable model
+σ(CV scores) is high → model is sensitive
+  to which patients are in training data
+  → overfitting or class imbalance</div>
+        <p>The <strong>error bars</strong> on the accuracy chart show fold-to-fold variability.</p>
+    </section>
+    <section id="s4">
+        <div class="ethical-box">
+            <h2>⚖️ Ethical Reality</h2>
+            <p><strong>Stratification Matters:</strong> Standard CV may put all diabetic patients from a minority ethnic group into one fold. <strong>Stratified K-Fold</strong> preserves class proportions in each fold — essential for equitable model evaluation.</p>
+        </div>
+    </section>
+</aside>
+<div class="lab-scroll">
+    <div class="panels-row">
+        <!-- Panel 1 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>① CV Configuration</div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Number of Folds (K)</span><span class="s-val" id="lbl-k">5</span></div>
+                <input type="range" class="blue" id="sl-k" min="2" max="10" value="5">
+                <span class="s-hint">2 = holdout · 10 = LOOCV-like</span>
+            </div>
+            <div class="slider-row">
+                <div class="slider-top"><span class="s-label">Model Complexity</span><span class="s-val" id="lbl-comp">3</span></div>
+                <input type="range" class="pink" id="sl-comp" min="1" max="10" value="3">
+                <span class="s-hint">higher = more overfit = higher σ</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn-primary" id="btn-anim">▶ Animate Folds</button>
+                <button class="btn-secondary" id="btn-stop">■ Stop</button>
+            </div>
+        </div>
+        <!-- Panel 2 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-pink"></span>② CV Formula</div>
+            <div class="eq-row">
+                CV Score = (1/K) Σᵢ Acc(Mᵢ)<br>
+                σ = √[(1/K) Σᵢ (Accᵢ − CV)²]<br>
+                <span style="color:#f8fafc;font-size:0.85rem;font-weight:800;" id="eq-cv">— ± —</span>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-dim);line-height:1.7;">
+                Mᵢ = model trained without fold i<br>
+                Acc(Mᵢ) = accuracy on fold i test set<br>
+                Active fold: <span id="lbl-active" style="color:#fbbf24;font-weight:700;">—</span>
+            </div>
+        </div>
+        <!-- Panel 3 -->
+        <div class="glass-panel">
+            <div class="panel-label"><span class="dot dot-green"></span>③ Summary Metrics</div>
+            <div class="output-big">
+                <div class="out-label">Mean CV Accuracy</div>
+                <div class="out-value" id="out-mean">—</div>
+                <div class="out-sub" id="out-stability">—</div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-best" style="color:#34d399">—</div><div class="mini-label">Best Fold</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-worst" style="color:#f87171">—</div><div class="mini-label">Worst Fold</div></div>
+            </div>
+            <div class="mini-row">
+                <div class="mini-card"><div class="mini-val" id="val-std" style="color:#fbbf24">—</div><div class="mini-label">Std Dev (σ)</div></div>
+                <div class="mini-card"><div class="mini-val" id="val-ci" style="color:#60a5fa">—</div><div class="mini-label">95% CI</div></div>
+            </div>
+        </div>
+    </div>
+    <!-- Viz Row -->
+    <div class="viz-row">
+        <!-- Fold diagram -->
+        <div class="glass-panel viz-panel">
+            <div class="panel-label"><span class="dot dot-gold"></span>④ Fold Animation — highlighted fold = current test set · glowing = active rotation</div>
+            <svg id="fold-svg"></svg>
+        </div>
+        <!-- Accuracy bars -->
+        <div class="glass-panel viz-panel">
+            <div class="panel-label"><span class="dot dot-blue"></span>⑤ Per-Fold Accuracy — train (dim) vs test (bright) · error = overfitting gap</div>
+            <svg id="bar-svg"></svg>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+// ── Seed-based RNG ────────────────────────────────────────────────
+function seededRand(seed){ let s=seed; return ()=>{ s=(s*1103515245+12345)&0x7fffffff; return s/0x7fffffff; }; }
+
+// ── Generate per-fold scores ──────────────────────────────────────
+function genScores(K, complexity, seed=42){
+    const rand=seededRand(seed);
+    // Higher complexity → higher train acc, higher variance in test
+    const baseTrain=0.72+complexity*0.025;
+    const baseTest =0.88-complexity*0.018;
+    const noise=0.02+complexity*0.012;
+    const train=[], test=[];
+    for(let i=0;i<K;i++){
+        train.push(Math.min(0.99,baseTrain+(rand()-0.5)*0.02));
+        test.push (Math.max(0.45,Math.min(0.98,baseTest+(rand()-0.5)*noise*2)));
+    }
+    return {train,test};
+}
+
+const state={K:5,comp:3,activeFold:0,animating:false,animTimer:null};
+let scores=genScores(5,3);
+
+// ── Fold visualization ────────────────────────────────────────────
+const fmL={top:16,right:16,bottom:16,left:16};
+const fSvg=d3.select("#fold-svg");
+const fG=fSvg.append("g").attr("transform",`translate(${fmL.left},${fmL.top})`);
+
+function renderFolds(){
+    const r=document.getElementById("fold-svg").getBoundingClientRect();
+    const W=r.width-fmL.left-fmL.right, H=r.height-fmL.top-fmL.bottom;
+    if(W<=0||H<=0) return;
+    fG.selectAll("*").remove();
+
+    const K=state.K, af=state.activeFold;
+    const legendH=14; // reserve bottom strip for legend
+    const patH=Math.min(56,Math.floor((H-legendH-8)/K)-5);
+    const totalUsedH=K*(patH+5);
+    const N=100; // patients per fold display
+    const ptSize=Math.min(7,Math.floor((W/(N/K))*0.7));
+    const ptsPerFold=Math.floor(N/K);
+
+    // Patient dots
+    const allPts=Array.from({length:N},(_,i)=>{
+        const fold=Math.floor(i/ptsPerFold);
+        return {i,fold,isTest:fold===af,label:i%3!==0};
+    });
+
+    // Draw fold lanes (start at y=0; legend is at bottom)
+    for(let k=0;k<K;k++){
+        const y=k*(patH+5);
+        const isTest=k===af;
+        // Lane background
+        fG.append("rect").attr("x",0).attr("y",y).attr("width",W).attr("height",patH).attr("rx",8)
+            .attr("fill",isTest?"rgba(251,191,36,0.1)":"rgba(255,255,255,0.04)")
+            .attr("stroke",isTest?"#fbbf24":"rgba(255,255,255,0.1)")
+            .attr("stroke-width",isTest?2:1)
+            .attr("filter",isTest?"drop-shadow(0 0 8px rgba(251,191,36,0.4))":null);
+
+        // Fold label
+        fG.append("text").attr("x",10).attr("y",y+patH/2+4)
+            .attr("fill",isTest?"#fbbf24":"rgba(148,163,184,0.6)")
+            .attr("font-size",9).attr("font-family","Outfit").attr("font-weight",700)
+            .text(`Fold ${k+1}`);
+
+        // Badge
+        fG.append("rect").attr("x",W-65).attr("y",y+patH/2-9).attr("width",58).attr("height",18).attr("rx",9)
+            .attr("fill",isTest?"rgba(251,191,36,0.2)":"rgba(96,165,250,0.1)")
+            .attr("stroke",isTest?"rgba(251,191,36,0.5)":"rgba(96,165,250,0.2)").attr("stroke-width",1);
+        fG.append("text").attr("x",W-36).attr("y",y+patH/2+4)
+            .attr("text-anchor","middle").attr("fill",isTest?"#fbbf24":"#60a5fa")
+            .attr("font-size",7.5).attr("font-family","Outfit").attr("font-weight",700)
+            .text(isTest?"▶ TEST":"TRAIN");
+
+        // Patient dots — bounded between fold label (55px) and badge (70px from right)
+        const pts=allPts.filter(p=>p.fold===k);
+        const dotAreaW=W-55-75; // left margin 55, right badge 75
+        const dotR=Math.min(4,Math.floor(dotAreaW/pts.length/2*0.7));
+        const dotSpacing=dotAreaW/Math.max(pts.length,1);
+        pts.forEach((p,j)=>{
+            const px=55+j*dotSpacing+dotSpacing/2;
+            const py=y+patH/2;
+            fG.append("circle").attr("cx",px).attr("cy",py).attr("r",Math.max(2,dotR))
+                .attr("fill",p.label?(isTest?"rgba(248,113,113,0.9)":"rgba(248,113,113,0.4)"):(isTest?"rgba(52,211,153,0.9)":"rgba(52,211,153,0.4)"))
+                .attr("stroke",isTest?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.1)")
+                .attr("stroke-width",0.7);
+        });
+
+        // Accuracy annotation — INSIDE lane, bottom-left, above lane bottom by 3px
+        if(scores.test[k]!==undefined&&patH>=22){
+            fG.append("text").attr("x",8).attr("y",y+patH-4)
+                .attr("fill",isTest?"rgba(251,191,36,0.7)":"rgba(148,163,184,0.4)")
+                .attr("font-size",6.5).attr("font-family","JetBrains Mono")
+                .text(`Acc=${(scores.test[k]*100).toFixed(1)}%`);
+        }
+    }
+
+    // Legend — placed at very bottom, below all fold lanes
+    const legY=H-2;
+    fG.append("circle").attr("cx",4).attr("cy",legY).attr("r",4).attr("fill","rgba(248,113,113,0.8)");
+    fG.append("text").attr("x",12).attr("y",legY+3).attr("fill","rgba(148,163,184,0.6)").attr("font-size",7.5).attr("font-family","Outfit").text("Malignant");
+    fG.append("circle").attr("cx",84).attr("cy",legY).attr("r",4).attr("fill","rgba(52,211,153,0.8)");
+    fG.append("text").attr("x",92).attr("y",legY+3).attr("fill","rgba(148,163,184,0.6)").attr("font-size",7.5).attr("font-family","Outfit").text("Benign");
+}
+
+// ── Accuracy bar chart ────────────────────────────────────────────
+const bL={top:16,right:16,bottom:36,left:44};
+const bSvg=d3.select("#bar-svg");
+const bG=bSvg.append("g").attr("transform",`translate(${bL.left},${bL.top})`);
+
+function renderBars(){
+    const r=document.getElementById("bar-svg").getBoundingClientRect();
+    const W=r.width-bL.left-bL.right, H=r.height-bL.top-bL.bottom;
+    if(W<=0||H<=0) return;
+    bG.selectAll("*").remove();
+
+    const K=state.K, af=state.activeFold;
+    const xSc=d3.scaleBand().domain(d3.range(K)).range([0,W]).padding(0.28);
+    const ySc=d3.scaleLinear().domain([0.4,1]).range([H,0]);
+    const bw=xSc.bandwidth();
+
+    bG.append("g").attr("class","axis").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xSc).tickFormat(i=>`F${i+1}`));
+    bG.append("g").attr("class","axis").call(d3.axisLeft(ySc).ticks(4).tickFormat(d3.format(".0%")));
+    bG.append("text").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",-38).attr("text-anchor","middle").attr("fill","rgba(148,163,184,0.6)").attr("font-size",9).attr("font-family","Outfit").text("Accuracy");
+
+    const defs=bSvg.selectAll("defs").data([0]).join("defs");
+    const gf=defs.append("filter").attr("id","bgf");
+    gf.append("feGaussianBlur").attr("stdDeviation","2").attr("result","blur");
+    const fm=gf.append("feMerge");fm.append("feMergeNode").attr("in","blur");fm.append("feMergeNode").attr("in","SourceGraphic");
+
+    for(let k=0;k<K;k++){
+        const x=xSc(k), isActive=k===af;
+        const trainH=H-ySc(scores.train[k]), testH=H-ySc(scores.test[k]);
+
+        // Train bar (dim)
+        bG.append("rect").attr("x",x).attr("y",H-trainH).attr("width",bw/2-1).attr("height",trainH).attr("rx",3)
+            .attr("fill","rgba(96,165,250,0.25)").attr("stroke","rgba(96,165,250,0.4)").attr("stroke-width",1);
+        // Test bar
+        bG.append("rect").attr("x",x+bw/2).attr("y",H-testH).attr("width",bw/2-1).attr("height",testH).attr("rx",3)
+            .attr("fill",isActive?"rgba(251,191,36,0.8)":"rgba(52,211,153,0.5)")
+            .attr("stroke",isActive?"#fbbf24":"rgba(52,211,153,0.7)").attr("stroke-width",isActive?2:1)
+            .attr("filter",isActive?"url(#bgf)":null);
+
+        // Gap line (train-test gap = overfit indicator)
+        if(scores.train[k]>scores.test[k]+0.02){
+            bG.append("line").attr("x1",x+bw/4).attr("x2",x+3*bw/4)
+                .attr("y1",H-trainH).attr("y2",H-testH)
+                .attr("stroke","rgba(248,113,113,0.5)").attr("stroke-width",1.5).attr("stroke-dasharray","3,2");
+        }
+
+        // Labels
+        bG.append("text").attr("x",x+bw/4).attr("y",H-trainH-3)
+            .attr("text-anchor","middle").attr("fill","rgba(96,165,250,0.7)").attr("font-size",6.5).attr("font-family","JetBrains Mono")
+            .text((scores.train[k]*100).toFixed(0)+"%");
+        bG.append("text").attr("x",x+3*bw/4).attr("y",H-testH-3)
+            .attr("text-anchor","middle").attr("fill",isActive?"#fbbf24":"rgba(52,211,153,0.9)").attr("font-size",6.5).attr("font-family","JetBrains Mono")
+            .text((scores.test[k]*100).toFixed(0)+"%");
+    }
+    // Legend
+    bG.append("rect").attr("x",0).attr("y",-14).attr("width",10).attr("height",8).attr("rx",2).attr("fill","rgba(96,165,250,0.3)");
+    bG.append("text").attr("x",13).attr("y",-7).attr("fill","rgba(148,163,184,0.6)").attr("font-size",7.5).attr("font-family","Outfit").text("Train");
+    bG.append("rect").attr("x",48).attr("y",-14).attr("width",10).attr("height",8).attr("rx",2).attr("fill","rgba(52,211,153,0.5)");
+    bG.append("text").attr("x",61).attr("y",-7).attr("fill","rgba(148,163,184,0.6)").attr("font-size",7.5).attr("font-family","Outfit").text("Test");
+}
+
+function updateMetrics(){
+    const K=state.K, af=state.activeFold;
+    const ts=scores.test;
+    const mean=d3.mean(ts), std=d3.deviation(ts)||0;
+    const ci=1.96*std/Math.sqrt(K);
+    document.getElementById("out-mean").textContent=(mean*100).toFixed(1)+"%";
+    document.getElementById("val-std").textContent=(std*100).toFixed(1)+"%";
+    document.getElementById("val-ci").textContent=`±${(ci*100).toFixed(1)}%`;
+    document.getElementById("val-best").textContent=(d3.max(ts)*100).toFixed(1)+"%";
+    document.getElementById("val-worst").textContent=(d3.min(ts)*100).toFixed(1)+"%";
+    const stability=std<0.03?"Stable":std<0.07?"Moderate":"Unstable";
+    document.getElementById("out-stability").textContent=`Stability: ${stability} · σ=${(std*100).toFixed(1)}%`;
+    document.getElementById("eq-cv").textContent=`${(mean*100).toFixed(1)}% ± ${(std*100).toFixed(1)}%`;
+    document.getElementById("lbl-active").textContent=`Fold ${af+1} / ${K}`;
+}
+
+function render(){
+    scores=genScores(state.K,state.comp);
+    updateMetrics();
+    renderFolds();
+    renderBars();
+}
+
+// Animation
+function startAnim(){
+    if(state.animating) return;
+    state.animating=true;
+    state.activeFold=0;
+    const step=()=>{
+        renderFolds(); renderBars(); updateMetrics();
+        state.activeFold=(state.activeFold+1)%state.K;
+        if(state.animating) state.animTimer=setTimeout(step,900);
+    };
+    state.animTimer=setTimeout(step,0);
+}
+function stopAnim(){
+    state.animating=false;
+    if(state.animTimer) clearTimeout(state.animTimer);
+}
+
+document.getElementById("sl-k").addEventListener("input",function(){state.K=+this.value;document.getElementById("lbl-k").textContent=this.value;state.activeFold=0;render();});
+document.getElementById("sl-comp").addEventListener("input",function(){state.comp=+this.value;document.getElementById("lbl-comp").textContent=this.value;render();});
+document.getElementById("btn-anim").addEventListener("click",startAnim);
+document.getElementById("btn-stop").addEventListener("click",stopAnim);
+
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));e.target.classList.add("active");}});},{threshold:0.5});
+document.querySelectorAll("section").forEach(s=>obs.observe(s));
+window.addEventListener("resize",render);
+setTimeout(render,80);
+</script>
+</body>
+</html>
