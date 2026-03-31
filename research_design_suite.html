@@ -3818,6 +3818,8 @@
 
 
         // --- Forest & Funnel Plot Generator State ---
+        let userForestEffectType = 'HR'; // HR, OR, RR
+        let userForestModelType = 'RE'; // FE, RE
         let userForestStudies = [
             { name: 'Study A', ref: 'Author et al. 2024', hr: 0.85, lo: 0.70, hi: 0.98, w: 30 }
         ];
@@ -3906,7 +3908,29 @@
         function renderForestGeneratorUI() {
             const container = document.getElementById('forest-gen-inputs');
             if (!container) return;
-            container.innerHTML = userForestStudies.map((s, i) => `
+            
+            // Add Effect/Model controls at the top
+            const controls = `
+                <div style="display:flex; gap:1.5rem; margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.75rem;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span style="color:#94a3b8;">Effect Type:</span>
+                        <select onchange="userForestEffectType=this.value; updateUserForestPlot();" style="background:#0f172a; color:white; border:1px solid rgba(255,255,255,0.2); border-radius:4px; padding:2px 4px;">
+                            <option value="HR" ${userForestEffectType==='HR'?'selected':''}>Hazard Ratio (HR)</option>
+                            <option value="OR" ${userForestEffectType==='OR'?'selected':''}>Odds Ratio (OR)</option>
+                            <option value="RR" ${userForestEffectType==='RR'?'selected':''}>Risk Ratio (RR)</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span style="color:#94a3b8;">Statistical Model:</span>
+                        <select onchange="userForestModelType=this.value; updateUserForestPlot();" style="background:#0f172a; color:white; border:1px solid rgba(255,255,255,0.2); border-radius:4px; padding:2px 4px;">
+                            <option value="RE" ${userForestModelType==='RE'?'selected':''}>Random Effects (RE)</option>
+                            <option value="FE" ${userForestModelType==='FE'?'selected':''}>Fixed Effects (FE)</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            
+            const rows = userForestStudies.map((s, i) => `
                 <div class="input-row" style="display:grid; grid-template-columns:1fr 1fr 60px 60px 60px 60px 40px; gap:0.4rem; margin-bottom:0.4rem; align-items:center;">
                     <input type="text" value="${s.name}" oninput="updateForestStudy(${i}, 'name', this.value)" placeholder="Study..." style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 8px; color:white; font-size:0.7rem; width:100%; box-sizing:border-box;">
                     <input type="text" value="${s.ref}" oninput="updateForestStudy(${i}, 'ref', this.value)" placeholder="Ref..." style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 8px; color:#94a3b8; font-size:0.7rem; width:100%; box-sizing:border-box;">
@@ -3917,6 +3941,8 @@
                     <button onclick="removeForestStudy(${i})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); border-radius:6px; cursor:pointer; height:28px; width:28px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">✕</button>
                 </div>
             `).join('');
+            
+            container.innerHTML = controls + rows;
         }
 
         function renderFunnelGeneratorUI() {
@@ -3938,25 +3964,46 @@
             const studies = userForestStudies;
             if (studies.length === 0) { wrap.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:2rem;">Add a study to generate plot</p>'; return; }
 
-            // Simple pooled calculation (Inverse Variance Weighted)
-            let sumW = 0, sumWHR = 0;
-            studies.forEach(s => {
-                sumW += s.w;
-                sumWHR += (s.w * s.hr);
+            // --- Real Scientific Calculation of Heterogeneity (I²) ---
+            // Estimate SE and Inverse Variance Weights
+            let calcData = studies.map(s => {
+                const lnES = Math.log(s.hr);
+                const lnLo = Math.log(s.lo);
+                const lnHi = Math.log(s.hi);
+                const se = (lnHi - lnLo) / 3.92;
+                const weight = 1 / (se * se);
+                return { ...s, lnES, se, ivWeight: weight };
             });
-            const pooledHR = sumWHR / sumW || 1.0;
-            // Simplified CI for pooled (for visualization)
-            const pooledLo = pooledHR - 0.05, pooledHi = pooledHR + 0.05;
+
+            // Pooled calculation (Inverse Variance Weighted - Fixed Effect)
+            const totalW = calcData.reduce((acc, s) => acc + s.ivWeight, 0);
+            const weightedSumES = calcData.reduce((acc, s) => acc + (s.lnES * s.ivWeight), 0);
+            const pooledES = weightedSumES / totalW;
+            const pooledHR = Math.exp(pooledES);
+            
+            // Cochran's Q for heterogeneity
+            let Q = 0;
+            calcData.forEach(s => {
+                Q += s.ivWeight * Math.pow(s.lnES - pooledES, 2);
+            });
+            const df = studies.length - 1;
+            const i2Value = df > 0 ? Math.max(0, 100 * (Q - df) / Q) : 0;
+            const i2Level = i2Value < 25 ? 'Low' : (i2Value < 75 ? 'Moderate' : 'High');
+
+            // Simplified CI for visualization pooled (scaled by SE)
+            const pooledSE = Math.sqrt(1 / totalW);
+            const pooledLo = Math.exp(pooledES - 1.96 * pooledSE);
+            const pooledHi = Math.exp(pooledES + 1.96 * pooledSE);
 
             const W = Math.max(wrap.offsetWidth, 600);
-            const rowH = 40, pad = { l: 150, r: 120, t: 40, b: 60 };
+            const rowH = 40, pad = { l: 150, r: 120, t: 40, b: 80 };
             const plotW = W - pad.l - pad.r;
             const totalH = pad.t + studies.length * rowH + 60 + pad.b;
             
-            const minVal = Math.min(...studies.map(s => s.lo), 0.4);
-            const maxVal = Math.max(...studies.map(s => s.hi), 2.0);
+            const minV = Math.min(...studies.map(s => s.lo), pooledLo, 0.4);
+            const maxV = Math.max(...studies.map(s => s.hi), pooledHi, 2.0);
             
-            const xScale = v => pad.l + ((Math.log(v) - Math.log(minVal)) / (Math.log(maxVal) - Math.log(minVal))) * plotW;
+            const xScale = v => pad.l + ((Math.log(v) - Math.log(minV)) / (Math.log(maxV) - Math.log(minV))) * plotW;
             const nullX = xScale(1.0);
 
             let rows = '';
@@ -3976,15 +4023,19 @@
             const poolY = pad.t + studies.length * rowH + 30;
             const dCx = xScale(pooledHR), dLx = xScale(pooledLo), dRx = xScale(pooledHi);
 
+            const effectFullLabel = userForestEffectType === 'HR' ? 'Hazard Ratio' : (userForestEffectType === 'OR' ? 'Odds Ratio' : 'Risk Ratio');
+            const modelFullLabel = userForestModelType === 'RE' ? 'Random Effects Model' : 'Fixed Effects Model';
+
             wrap.innerHTML = `<svg viewBox="0 0 ${W} ${totalH}" style="background:white; border-radius:8px; font-family:'Outfit', sans-serif; display:block;">
                 <line x1="${nullX}" y1="${pad.t-10}" x2="${nullX}" y2="${poolY+20}" stroke="#94a3b8" stroke-dasharray="4,2"/>
                 <text x="${pad.l}" y="${pad.t-20}" fill="#2563eb" font-size="12" font-weight="700">Study</text>
-                <text x="${W-pad.r}" y="${pad.t-20}" fill="#db2777" font-size="12" font-weight="700">Result (95% CI)</text>
+                <text x="${W-pad.r}" y="${pad.t-20}" fill="#db2777" font-size="12" font-weight="700">${userForestEffectType} (95% CI)</text>
                 ${rows}
                 <line x1="${pad.l}" y1="${poolY-15}" x2="${W-pad.r}" y2="${poolY-15}" stroke="#e2e8f0"/>
                 <polygon points="${dLx},${poolY} ${dCx},${poolY-10} ${dRx},${poolY} ${dCx},${poolY+10}" fill="#10b981" />
                 <text x="${pad.l-10}" y="${poolY}" text-anchor="end" fill="#059669" font-size="12" font-weight="700">Pooled Effect</text>
                 <text x="${W-pad.r+10}" y="${poolY}" fill="#059669" font-size="12" font-weight="700">${pooledHR.toFixed(2)}</text>
+                <text x="${W/2}" y="${totalH - 25}" text-anchor="middle" fill="#475569" font-size="10" font-weight="600">I² = ${i2Value.toFixed(1)}% (${i2Level} Heterogeneity)  |  ${userForestEffectType} = ${effectFullLabel}  |  ${userForestModelType} = ${modelFullLabel}</text>
             </svg>`;
         }
 
@@ -3994,12 +4045,12 @@
             const studies = userFunnelStudies;
             if (studies.length === 0) { wrap.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:2rem;">Add data to generate plot</p>'; return; }
 
-            const W = 500, H = 350;
-            const pad = { t: 40, b: 50, l: 60, r: 40 };
+            const W = 560, H = 400; // Increased size for cleaner axes
+            const pad = { t: 50, b: 60, l: 80, r: 50 };
             
             const effects = studies.map(s => s.effect);
             const ses = studies.map(s => s.se);
-            const minX = Math.min(...effects, 0) - 0.5, maxX = Math.max(...effects, 1) + 0.5;
+            const minX = Math.floor(Math.min(...effects, 0)) - 0.5, maxX = Math.ceil(Math.max(...effects, 1)) + 0.5;
             const minY = 0, maxY = Math.max(...ses, 1) * 1.2;
 
             const xScale = v => pad.l + ((v - minX) / (maxX - minX)) * (W - pad.l - pad.r);
@@ -4008,17 +4059,42 @@
             const avgEffect = effects.reduce((a,b) => a+b, 0) / effects.length;
             const midX = xScale(avgEffect);
 
-            const dots = studies.map(s => `<circle cx="${xScale(s.effect)}" cy="${yScale(s.se)}" r="4" fill="#2dd4bf" opacity="0.7" />`).join('');
+            // Generate X-axis ticks (Numbers on Effect Size)
+            const xTicks = [];
+            for (let i = Math.ceil(minX); i <= Math.floor(maxX); i += 0.5) {
+                const tx = xScale(i);
+                xTicks.push(`
+                    <line x1="${tx}" y1="${H-pad.b}" x2="${tx}" y2="${H-pad.b+5}" stroke="#475569" stroke-width="1.5"/>
+                    <text x="${tx}" y="${H-pad.b+18}" text-anchor="middle" fill="#1e293b" font-size="10">${i}</text>
+                `);
+            }
 
-            wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="background:#0f172a; border-radius:8px; font-family:'Outfit', sans-serif; display:block;">
-                <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="#334155" />
-                <line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#334155" />
-                <line x1="${midX}" y1="${pad.t}" x2="${midX}" y2="${H-pad.b}" stroke="#475569" stroke-dasharray="4,2" />
-                <line x1="${midX}" y1="${pad.t}" x2="${xScale(avgEffect - maxY*0.8)}" y2="${H-pad.b}" stroke="rgba(255,255,255,0.1)" stroke-dasharray="2,2" />
-                <line x1="${midX}" y1="${pad.t}" x2="${xScale(avgEffect + maxY*0.8)}" y2="${H-pad.b}" stroke="rgba(255,255,255,0.1)" stroke-dasharray="2,2" />
+            // Generate Y-axis ticks (Numbers on Standard Error - Inverted)
+            const yTicks = [];
+            for (let i = 0; i <= maxY; i += 0.2) {
+                const ty = yScale(i);
+                yTicks.push(`
+                    <line x1="${pad.l-5}" y1="${ty}" x2="${pad.l}" y2="${ty}" stroke="#475569" stroke-width="1.5"/>
+                    <text x="${pad.l-10}" y="${ty}" text-anchor="end" dominant-baseline="middle" fill="#1e293b" font-size="10">${i.toFixed(1)}</text>
+                `);
+            }
+
+            const dots = studies.map(s => `<circle cx="${xScale(s.effect)}" cy="${yScale(s.se)}" r="5" fill="#2dd4bf" stroke="#0d9488" stroke-width="1" opacity="0.8" />`).join('');
+
+            wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="background:white; border-radius:8px; font-family:'Outfit', sans-serif; display:block;">
+                <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="#475569" stroke-width="2" />
+                <line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#475569" stroke-width="2" />
+                
+                <text x="${W/2}" y="${H-10}" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="700">Effect Size</text>
+                <text x="20" y="${(H-pad.t-pad.b)/2 + pad.t}" transform="rotate(-90 20 ${(H-pad.t-pad.b)/2 + pad.t})" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="700">Standard Error</text>
+                
+                <line x1="${midX}" y1="${pad.t}" x2="${midX}" y2="${H-pad.b}" stroke="#94a3b8" stroke-dasharray="4,2" />
+                <line x1="${midX}" y1="${pad.t}" x2="${xScale(avgEffect - maxY*0.8)}" y2="${H-pad.b}" stroke="#64748b" stroke-dasharray="2,2" />
+                <line x1="${midX}" y1="${pad.t}" x2="${xScale(avgEffect + maxY*0.8)}" y2="${H-pad.b}" stroke="#64748b" stroke-dasharray="2,2" />
+                
+                ${xTicks.join('')}
+                ${yTicks.join('')}
                 ${dots}
-                <text x="${W/2}" y="${H-10}" text-anchor="middle" fill="#94a3b8" font-size="11">Effect Size</text>
-                <text x="15" y="${H/2}" transform="rotate(-90 15 ${H/2})" text-anchor="middle" fill="#94a3b8" font-size="11">Standard Error</text>
             </svg>`;
         }
 
