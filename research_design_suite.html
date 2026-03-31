@@ -101,6 +101,12 @@
             margin-bottom: 2rem;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
             animation: slideUp 0.5s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        /* Override global main.css hover animation for research plots */
+        .tile:hover svg {
+            transform: none !important;
         }
 
         .section-header {
@@ -994,6 +1000,20 @@
             border-color: #10b981;
             background: rgba(16, 185, 129, 0.05);
             border-width: 2px;
+        }
+
+        /* Plot Visualization Styling - Clean, non-tilting */
+        .academic-viz-card {
+            border: 2px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .academic-viz-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary-blue);
         }
 
         .prisma-arrow-v {
@@ -3796,6 +3816,212 @@
             }
         }
 
+
+        // --- Forest & Funnel Plot Generator State ---
+        let userForestStudies = [
+            { name: 'Study A', ref: 'Author et al. 2024', hr: 0.85, lo: 0.70, hi: 0.98, w: 30 }
+        ];
+
+        let userFunnelStudies = [
+            { effect: 0.5, se: 0.2 },
+            { effect: 0.7, se: 0.4 },
+            { effect: 0.3, se: 0.15 }
+        ];
+
+        function addForestStudyRow() {
+            userForestStudies.push({ name: 'New Study', ref: 'Author ' + (new Date().getFullYear()), hr: 1.0, lo: 0.8, hi: 1.2, w: 25 });
+            renderForestGeneratorUI();
+            updateUserForestPlot();
+        }
+
+        function removeForestStudy(index) {
+            userForestStudies.splice(index, 1);
+            renderForestGeneratorUI();
+            updateUserForestPlot();
+        }
+
+        function updateForestStudy(index, field, value) {
+            userForestStudies[index][field] = field === 'name' || field === 'ref' ? value : parseFloat(value) || 0;
+            updateUserForestPlot();
+        }
+
+        function addFunnelStudyRow() {
+            userFunnelStudies.push({ effect: 0.5, se: 0.2 });
+            renderFunnelGeneratorUI();
+            updateUserFunnelPlot();
+        }
+
+        function removeFunnelStudy(index) {
+            userFunnelStudies.splice(index, 1);
+            renderFunnelGeneratorUI();
+            updateUserFunnelPlot();
+        }
+
+        function updateFunnelStudy(index, field, value) {
+            userFunnelStudies[index][field] = parseFloat(value) || 0;
+            updateUserFunnelPlot();
+        }
+
+        function downloadSVG(svgId, filename, format = 'png') {
+            const wrap = document.getElementById(svgId);
+            const svg = wrap ? wrap.querySelector('svg') : null;
+            if (!svg) return;
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            if (format === 'svg') {
+                const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename + '.svg';
+                link.click();
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const svgSize = svg.getBoundingClientRect();
+            const scale = 4; // High DPI
+            canvas.width = svgSize.width * scale;
+            canvas.height = svgSize.height * scale;
+            const ctx = canvas.getContext('2d');
+            
+            const img = new Image();
+            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(url);
+                const pngUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = pngUrl;
+                link.download = filename + '.png';
+                link.click();
+            };
+            img.src = url;
+        }
+
+        function renderForestGeneratorUI() {
+            const container = document.getElementById('forest-gen-inputs');
+            if (!container) return;
+            container.innerHTML = userForestStudies.map((s, i) => `
+                <div class="input-row" style="display:grid; grid-template-columns:1fr 1fr 60px 60px 60px 60px 40px; gap:0.4rem; margin-bottom:0.4rem; align-items:center;">
+                    <input type="text" value="${s.name}" oninput="updateForestStudy(${i}, 'name', this.value)" placeholder="Study..." style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 8px; color:white; font-size:0.7rem; width:100%; box-sizing:border-box;">
+                    <input type="text" value="${s.ref}" oninput="updateForestStudy(${i}, 'ref', this.value)" placeholder="Ref..." style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 8px; color:#94a3b8; font-size:0.7rem; width:100%; box-sizing:border-box;">
+                    <input type="number" step="0.01" value="${s.hr}" oninput="updateForestStudy(${i}, 'hr', this.value)" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 4px; color:#60a5fa; font-size:0.7rem; text-align:center; width:100%; box-sizing:border-box;">
+                    <input type="number" step="0.01" value="${s.lo}" oninput="updateForestStudy(${i}, 'lo', this.value)" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 4px; color:#94a3b8; font-size:0.7rem; text-align:center; width:100%; box-sizing:border-box;">
+                    <input type="number" step="0.01" value="${s.hi}" oninput="updateForestStudy(${i}, 'hi', this.value)" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 4px; color:#94a3b8; font-size:0.7rem; text-align:center; width:100%; box-sizing:border-box;">
+                    <input type="number" step="1" value="${s.w}" oninput="updateForestStudy(${i}, 'w', this.value)" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 4px; color:#f472b6; font-size:0.7rem; text-align:center; width:100%; box-sizing:border-box;">
+                    <button onclick="removeForestStudy(${i})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); border-radius:6px; cursor:pointer; height:28px; width:28px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function renderFunnelGeneratorUI() {
+            const container = document.getElementById('funnel-gen-inputs');
+            if (!container) return;
+            container.innerHTML = userFunnelStudies.map((s, i) => `
+                <div class="input-row" style="display:grid; grid-template-columns:1fr 1fr 40px; gap:0.4rem; margin-bottom:0.4rem; align-items:center;">
+                    <input type="number" step="0.01" value="${s.effect}" oninput="updateFunnelStudy(${i}, 'effect', this.value)" placeholder="Effect Size" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 8px; color:#2dd4bf; font-size:0.7rem; width:100%; box-sizing:border-box;">
+                    <input type="number" step="0.01" value="${s.se}" oninput="updateFunnelStudy(${i}, 'se', this.value)" placeholder="Std Error" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:6px 8px; color:#94a3b8; font-size:0.7rem; width:100%; box-sizing:border-box;">
+                    <button onclick="removeFunnelStudy(${i})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); border-radius:6px; cursor:pointer; height:28px; width:28px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function updateUserForestPlot() {
+            const wrap = document.getElementById('user-forest-svg-wrap');
+            if (!wrap) return;
+
+            const studies = userForestStudies;
+            if (studies.length === 0) { wrap.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:2rem;">Add a study to generate plot</p>'; return; }
+
+            // Simple pooled calculation (Inverse Variance Weighted)
+            let sumW = 0, sumWHR = 0;
+            studies.forEach(s => {
+                sumW += s.w;
+                sumWHR += (s.w * s.hr);
+            });
+            const pooledHR = sumWHR / sumW || 1.0;
+            // Simplified CI for pooled (for visualization)
+            const pooledLo = pooledHR - 0.05, pooledHi = pooledHR + 0.05;
+
+            const W = Math.max(wrap.offsetWidth, 600);
+            const rowH = 40, pad = { l: 150, r: 120, t: 40, b: 60 };
+            const plotW = W - pad.l - pad.r;
+            const totalH = pad.t + studies.length * rowH + 60 + pad.b;
+            
+            const minVal = Math.min(...studies.map(s => s.lo), 0.4);
+            const maxVal = Math.max(...studies.map(s => s.hi), 2.0);
+            
+            const xScale = v => pad.l + ((Math.log(v) - Math.log(minVal)) / (Math.log(maxVal) - Math.log(minVal))) * plotW;
+            const nullX = xScale(1.0);
+
+            let rows = '';
+            studies.forEach((s, i) => {
+                const y = pad.t + i * rowH + rowH/2;
+                const cx = xScale(s.hr), lx = xScale(s.lo), rx = xScale(s.hi);
+                const sq = 4 + (s.w/100) * 12;
+                rows += `
+                    <text x="${pad.l - 10}" y="${y}" text-anchor="end" fill="#1e293b" font-size="10" font-weight="600">${s.name}</text>
+                    <text x="${pad.l - 10}" y="${y+10}" text-anchor="end" fill="#64748b" font-size="8">${s.ref}</text>
+                    <line x1="${lx}" y1="${y}" x2="${rx}" y2="${y}" stroke="#3b82f6" stroke-width="1.5"/>
+                    <rect x="${cx-sq/2}" y="${y-sq/2}" width="${sq}" height="${sq}" fill="#ec4899" />
+                    <text x="${W - pad.r + 10}" y="${y}" fill="#1e293b" font-size="10">${s.hr.toFixed(2)} (${s.lo.toFixed(2)}-${s.hi.toFixed(2)})</text>
+                `;
+            });
+
+            const poolY = pad.t + studies.length * rowH + 30;
+            const dCx = xScale(pooledHR), dLx = xScale(pooledLo), dRx = xScale(pooledHi);
+
+            wrap.innerHTML = `<svg viewBox="0 0 ${W} ${totalH}" style="background:white; border-radius:8px; font-family:'Outfit', sans-serif; display:block;">
+                <line x1="${nullX}" y1="${pad.t-10}" x2="${nullX}" y2="${poolY+20}" stroke="#94a3b8" stroke-dasharray="4,2"/>
+                <text x="${pad.l}" y="${pad.t-20}" fill="#2563eb" font-size="12" font-weight="700">Study</text>
+                <text x="${W-pad.r}" y="${pad.t-20}" fill="#db2777" font-size="12" font-weight="700">Result (95% CI)</text>
+                ${rows}
+                <line x1="${pad.l}" y1="${poolY-15}" x2="${W-pad.r}" y2="${poolY-15}" stroke="#e2e8f0"/>
+                <polygon points="${dLx},${poolY} ${dCx},${poolY-10} ${dRx},${poolY} ${dCx},${poolY+10}" fill="#10b981" />
+                <text x="${pad.l-10}" y="${poolY}" text-anchor="end" fill="#059669" font-size="12" font-weight="700">Pooled Effect</text>
+                <text x="${W-pad.r+10}" y="${poolY}" fill="#059669" font-size="12" font-weight="700">${pooledHR.toFixed(2)}</text>
+            </svg>`;
+        }
+
+        function updateUserFunnelPlot() {
+            const wrap = document.getElementById('user-funnel-svg-wrap');
+            if (!wrap) return;
+            const studies = userFunnelStudies;
+            if (studies.length === 0) { wrap.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:2rem;">Add data to generate plot</p>'; return; }
+
+            const W = 500, H = 350;
+            const pad = { t: 40, b: 50, l: 60, r: 40 };
+            
+            const effects = studies.map(s => s.effect);
+            const ses = studies.map(s => s.se);
+            const minX = Math.min(...effects, 0) - 0.5, maxX = Math.max(...effects, 1) + 0.5;
+            const minY = 0, maxY = Math.max(...ses, 1) * 1.2;
+
+            const xScale = v => pad.l + ((v - minX) / (maxX - minX)) * (W - pad.l - pad.r);
+            const yScale = v => pad.t + (v / maxY) * (H - pad.t - pad.b); 
+
+            const avgEffect = effects.reduce((a,b) => a+b, 0) / effects.length;
+            const midX = xScale(avgEffect);
+
+            const dots = studies.map(s => `<circle cx="${xScale(s.effect)}" cy="${yScale(s.se)}" r="4" fill="#2dd4bf" opacity="0.7" />`).join('');
+
+            wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="background:#0f172a; border-radius:8px; font-family:'Outfit', sans-serif; display:block;">
+                <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="#334155" />
+                <line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#334155" />
+                <line x1="${midX}" y1="${pad.t}" x2="${midX}" y2="${H-pad.b}" stroke="#475569" stroke-dasharray="4,2" />
+                <line x1="${midX}" y1="${pad.t}" x2="${xScale(avgEffect - maxY*0.8)}" y2="${H-pad.b}" stroke="rgba(255,255,255,0.1)" stroke-dasharray="2,2" />
+                <line x1="${midX}" y1="${pad.t}" x2="${xScale(avgEffect + maxY*0.8)}" y2="${H-pad.b}" stroke="rgba(255,255,255,0.1)" stroke-dasharray="2,2" />
+                ${dots}
+                <text x="${W/2}" y="${H-10}" text-anchor="middle" fill="#94a3b8" font-size="11">Effect Size</text>
+                <text x="15" y="${H/2}" transform="rotate(-90 15 ${H/2})" text-anchor="middle" fill="#94a3b8" font-size="11">Standard Error</text>
+            </svg>`;
+        }
+
         function renderSystematicReviewExtras(container) {
             console.log("Initializing Systematic Review Extras...");
             let outer = document.getElementById('epi-viz-outer');
@@ -3818,6 +4044,10 @@
                 updatePrismaDiagram();
                 renderForestPlot('medical');
                 renderFunnelPlot('symmetric');
+                renderForestGeneratorUI();
+                renderFunnelGeneratorUI();
+                updateUserForestPlot();
+                updateUserFunnelPlot();
             }, 400);
 
             // ── Input helper
@@ -3961,6 +4191,11 @@
                 </div>
             `;
             vizContainer.appendChild(funnelSection);
+
+            // Add Generators
+            renderForestPlotGenerator(vizContainer);
+            renderFunnelPlotGenerator(vizContainer);
+
             setTimeout(() => renderFunnelPlot('symmetric'), 300);
         }
 
@@ -4062,6 +4297,74 @@
                     <!-- I2 label -->
                     <text x="${W/2}" y="${totalH - 12}" text-anchor="middle" fill="#1a1a1a" font-size="11">I² = ${pooled.i2}% (${pooled.i2 < 25 ? 'Low' : pooled.i2 < 50 ? 'Moderate' : 'High'} Heterogeneity) &nbsp;|&nbsp; HR = Hazard Ratio &nbsp;|&nbsp; RE = Random Effects Model</text>
                 </svg>`;
+        }
+
+        function renderForestPlotGenerator(container) {
+            const genSection = document.createElement('div');
+            genSection.style.cssText = "background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:2rem; margin-bottom:2rem;";
+            genSection.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <div>
+                        <h3 style="color:#60a5fa; margin:0; font-size:1.2rem;">🛠️ Forest Plot Generator</h3>
+                        <p style="color:#94a3b8; font-size:0.8rem; margin-top:0.3rem;">Create publication-ready forest plots from your study data.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button onclick="downloadSVG('user-forest-svg-wrap', 'ForestPlot', 'png')" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.75rem; font-weight:700;">⬇ PNG</button>
+                        <button onclick="downloadSVG('user-forest-svg-wrap', 'ForestPlot', 'svg')" style="background:rgba(96,165,250,0.1); color:#60a5fa; border:1px solid rgba(96,165,250,0.25); border-radius:6px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.75rem; font-weight:700;">⬇ SVG</button>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:2rem;">
+                    <div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 60px 60px 60px 60px 40px; gap:0.5rem; margin-bottom:0.8rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.5rem;">
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">STUDY</div>
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">AUTHOR/REF</div>
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">HR</div>
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">LOW</div>
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">HIGH</div>
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">W%</div>
+                            <div></div>
+                        </div>
+                        <div id="forest-gen-inputs"></div>
+                        <button onclick="addForestStudyRow()" style="width:100%; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); color:#94a3b8; border-radius:8px; padding:0.6rem; cursor:pointer; font-size:0.8rem; font-weight:600; margin-top:0.5rem;">+ Add New Study</button>
+                    </div>
+                    <div id="user-forest-svg-wrap" style="background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid rgba(255,255,255,0.1); min-height:300px; display:flex; align-items:center; justify-content:center; overflow:auto;">
+                    </div>
+                </div>
+            `;
+            container.appendChild(genSection);
+        }
+
+        function renderFunnelPlotGenerator(container) {
+            const genSection = document.createElement('div');
+            genSection.style.cssText = "background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:2rem; margin-bottom:2rem;";
+            genSection.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <div>
+                        <h3 style="color:#2dd4bf; margin:0; font-size:1.2rem;">🛠️ Funnel Plot Generator</h3>
+                        <p style="color:#94a3b8; font-size:0.8rem; margin-top:0.3rem;">Plot publication bias for your meta-analysis.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button onclick="downloadSVG('user-funnel-svg-wrap', 'FunnelPlot', 'png')" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.75rem; font-weight:700;">⬇ PNG</button>
+                        <button onclick="downloadSVG('user-funnel-svg-wrap', 'FunnelPlot', 'svg')" style="background:rgba(96,165,250,0.1); color:#60a5fa; border:1px solid rgba(96,165,250,0.25); border-radius:6px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.75rem; font-weight:700;">⬇ SVG</button>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:2rem;">
+                    <div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 40px; gap:0.5rem; margin-bottom:0.8rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.5rem;">
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">EFFECT SIZE (OR/HR)</div>
+                            <div style="font-size:0.65rem; color:#94a3b8; font-weight:700;">STD ERROR / PRECISION</div>
+                            <div></div>
+                        </div>
+                        <div id="funnel-gen-inputs"></div>
+                        <button onclick="addFunnelStudyRow()" style="width:100%; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); color:#94a3b8; border-radius:8px; padding:0.6rem; cursor:pointer; font-size:0.8rem; font-weight:600; margin-top:0.5rem;">+ Add Data Point</button>
+                    </div>
+                    <div id="user-funnel-svg-wrap" style="background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid rgba(255,255,255,0.1); min-height:300px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    </div>
+                </div>
+            `;
+            container.appendChild(genSection);
         }
 
         function renderFunnelPlot(mode) {
