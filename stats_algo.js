@@ -26,6 +26,7 @@ function loadData() {
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
+                trimHeaders: true,
                 complete: handleParsedData,
                 error: (err) => { statusDiv.innerHTML = `<span style="color:#ff5252">Error parsing CSV: ${err}</span>`; }
             });
@@ -814,6 +815,33 @@ function displayResult(res) {
     }
 }
 
+// Helper: Global helper to build Box Plot array for distribution charts
+function generateBoxArray(mean, sd, med, iqr, min, max) {
+    // First determine Whiskers (Min / Max)
+    const finalMin = !isNaN(min) && min !== null ? min : (mean - (3 * sd));
+    const finalMax = !isNaN(max) && max !== null ? max : (mean + (3 * sd));
+
+    // If the user provided actual Median and IQR, use them for precise Q1/Median/Q3!
+    if (!isNaN(med) && med !== null && !isNaN(iqr) && iqr !== null && iqr > 0) {
+        return [
+            finalMin,            // Min Whiskers
+            med - (iqr / 2),     // Q1 (Precise)
+            med,                 // Median (Precise)
+            med + (iqr / 2),     // Q3 (Precise)
+            finalMax             // Max Whiskers
+        ];
+    } else {
+        // Fallback simulation assuming normal distribution if they skipped the fields
+        return [
+            finalMin,           // Min (Whiskers)
+            mean - (0.67 * sd), // Q1
+            mean,               // Median
+            mean + (0.67 * sd), // Q3
+            finalMax            // Max (Whiskers)
+        ];
+    }
+}
+
 let rawResultChart = null;
 
 function drawTestChart(testType, plotData) {
@@ -1325,7 +1353,8 @@ function wizardBack(step) {
     document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
     if (step === 'auto') {
         // dynamic back based on state
-        if (wizardState.goal === 'correlate' || wizardState.groups === 3) step = 1;
+        if (wizardState.goal === 'correlate') step = 1;
+        else if (wizardState.groups === 3) step = 2;
         else if (wizardState.groups === 2) step = 3;
     }
     document.getElementById(`wizard-step-${step}`).style.display = 'block';
@@ -1417,8 +1446,16 @@ function wizardSelectTest() {
     if (testDropdown && recommendedTestVal) {
         testDropdown.value = recommendedTestVal;
 
+        // Ensure the test card is visible before scrolling
+        const testCard = document.getElementById('test-card');
+        if (testCard.style.display === 'none') {
+            testCard.style.display = 'block';
+        }
+
         // Scroll down to the test section
-        document.getElementById('test-card').scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            testCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
 
         // Trigger the change event to build variable selectors
         updateVariableSelectors();
@@ -2158,33 +2195,6 @@ function drawSummaryChart(testType, plotData) {
     }
     // 2. Simulated Boxplot for Continuous Data Comparisons (T-Tests & ANOVA)
     else {
-        // Function to build Box Plot array
-        const generateBoxArray = (mean, sd, med, iqr, min, max) => {
-            // First determine Whiskers (Min / Max)
-            const finalMin = !isNaN(min) ? min : (mean - (3 * sd));
-            const finalMax = !isNaN(max) ? max : (mean + (3 * sd));
-
-            // If the user provided actual Median and IQR, use them for precise Q1/Median/Q3!
-            if (!isNaN(med) && !isNaN(iqr) && iqr > 0) {
-                return [
-                    finalMin,            // Min Whiskers
-                    med - (iqr / 2),     // Q1 (Precise)
-                    med,                 // Median (Precise)
-                    med + (iqr / 2),     // Q3 (Precise)
-                    finalMax             // Max Whiskers
-                ];
-            } else {
-                // Fallback simulation assuming normal distribution if they skipped the fields
-                return [
-                    finalMin,           // Min (Whiskers)
-                    mean - (0.67 * sd), // Q1
-                    mean,               // Median
-                    mean + (0.67 * sd), // Q3
-                    finalMax            // Max (Whiskers)
-                ];
-            }
-        };
-
         const chartDatasets = [];
 
         if (testType === 'unpaired-t') {
