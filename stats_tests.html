@@ -266,6 +266,29 @@
                 padding: 0.8rem;
             }
         }
+
+        @media (max-width: 1100px) {
+            .grid-2-split {
+                grid-template-columns: 1fr !important;
+            }
+            #summary-context-container {
+                position: static !important;
+                margin-top: 2rem;
+            }
+        }
+
+        /* Global Placeholder Visibility Fix */
+        ::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+            opacity: 1;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.7);
+        }
+        :-ms-input-placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+        ::-ms-input-placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
     </style>
 </head>
 
@@ -769,12 +792,69 @@ Control, 48, 129.0, Recovered</code>
                 <div
                     style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
                     <h4 style="color: #fff; margin-bottom: 1rem;">Select Variable to Test for Normality:</h4>
-                    <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
                         <select id="normality-var-select"
                             style="flex: 1; padding: 0.8rem; border-radius: 8px; background: #fff; border: 1px solid rgba(255,255,255,0.2); color: #1e293b; font-weight: 500;">
                             <option value="" disabled selected>-- Upload Data First --</option>
                         </select>
                         <button class="btn-primary" onclick="runNormalityChecks()">Run Normality Checks</button>
+                    </div>
+
+                    <!-- Plot Customization for Normality Checker (Restored to separate row) -->
+                    <div class="plot-customization-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px; text-align: left;">
+                        <div style="font-size: 0.9rem; font-weight: 600; color: #fbbf24; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+                            Optional: Plot Quality & Presentation Customization
+                        </div>
+                        <div class="grid-2" style="gap: 1.5rem;">
+                            <div>
+                                <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Custom Title Prefix:</label>
+                                <input type="text" id="norm-plot-title" placeholder="Normality Distribution" style="width:100%; margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color:#fff;">
+                                <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Custom Subtitle:</label>
+                                <input type="text" id="norm-plot-subtitle" placeholder="Statistical Analysis Overview" style="width:100%; margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color:#fff;">
+                                <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Visual Aspect Ratio:</label>
+                                <select id="norm-aspect-ratio" style="width:100%; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                    <option value="1">Square (1:1)</option>
+                                    <option value="1.33">Standard (4:3)</option>
+                                    <option value="2" selected>Wide (16:8)</option>
+                                    <option value="2.35">Cinematic (21:9)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="grid-2" style="gap:1rem;">
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Grid Style:</label>
+                                        <select id="norm-grid-style" style="width:100%; margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                            <option value="both">Full Grid (XY)</option>
+                                            <option value="horizontal">Horizontal Only (Y)</option>
+                                            <option value="none">Blank (Scientific)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Color Scheme:</label>
+                                        <select id="norm-color-scheme" style="width:100%; margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                            <option value="classic">Classic EpiSense (Blues/Pinks)</option>
+                                            <option value="vibrant">Vibrant Results (Neon/Gold)</option>
+                                            <option value="nature">Nature Scientific (Greens/Teal)</option>
+                                            <option value="pastel">Soft Pastels (Muted Colors)</option>
+                                            <option value="medical">Medical Journal (Greyscale)</option>
+                                            <option value="sunset">Sunset View (Warm)</option>
+                                            <option value="ocean">Deep Ocean (Blues)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">X-Axis / Category Label:</label>
+                                <input type="text" id="norm-axis-label" placeholder="Variable Values" style="width:100%; margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color:#fff;">
+                                <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                    <label style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+                                        <input type="checkbox" id="norm-show-legend" checked style="width: 1.1rem; height: 1.1rem; margin: 0;"> Show Legend
+                                    </label>
+                                    <label style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+                                        <input type="checkbox" id="norm-transparent-bg" checked style="width: 1.1rem; height: 1.1rem; margin: 0;"> Transparent BG
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1130,6 +1210,57 @@ Control, 48, 129.0, Recovered</code>
                 <button class="btn-primary" id="run-test-btn" style="margin-top: 1rem; width: 100%; display: none;"
                     onclick="runTest()">Run Test & Interpret</button>
 
+                <!-- Plot Customization for Raw Data Selector -->
+                <div id="raw-plot-customization" class="plot-customization-card" style="display: none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 12px; margin-top: 1.5rem;">
+                    <div style="font-size: 0.9rem; font-weight: 600; color: #94a3b8; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+                        Optional: Plot Customization
+                    </div>
+                    <div class="grid-2" style="gap: 1.5rem;">
+                        <div>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Custom Title:</label>
+                            <input type="text" id="raw-plot-title" placeholder="Scientific Analysis" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.2);">
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Subtitle:</label>
+                            <input type="text" id="raw-plot-subtitle" placeholder="Hypothesis Testing Result" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.2);">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Grid Style:</label>
+                            <select id="raw-grid-style" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                <option value="both">Full Grid (XY)</option>
+                                <option value="horizontal">Horizontal Only (Y)</option>
+                                <option value="none" selected>Blank (Scientific)</option>
+                            </select>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Color Scheme:</label>
+                            <select id="raw-color-scheme" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                <option value="classic">Classic EpiSense (Blues/Pinks)</option>
+                                <option value="vibrant">Vibrant Results (Neon/Gold)</option>
+                                <option value="nature">Nature Scientific (Greens/Teal)</option>
+                                <option value="pastel">Soft Pastels (Muted Colors)</option>
+                                <option value="medical">Medical Journal (Greyscale)</option>
+                                <option value="sunset">Sunset View (Warm)</option>
+                                <option value="ocean">Deep Ocean (Blues)</option>
+                            </select>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Visual Aspect Ratio:</label>
+                            <select id="raw-aspect-ratio" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                <option value="1">Square (1:1)</option>
+                                <option value="1.33">Standard (4:3)</option>
+                                <option value="2" selected>Wide (16:8)</option>
+                                <option value="2.35">Cinematic (21:9)</option>
+                            </select>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">X-Axis / Category Label:</label>
+                            <input type="text" id="raw-axis-label" placeholder="Test Groups" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+                                <label style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+                                    <input type="checkbox" id="raw-show-legend" checked style="width: 1.1rem; height: 1.1rem; margin: 0;"> Show Legend
+                                </label>
+                                <label style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+                                    <input type="checkbox" id="raw-transparent-bg" checked style="width: 1.1rem; height: 1.1rem; margin: 0;"> Transparent Background
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="result-box" class="result-box">
                     <div
                         style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">
@@ -1415,11 +1546,66 @@ Control, 48, 129.0, Recovered</code>
                 </select>
             </div>
 
+            <!-- Plot Customization for Summary Calculator -->
+            <div id="sum-plot-customization-section" class="plot-customization-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <div style="font-size: 1rem; font-weight: 600; color: #fbbf24; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.7rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+                    Optional: Plot Presentation Customization
+                </div>
+                <div class="grid-2" style="gap: 2rem;">
+                    <div>
+                        <label style="font-size: 0.9rem; color: #cbd5e1; font-weight: 500; display: block; margin-bottom: 0.4rem;">Plot Main Title:</label>
+                        <input type="text" id="sum-plot-title" placeholder="Clinical Summary Statistics" style="width: 100%; margin-bottom: 1rem; padding: 0.8rem; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                        <label style="font-size: 0.9rem; color: #cbd5e1; font-weight: 500; display: block; margin-bottom: 0.4rem;">Secondary Subtitle:</label>
+                        <input type="text" id="sum-plot-subtitle" placeholder="Distribution & Significance Overview" style="width: 100%; margin-bottom: 1rem; padding: 0.8rem; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.9rem; color: #cbd5e1; font-weight: 500; display: block; margin-bottom: 0.4rem;">Grid Presentation Style:</label>
+                        <select id="sum-grid-style" style="width: 100%; margin-bottom: 1.2rem; padding: 0.8rem; border-radius: 8px; background: #fff; color: #1e293b; font-weight: 600;">
+                            <option value="both">Full Professional Grid</option>
+                            <option value="horizontal">Horizontal Grid Only</option>
+                            <option value="none">Clean Blank Background</option>
+                        </select>
+                        <div>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Color Scheme:</label>
+                            <select id="sum-color-scheme" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                <option value="classic">Classic EpiSense (Blues/Pinks)</option>
+                                <option value="vibrant">Vibrant Results (Neon/Gold)</option>
+                                <option value="nature">Nature Scientific (Greens/Teal)</option>
+                                <option value="pastel">Soft Pastels (Muted Colors)</option>
+                                <option value="medical">Medical Journal (Greyscale)</option>
+                                <option value="sunset">Sunset View (Warm)</option>
+                                <option value="ocean">Deep Ocean (Blues)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">Visual Aspect Ratio:</label>
+                            <select id="sum-aspect-ratio" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: #fff; color: #1e293b; font-weight: 500;">
+                                <option value="1">Square (1:1)</option>
+                                <option value="1.33">Standard (4:3)</option>
+                                <option value="2" selected>Wide (16:8)</option>
+                                <option value="2.35">Cinematic (21:9)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;">X-Axis / Category Label:</label>
+                            <input type="text" id="sum-axis-label" placeholder="Statistical Distribution" style="margin-bottom: 0.8rem; padding: 0.6rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                            <label style="font-size: 0.9rem; color: #fff; display: flex; align-items: center; gap: 0.7rem; cursor: pointer; user-select: none;">
+                        <label style="font-size: 0.9rem; color: #fff; display: flex; align-items: center; gap: 0.7rem; cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="sum-transparent-bg" checked style="width: 1.2rem; height: 1.2rem; margin: 0; cursor: pointer;"> Transparent BG
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Split Panel Layout: Inputs vs Context -->
-            <div class="grid-2" style="gap: 3rem;">
+            <div class="grid-2-split" style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.6fr); gap: 2rem; align-items: start;">
 
                 <!-- Left Panel: Interactive Inputs -->
-                <div>
+                <div style="min-width: 0; overflow: hidden;">
                     <!-- 2. Dynamic Input Area (Injected via JS) -->
                     <div id="summary-inputs-container" style="margin-bottom: 2rem;">
                         <!-- JS will build the grid of inputs here based on the dropdown selection -->

@@ -8,7 +8,66 @@
 let currentData = null; // Array of objects
 let columns = []; // Array of strings
 let varStats = {}; // Objects holding descriptive stats per column
-let summaryResultChart = null; // Holds the Chart.js instance for the Summary Stats Mode
+
+// Global Chart Instances for proper cleanup/destroy
+let chartNormHist = null;
+let chartNormQQ = null;
+let chartNormBox = null;
+let rawResultChart = null;
+let summaryResultChart = null;
+
+// Curated Color Palettes for Publication-Ready Graphs
+const getPalette = (scheme, index, alpha = 1) => {
+    const palettes = {
+        classic: ['#60a5fa', '#f472b6', '#fbbf24', '#34d399', '#a78bfa', '#f87171'],
+        vibrant: ['#00e676', '#ffeb3b', '#ff4081', '#00bcd4', '#ff9800', '#7c4dff'],
+        nature: ['#2d6a4f', '#52b788', '#95d5b2', '#b7e4c7', '#d8f3dc', '#1b4332'],
+        pastel: ['#ffb7b2', '#ffdac1', '#e2f0cb', '#b5ead7', '#c7ceea', '#eccaff'],
+        medical: ['#1e3a8a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'],
+        sunset: ['#f43f5e', '#fb7185', '#fbbf24', '#f59e0b', '#ea580c', '#be123c'],
+        ocean: ['#0369a1', '#0ea5e9', '#38bdf8', '#7dd3fc', '#bae6fd', '#0c4a6e']
+    };
+    const colors = palettes[scheme] || palettes.classic;
+    const color = colors[index % colors.length];
+    
+    // Hex to RGBA conversion for transparency
+    if (alpha < 1 && color.startsWith('#')) {
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return color;
+};
+
+// Register Global White Background Plugin for all charts
+const whiteBackgroundPlugin = {
+    id: 'custom_canvas_background_color',
+    beforeDraw: (chart) => {
+        // Only fill white if the user HAS NOT checked "Transparent Background" (default behavior)
+        // We determine the module type from the chart's canvas ID prefix
+        const canvasId = chart.canvas.id;
+        let isTransparent = false;
+
+        if (canvasId === 'summary-result-chart') {
+            isTransparent = document.getElementById('sum-transparent-bg')?.checked;
+        } else if (canvasId === 'test-result-chart') {
+            isTransparent = document.getElementById('raw-transparent-bg')?.checked;
+        } else if (canvasId.startsWith('normality')) {
+            isTransparent = document.getElementById('norm-transparent-bg')?.checked;
+        }
+
+        if (isTransparent) return;
+
+        const { ctx } = chart;
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = '#ffffff'; // Solid white
+        ctx.fillRect(0, 0, chart.width, chart.height);
+        ctx.restore();
+    }
+};
+Chart.register(whiteBackgroundPlugin);
 
 // 1. Data Loading & Parsing
 function loadData() {
@@ -364,8 +423,10 @@ function updateVariableSelectors() {
 
     if (html !== '') {
         runBtn.style.display = 'block';
+        document.getElementById('raw-plot-customization').style.display = 'block';
     } else {
         runBtn.style.display = 'none'; // E.g. for Z-test message
+        document.getElementById('raw-plot-customization').style.display = 'none';
     }
 }
 
@@ -815,34 +876,41 @@ function displayResult(res) {
     }
 }
 
-// Helper: Global helper to build Box Plot array for distribution charts
+// Helper: Global helper to build Box Plot stats object for @sgratzl/chartjs-chart-boxplot
 function generateBoxArray(mean, sd, med, iqr, min, max) {
     // First determine Whiskers (Min / Max)
-    const finalMin = !isNaN(min) && min !== null ? min : (mean - (3 * sd));
-    const finalMax = !isNaN(max) && max !== null ? max : (mean + (3 * sd));
+    // We add Math.min/max safety to ensure whiskers always enclose the box components
+    let finalMin = !isNaN(min) && min !== null ? min : (mean - (3 * sd));
+    let finalMax = !isNaN(max) && max !== null ? max : (mean + (3 * sd));
+
+    let q1, median, q3;
 
     // If the user provided actual Median and IQR, use them for precise Q1/Median/Q3!
     if (!isNaN(med) && med !== null && !isNaN(iqr) && iqr !== null && iqr > 0) {
-        return [
-            finalMin,            // Min Whiskers
-            med - (iqr / 2),     // Q1 (Precise)
-            med,                 // Median (Precise)
-            med + (iqr / 2),     // Q3 (Precise)
-            finalMax             // Max Whiskers
-        ];
+        q1 = med - (iqr / 2);
+        median = med;
+        q3 = med + (iqr / 2);
     } else {
         // Fallback simulation assuming normal distribution if they skipped the fields
-        return [
-            finalMin,           // Min (Whiskers)
-            mean - (0.67 * sd), // Q1
-            mean,               // Median
-            mean + (0.67 * sd), // Q3
-            finalMax            // Max (Whiskers)
-        ];
+        q1 = mean - (0.67 * sd);
+        median = mean;
+        q3 = mean + (0.67 * sd);
     }
+
+    // Safety: ensure whiskers are actually outside the box
+    finalMin = Math.min(finalMin, q1);
+    finalMax = Math.max(finalMax, q3);
+
+    return {
+        min: finalMin,
+        q1: q1,
+        median: median,
+        q3: q3,
+        max: finalMax
+    };
 }
 
-let rawResultChart = null;
+rawResultChart = null;
 
 function drawTestChart(testType, plotData) {
     const canvas = document.getElementById('test-result-chart');
@@ -850,21 +918,47 @@ function drawTestChart(testType, plotData) {
 
     let config = {};
 
+    const customTitle = document.getElementById('raw-plot-title')?.value || (testType === 'chi-square' || testType === 'fisher-exact' ? 'Categorical Distribution' : 'Raw Data Analysis');
+    const customSubtitle = document.getElementById('raw-plot-subtitle')?.value || 'Statistical Hypothesis Testing';
+    const axisLabel = document.getElementById('raw-axis-label')?.value || 'Test Groups';
+    const colorScheme = document.getElementById('raw-color-scheme')?.value || 'classic';
+    const gridStyle = document.getElementById('raw-grid-style')?.value || 'both';
+    const showLegend = document.getElementById('raw-show-legend')?.checked;
+    const isTrans = document.getElementById('raw-transparent-bg')?.checked;
+
+    const textColor = isTrans ? '#e2e8f0' : '#1e293b';
+    const gridColor = isTrans ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
     if (testType === 'chi-square' || testType === 'fisher-exact') {
+        const datasets = plotData.datasets.map((ds, idx) => ({
+            ...ds,
+            backgroundColor: getPalette(colorScheme, idx, 0.7)
+        }));
         config = {
             type: 'bar',
             data: {
                 labels: plotData.labels,
-                datasets: plotData.datasets
+                datasets: datasets
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
                 plugins: {
-                    title: { display: true, text: 'Categorical Distribution', color: '#fff' }
+                    title: { display: true, text: customTitle, color: textColor, font: { size: 16 } },
+                    subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor },
+                    legend: { display: showLegend, labels: { color: textColor } }
                 },
                 scales: {
-                    y: { beginAtZero: true, ticks: { color: '#cbd5e1' } },
-                    x: { ticks: { color: '#cbd5e1' } }
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { color: textColor },
+                        grid: { display: gridStyle !== 'none', color: gridColor }
+                    },
+                    x: { 
+                        ticks: { color: textColor },
+                        grid: { display: gridStyle === 'both', color: gridColor }
+                    }
                 }
             }
         };
@@ -877,30 +971,38 @@ function drawTestChart(testType, plotData) {
                 datasets: [{
                     label: "Pearson's R",
                     data: [rVal],
-                    backgroundColor: rVal > 0 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(248, 113, 113, 0.7)',
-                    borderColor: rVal > 0 ? '#34d399' : '#f87171',
+                    backgroundColor: rVal > 0 ? getPalette(colorScheme, 3, 0.7) : getPalette(colorScheme, 5, 0.7),
+                    borderColor: rVal > 0 ? getPalette(colorScheme, 3, 1) : getPalette(colorScheme, 5, 1),
                     borderWidth: 2
                 }]
             },
             options: {
                 indexAxis: 'y',
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 4,
                 plugins: {
-                    title: { display: true, text: 'Relationship Direction & Magnitude', color: '#fff' }
+                    title: { display: true, text: customTitle, color: textColor },
+                    subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor },
+                    legend: { display: showLegend, labels: { color: textColor } }
                 },
                 scales: {
-                    x: { min: -1.1, max: 1.1, ticks: { color: '#cbd5e1' } },
+                    x: { 
+                        min: -1.1, max: 1.1, 
+                        ticks: { color: textColor },
+                        grid: { display: gridStyle !== 'none', color: gridColor }
+                    },
                     y: { ticks: { display: false } }
                 }
             }
         };
     } else {
         // Continuous data comparisons (T-Tests, ANOVA)
-        const datasets = plotData.groups.map(g => ({
+        const datasets = plotData.groups.map((g, idx) => ({
             label: g.name,
             data: [generateBoxArray(g.mean, g.sd, g.median, g.iqr, g.min, g.max)],
-            backgroundColor: g.color || 'rgba(124, 58, 237, 0.6)',
-            borderColor: g.color || '#7c3aed',
+            backgroundColor: getPalette(colorScheme, idx, 0.5),
+            borderColor: getPalette(colorScheme, idx, 1),
             padding: 10,
             itemRadius: 2
         }));
@@ -908,17 +1010,27 @@ function drawTestChart(testType, plotData) {
         config = {
             type: 'boxplot',
             data: {
-                labels: ['Distribution Analysis'],
+                labels: [axisLabel],
                 datasets: datasets
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
                 plugins: {
-                    legend: { position: 'top', labels: { color: '#cbd5e1' } },
-                    title: { display: true, text: 'Clinical Distribution Comparison', color: '#fff' }
+                    title: { display: true, text: customTitle, color: textColor, font: { size: 16 } },
+                    subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor },
+                    legend: { display: showLegend, labels: { color: textColor } }
                 },
                 scales: {
-                    y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    x: { 
+                        ticks: { color: textColor },
+                        grid: { display: gridStyle === 'both', color: gridColor }
+                    },
+                    y: { 
+                        ticks: { color: textColor },
+                        grid: { display: gridStyle !== 'none', color: gridColor }
+                    }
                 }
             }
         };
@@ -941,9 +1053,9 @@ function displayError(msg) {
 // 6.5 Normality Checker Module 
 // ============================================
 
-let chartNormHist = null;
-let chartNormBox = null;
-let chartNormQQ = null;
+    chartNormHist = null;
+    chartNormBox = null;
+    chartNormQQ = null;
 
 function runNormalityChecks() {
     const colName = document.getElementById('normality-var-select').value;
@@ -1018,6 +1130,16 @@ function renderNormalityHistogram(data) {
     const ctx = document.getElementById('normalityHistogram').getContext('2d');
     if (chartNormHist) chartNormHist.destroy();
 
+    const axisLabel = document.getElementById('norm-axis-label')?.value || 'Distribution Viewer';
+    const colorScheme = document.getElementById('norm-color-scheme')?.value || 'classic';
+    const customTitle = document.getElementById('norm-plot-title')?.value || 'Histogram: Normality Check';
+    const customSubtitle = document.getElementById('norm-plot-subtitle')?.value || '';
+    const isTrans = document.getElementById('norm-transparent-bg')?.checked;
+    const textColor = isTrans ? '#e2e8f0' : '#1e293b';
+    const gridColor = isTrans ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+    const gridStyle = document.getElementById('norm-grid-style')?.value || 'both';
+    const showLegend = document.getElementById('norm-show-legend')?.checked ?? true;
+
     chartNormHist = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1026,22 +1148,19 @@ function renderNormalityHistogram(data) {
                 {
                     label: 'Normal Curve Density',
                     type: 'line',
-                    data: curveLabels.map((l, i) => ({ x: l, y: curvePoints[i] })),
-                    borderColor: 'rgba(52, 211, 153, 0.8)', // Green curve
+                    data: [], // populated below
+                    borderColor: getPalette(colorScheme, 3, 0.8), // Green-ish/Secondary curve
                     borderWidth: 2,
                     borderDash: [5, 5],
                     pointRadius: 0,
-                    tension: 0.4,
-                    // Map x-axis differently to align with scatter curve over categorical bins
-                    // A trick in Chart.js for mixed continuous/categorical without true linear x-axis
-                    // requires mapping the curve points explicitly to the categorical bin indeces
+                    tension: 0.4
                 },
                 {
                     label: 'Frequency',
                     type: 'bar',
                     data: freqs,
-                    backgroundColor: 'rgba(96, 165, 250, 0.5)',
-                    borderColor: '#60a5fa',
+                    backgroundColor: getPalette(colorScheme, 0, 0.5),
+                    borderColor: getPalette(colorScheme, 0, 1),
                     borderWidth: 1.5,
                     borderRadius: 4
                 }
@@ -1049,13 +1168,31 @@ function renderNormalityHistogram(data) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
             plugins: {
-                legend: { display: false }
+                title: { display: true, text: customTitle, color: textColor, font: { size: 16, weight: '600' } },
+                subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor, font: { size: 12 } },
+                legend: { display: showLegend, labels: { color: textColor } }
             },
             scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-                x: { grid: { display: false } }
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { color: textColor },
+                    grid: { 
+                        display: gridStyle !== 'none',
+                        color: gridColor 
+                    },
+                    title: { display: true, text: 'Frequency', color: textColor }
+                },
+                x: { 
+                    ticks: { color: textColor },
+                    grid: { 
+                        display: gridStyle === 'both',
+                        color: gridColor
+                    },
+                    title: { display: true, text: axisLabel, color: textColor }
+                }
             }
         }
     });
@@ -1103,19 +1240,29 @@ function renderNormalityQQPlot(data) {
     const ctx = document.getElementById('normalityQQPlot').getContext('2d');
     if (chartNormQQ) chartNormQQ.destroy();
 
+    const axisLabel = document.getElementById('norm-axis-label')?.value || 'Observed Data';
+    const colorScheme = document.getElementById('norm-color-scheme')?.value || 'classic';
+    const customTitle = document.getElementById('norm-plot-title')?.value || 'Q-Q Plot: Normality Check';
+    const customSubtitle = document.getElementById('norm-plot-subtitle')?.value || '';
+    const isTrans = document.getElementById('norm-transparent-bg')?.checked;
+    const textColor = isTrans ? '#e2e8f0' : '#1e293b';
+    const gridColor = isTrans ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+    const gridStyle = document.getElementById('norm-grid-style')?.value || 'both';
+    const showLegend = document.getElementById('norm-show-legend')?.checked ?? true;
+
     chartNormQQ = new Chart(ctx, {
         type: 'scatter',
         data: {
             datasets: [{
                 label: 'Sample Quantiles',
                 data: scatterData,
-                backgroundColor: '#f472b6',
+                backgroundColor: getPalette(colorScheme, 1, 0.8),
                 pointRadius: 4
             }, {
                 type: 'line',
                 label: 'Theoretical Normal',
                 data: theoresticalLine,
-                borderColor: 'rgba(255,255,255,0.4)',
+                borderColor: isTrans ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
                 borderWidth: 2,
                 borderDash: [5, 5],
                 pointRadius: 0
@@ -1123,18 +1270,23 @@ function renderNormalityQQPlot(data) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
             plugins: {
-                legend: { display: false }
+                title: { display: true, text: customTitle, color: textColor, font: { size: 16 } },
+                subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor },
+                legend: { display: showLegend, labels: { color: textColor } }
             },
             scales: {
                 y: {
-                    title: { display: true, text: 'Sample Data', color: '#94a3b8' },
-                    grid: { color: 'rgba(255,255,255,0.05)' }
+                    title: { display: true, text: axisLabel, color: textColor },
+                    ticks: { color: textColor },
+                    grid: { display: gridStyle !== 'none', color: gridColor }
                 },
                 x: {
-                    title: { display: true, text: 'Theoretical Normal Quantiles', color: '#94a3b8' },
-                    grid: { color: 'rgba(255,255,255,0.05)' }
+                    title: { display: true, text: 'Theoretical Normal Quantiles', color: textColor },
+                    ticks: { color: textColor },
+                    grid: { display: gridStyle === 'both', color: gridColor }
                 }
             }
         }
@@ -1145,34 +1297,45 @@ function renderNormalityBoxPlot(data) {
     const ctx = document.getElementById('normalityBoxPlot').getContext('2d');
     if (chartNormBox) chartNormBox.destroy();
 
-    // Using true boxplot plugin (@sgratzl/chartjs-chart-boxplot)
+    const customTitle = document.getElementById('norm-plot-title')?.value || 'Box Plot Distribution';
+    const gridStyle = document.getElementById('norm-grid-style')?.value || 'both';
+    const isTrans = document.getElementById('norm-transparent-bg')?.checked;
+    const textColor = isTrans ? '#e2e8f0' : '#1e293b';
+    const gridColor = isTrans ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+    const axisLabel = document.getElementById('norm-axis-label')?.value || 'Value Distribution';
+    const colorScheme = document.getElementById('norm-color-scheme')?.value || 'classic';
+
     chartNormBox = new Chart(ctx, {
         type: 'boxplot',
         data: {
-            labels: ['Value Distribution'],
+            labels: [axisLabel],
             datasets: [{
                 label: 'Standard Box Plot',
-                data: [data], // Plugin expects array of arrays
-                backgroundColor: 'rgba(167, 139, 250, 0.5)',
-                borderColor: '#a78bfa',
+                backgroundColor: getPalette(colorScheme, 0, 0.5),
+                borderColor: getPalette(colorScheme, 0, 1),
                 borderWidth: 2,
-                itemRadius: 3,
-                itemBackgroundColor: '#f472b6' // outlier color
+                outlierColor: getPalette(colorScheme, 0, 0.8),
+                padding: 10,
+                itemRadius: 2,
+                data: [data]
             }]
         },
         options: {
-            indexAxis: 'y', // Render horizontally
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
             plugins: {
+                title: { display: true, text: customTitle, color: textColor, font: { size: 16 } },
                 legend: { display: false }
             },
             scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.05)' }
+                y: { 
+                    ticks: { color: textColor },
+                    grid: { display: gridStyle !== 'none', color: gridColor } 
                 },
-                y: {
-                    display: false // Hide 'Value Distribution' label for cleaner UI
+                x: {
+                    ticks: { color: textColor },
+                    grid: { display: gridStyle === 'both', color: gridColor }
                 }
             }
         }
@@ -1555,19 +1718,36 @@ function buildSummaryInputs() {
         `;
         contextExplain.innerHTML = `<strong>Paired (Dependent) T-Test:</strong><br><br>This compares two related groups, most commonly the exact same patients measured twice (e.g., Blood pressure "Before" and "After" a medication).<br><br>Instead of comparing the two group averages, the math matches up each pair, calculates the difference for that specific person, and then tests if the <em>average difference</em> is significantly far from zero.`;
         container.innerHTML = `
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.5rem; max-width: 500px;">
-                <h4 style="color: #fbbf24; margin-bottom: 1rem;">Difference Scores (Post - Pre)</h4>
-                <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1rem;">For a paired test, you analyze the <em>differences</em> between the paired pairs.</p>
-                <label>Label for Differences:</label> <input type="text" id="sum-diff-name" class="sum-input" placeholder="e.g. Treatment Effect (Post-Pre)"><br>
-                <label>Mean of Differences:</label> <input type="number" id="sum-diff-mean" step="any" class="sum-input"><br>
-                <label>Standard Deviation of Differences:</label> <input type="number" id="sum-diff-sd" step="any" class="sum-input"><br>
-                <label>Number of Pairs (N):</label> <input type="number" id="sum-diff-n" step="1" min="2" class="sum-input"><br>
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.2);">
-                    <strong style="color: #cbd5e1; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Optional (For Exact Box Plot):</strong>
-                    <label>Minimum:</label> <input type="number" id="sum-diff-min" step="any" class="sum-input">
-                    <label>Median:</label> <input type="number" id="sum-diff-median" step="any" class="sum-input">
-                    <label>Maximum:</label> <input type="number" id="sum-diff-max" step="any" class="sum-input">
-                    <label>IQR:</label> <input type="number" id="sum-diff-iqr" step="any" class="sum-input">
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.5rem; max-width: 650px;">
+                <h4 style="color: #fbbf24; margin-bottom: 1.5rem;">Paired Comparison Data</h4>
+                
+                <div class="grid-2" style="gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <div>
+                        <h5 style="color: #60a5fa; font-size: 0.9rem; margin-bottom: 0.8rem;">1. Differences (Post - Pre) [Required for Math]</h5>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Mean of Differences:</label> <input type="number" id="sum-diff-mean" step="any" class="sum-input">
+                        <label style="font-size: 0.8rem; color: #94a3b8;">SD of Differences:</label> <input type="number" id="sum-diff-sd" step="any" class="sum-input">
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Pairs (N):</label> <input type="number" id="sum-diff-n" step="1" min="2" class="sum-input">
+                    </div>
+                    <div>
+                        <h5 style="color: #f472b6; font-size: 0.9rem; margin-bottom: 0.8rem;">2. Visual Context [Optional for Plot]</h5>
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Pre-Intervention Mean:</label> <input type="number" id="sum-pre-mean" step="any" class="sum-input">
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Post-Intervention Mean:</label> <input type="number" id="sum-post-mean" step="any" class="sum-input">
+                        <label style="font-size: 0.8rem; color: #94a3b8;">Shared SD (Optional):</label> <input type="number" id="sum-shared-sd" step="any" class="sum-input" placeholder="Use if SDs same">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <strong style="color: #cbd5e1; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Optional (For Exact Box Plot of Differences):</strong>
+                    <div class="grid-2" style="gap: 1rem;">
+                        <div>
+                            <label style="font-size: 0.8rem; color: #94a3b8;">Min:</label> <input type="number" id="sum-diff-min" step="any" class="sum-input">
+                            <label style="font-size: 0.8rem; color: #94a3b8;">Median:</label> <input type="number" id="sum-diff-median" step="any" class="sum-input">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: #94a3b8;">Max:</label> <input type="number" id="sum-diff-max" step="any" class="sum-input">
+                            <label style="font-size: 0.8rem; color: #94a3b8;">IQR:</label> <input type="number" id="sum-diff-iqr" step="any" class="sum-input">
+                        </div>
+                    </div>
                 </div>
             </div>
             <style>
@@ -1650,7 +1830,7 @@ function buildSummaryInputs() {
         `;
         contextExplain.innerHTML = `<strong>One-Way ANOVA:</strong><br><br>Compare 3 or more independent groups (e.g., Medication A vs B vs Placebo).<br><br>Instead of entering complex variance numbers, simply add your groups below with their Means and SDs. EpiSense will calculate the variance partitions and effect size (Eta-squared) automatically.`;
         container.innerHTML = `
-            <div id="anova-groups-container" style="display: flex; flex-direction: column; gap: 1rem; max-width: 800px;">
+            <div id="anova-groups-container" style="display: flex; flex-direction: column; gap: 1rem; width: 100%;">
                 <!-- Groups will be added here -->
             </div>
             <button class="btn-primary" onclick="addAnovaGroup()" style="margin-top: 1rem; background: rgba(167, 139, 250, 0.2); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.5); width: auto;">
@@ -1691,25 +1871,50 @@ function addAnovaGroup(label = "", color = "#fff") {
     const groupCount = container.children.length + 1;
     const groupDiv = document.createElement('div');
     groupDiv.className = 'anova-group-row';
-    groupDiv.style = "background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 1rem; align-items: center;";
+    groupDiv.style = "background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; border-left: 4px solid " + (color || "#fbbf24") + "; box-shadow: 0 4px 12px rgba(0,0,0,0.2);";
     groupDiv.innerHTML = `
-        <div>
-            <label style="font-size: 0.8rem; color: ${color || '#94a3b8'};">Group Name</label>
-            <input type="text" class="sum-input anova-name" value="${label || 'Group ' + groupCount}" style="margin:0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem;">
+            <div style="flex: 1;">
+                <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem; font-weight: 600;">Research Group Name</label>
+                <input type="text" class="sum-input anova-name" value="${label || 'Group ' + groupCount}" style="margin:0; padding: 0.6rem; font-size: 1rem; background: rgba(255,255,255,0.05);">
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); color: #f87171; cursor: pointer; font-size: 1.2rem; padding: 0.3rem 0.8rem; border-radius: 6px; transition: 0.3s;" title="Remove Group">Delete</button>
         </div>
-        <div>
-            <label style="font-size: 0.8rem;">Mean</label>
-            <input type="number" step="any" class="sum-input anova-mean" style="margin:0;">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;">
+            <div>
+                <label style="font-size: 0.75rem; color: #cbd5e1; font-weight: 500;">Mean</label>
+                <input type="number" step="any" class="sum-input anova-mean" placeholder="M" style="margin:0; padding: 0.6rem; background: rgba(255,255,255,0.05); font-size: 0.95rem;">
+            </div>
+            <div>
+                <label style="font-size: 0.75rem; color: #cbd5e1; font-weight: 500;">SD</label>
+                <input type="number" step="any" class="sum-input anova-sd" placeholder="SD" style="margin:0; padding: 0.6rem; background: rgba(255,255,255,0.05); font-size: 0.95rem;">
+            </div>
+            <div>
+                <label style="font-size: 0.75rem; color: #cbd5e1; font-weight: 500;">Sample Size (N)</label>
+                <input type="number" step="1" min="3" class="sum-input anova-n" placeholder="N" style="margin:0; padding: 0.6rem; background: rgba(255,255,255,0.05); font-size: 0.95rem;">
+            </div>
         </div>
-        <div>
-            <label style="font-size: 0.8rem;">SD</label>
-            <input type="number" step="any" class="sum-input anova-sd" style="margin:0;">
+
+        <!-- Optional Exact Box Data Section -->
+        <div style="padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
+            <div>
+                <label style="font-size: 0.7rem; color: #64748b; font-weight: 500;">Min</label>
+                <input type="number" step="any" class="sum-input anova-min" placeholder="Min" style="margin:0; padding: 0.4rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(255,255,255,0.05);">
+            </div>
+            <div>
+                <label style="font-size: 0.7rem; color: #64748b; font-weight: 500;">Median</label>
+                <input type="number" step="any" class="sum-input anova-median" placeholder="Med" style="margin:0; padding: 0.4rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(255,255,255,0.05);">
+            </div>
+            <div>
+                <label style="font-size: 0.7rem; color: #64748b; font-weight: 500;">Max</label>
+                <input type="number" step="any" class="sum-input anova-max" placeholder="Max" style="margin:0; padding: 0.4rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(255,255,255,0.05);">
+            </div>
+            <div>
+                <label style="font-size: 0.7rem; color: #64748b; font-weight: 500;">IQR</label>
+                <input type="number" step="any" class="sum-input anova-iqr" placeholder="IQR" style="margin:0; padding: 0.4rem; font-size: 0.8rem; background: transparent; border: 1px solid rgba(255,255,255,0.05);">
+            </div>
         </div>
-        <div>
-            <label style="font-size: 0.8rem;">N</label>
-            <input type="number" step="1" min="2" class="sum-input anova-n" style="margin:0;">
-        </div>
-        <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:1.2rem; margin-top:0.8rem;">\u00D7</button>
     `;
     container.appendChild(groupDiv);
 }
@@ -1794,7 +1999,7 @@ function runSummaryCalculation() {
             drawSummaryChart(testType, { name1, m1, s1, med1, iqr1, min1, max1, name2, m2, s2, med2, iqr2, min2, max2 });
 
         } else if (testType === 'paired-t') {
-            const diffName = document.getElementById('sum-diff-name').value || 'Difference Scores';
+            const diffName = document.getElementById('sum-diff-name')?.value || 'Difference';
             const meanDiff = parseFloat(document.getElementById('sum-diff-mean').value);
             const medDiff = parseFloat(document.getElementById('sum-diff-median').value);
             const iqrDiff = parseFloat(document.getElementById('sum-diff-iqr').value);
@@ -1802,6 +2007,11 @@ function runSummaryCalculation() {
             const maxDiff = parseFloat(document.getElementById('sum-diff-max').value);
             const sdDiff = parseFloat(document.getElementById('sum-diff-sd').value);
             const n = parseFloat(document.getElementById('sum-diff-n').value);
+
+            // Optional Visualization Data
+            const preM = parseFloat(document.getElementById('sum-pre-mean')?.value);
+            const postM = parseFloat(document.getElementById('sum-post-mean')?.value);
+            const sharedSD = parseFloat(document.getElementById('sum-shared-sd')?.value);
 
             if ([meanDiff, sdDiff, n].some(isNaN) || n < 2) throw new Error("Invalid inputs.");
 
@@ -1828,7 +2038,11 @@ function runSummaryCalculation() {
             `;
             const effectSize = Math.abs(meanDiff) / sdDiff; // Cohen's d for paired
             verdictBadge.innerHTML = generateMedicalInterpretation(p, 't-test', { cohenD: effectSize });
-            drawSummaryChart(testType, { diffName, meanDiff, sdDiff, medDiff, iqrDiff, minDiff, maxDiff });
+            
+            drawSummaryChart(testType, { 
+                diffName, meanDiff, sdDiff, medDiff, iqrDiff, minDiff, maxDiff,
+                preM, postM, sharedSD 
+            });
 
         } else if (testType === 'chi-square') {
             const a = parseFloat(document.getElementById('sum-cell-a').value);
@@ -1949,15 +2163,22 @@ function runSummaryCalculation() {
             drawSummaryChart(testType, { a, b, c, d });
 
         } else if (testType === 'anova') {
-            const groupRows = document.querySelectorAll('.anova-group-row');
             const groups = [];
-            groupRows.forEach(row => {
-                const name = row.querySelector('.anova-name').value;
-                const m = parseFloat(row.querySelector('.anova-mean').value);
-                const s = parseFloat(row.querySelector('.anova-sd').value);
-                const n = parseFloat(row.querySelector('.anova-n').value);
-                if (!isNaN(m) && !isNaN(s) && !isNaN(n) && n > 1) {
-                    groups.push({ name, m, s, n });
+            const rows = document.querySelectorAll('.anova-group-row');
+            rows.forEach(r => {
+                const name = r.querySelector('.anova-name').value;
+                const m = parseFloat(r.querySelector('.anova-mean').value);
+                const s = parseFloat(r.querySelector('.anova-sd').value);
+                const n = parseFloat(r.querySelector('.anova-n').value);
+                
+                // Exact Box Data
+                const med = parseFloat(r.querySelector('.anova-median').value);
+                const iqr = parseFloat(r.querySelector('.anova-iqr').value);
+                const min = parseFloat(r.querySelector('.anova-min').value);
+                const max = parseFloat(r.querySelector('.anova-max').value);
+                
+                if (!isNaN(m) && !isNaN(s) && !isNaN(n)) {
+                    groups.push({ name, m, s, n, med, iqr, min, max });
                 }
             });
 
@@ -2030,7 +2251,7 @@ function runSummaryCalculation() {
 
             const df = n - 2;
             const t = r * Math.sqrt(df / (1 - r * r));
-            let p = jStat.ttest(t, df, 2);
+            let p = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
             if (tail === 'one') p = p / 2;
 
             statBlock.innerHTML = `
@@ -2120,7 +2341,6 @@ function generateMedicalInterpretation(p, testType, metrics = {}) {
 // Summary Statistics Dynamic Plotting & Download
 // ---------------------------------------------------------
 
-
 function drawSummaryChart(testType, plotData) {
     const chartContainer = document.getElementById('summary-chart-container');
     const canvas = document.getElementById('summary-result-chart');
@@ -2134,7 +2354,18 @@ function drawSummaryChart(testType, plotData) {
 
     let config = {};
 
-    // 1. Bar Chart for Contingency Tables (Chi-Square & Fisher)
+    const customTitle = document.getElementById('sum-plot-title')?.value || (testType === 'chi-square' || testType === 'fisher-exact' ? 'Categorical Proportions' : 'Summary Statistics Overview');
+    const customSubtitle = document.getElementById('sum-plot-subtitle')?.value || 'Comparative Distribution Analysis';
+    const axisLabel = document.getElementById('sum-axis-label')?.value || (testType === 'chi-square' || testType === 'fisher-exact' ? 'Categorical Outcome' : 'Statistical Distribution');
+    const colorScheme = document.getElementById('sum-color-scheme')?.value || 'classic';
+    const gridStyle = document.getElementById('sum-grid-style')?.value || 'both';
+    const showLegend = document.getElementById('sum-show-legend')?.checked;
+    const isTrans = document.getElementById('sum-transparent-bg')?.checked;
+    const aspRatio = parseFloat(document.getElementById('sum-aspect-ratio')?.value) || 2;
+
+    const textColor = isTrans ? '#e2e8f0' : '#1e293b';
+    const gridColor = isTrans ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
     if (testType === 'chi-square' || testType === 'fisher-exact') {
         config = {
             type: 'bar',
@@ -2144,24 +2375,27 @@ function drawSummaryChart(testType, plotData) {
                     {
                         label: 'Outcome Positive',
                         data: [plotData.a, plotData.c],
-                        backgroundColor: 'rgba(96, 165, 250, 0.8)',
+                        backgroundColor: getPalette(colorScheme, 0, 0.8),
                     },
                     {
                         label: 'Outcome Negative',
                         data: [plotData.b, plotData.d],
-                        backgroundColor: 'rgba(236, 72, 153, 0.8)', // Pink theme
+                        backgroundColor: getPalette(colorScheme, 1, 0.8),
                     }
                 ]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: aspRatio,
                 plugins: {
-                    title: { display: true, text: 'Contingency Table Counts', color: '#fff', font: { size: 16 } },
-                    legend: { labels: { color: '#cbd5e1' } }
+                    title: { display: true, text: customTitle, color: textColor, font: { size: 16 } },
+                    subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor },
+                    legend: { display: showLegend, labels: { color: textColor } }
                 },
                 scales: {
-                    x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.05)' }, title: { display: true, text: 'Raw Counts', color: '#94a3b8' } }
+                    x: { ticks: { color: textColor }, grid: { display: gridStyle === 'both', color: gridColor } },
+                    y: { ticks: { color: textColor }, grid: { display: gridStyle !== 'none', color: gridColor }, title: { display: true, text: 'Raw Counts', color: textColor } }
                 }
             }
         };
@@ -2174,62 +2408,79 @@ function drawSummaryChart(testType, plotData) {
                 datasets: [{
                     label: "Pearson's R",
                     data: [rVal],
-                    backgroundColor: rVal > 0 ? 'rgba(52, 211, 153, 0.7)' : 'rgba(248, 113, 113, 0.7)',
-                    borderColor: rVal > 0 ? '#34d399' : '#f87171',
+                    backgroundColor: rVal > 0 ? getPalette(colorScheme, 3, 0.7) : getPalette(colorScheme, 5, 0.7),
+                    borderColor: rVal > 0 ? getPalette(colorScheme, 3, 1) : getPalette(colorScheme, 5, 1),
                     borderWidth: 2
                 }]
             },
             options: {
                 indexAxis: 'y',
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: aspRatio * 2,
                 plugins: {
-                    title: { display: true, text: 'Linear Relationship Direction & Magnitude', color: '#fff' },
+                    title: { display: true, text: customTitle, color: textColor },
+                    subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor },
                     tooltip: { enabled: true }
                 },
                 scales: {
-                    x: { min: -1.1, max: 1.1, ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { min: -1.1, max: 1.1, ticks: { color: textColor }, grid: { display: gridStyle !== 'none', color: gridColor } },
                     y: { ticks: { display: false } }
                 }
             }
         };
-    }
-    // 2. Simulated Boxplot for Continuous Data Comparisons (T-Tests & ANOVA)
-    else {
+    } else {
+        // Box Plot based tests
         const chartDatasets = [];
-
         if (testType === 'unpaired-t') {
             chartDatasets.push({
                 label: plotData.name1 || 'Group 1',
-                backgroundColor: 'rgba(96, 165, 250, 0.5)',
-                borderColor: '#60a5fa',
+                backgroundColor: getPalette(colorScheme, 0, 0.5),
+                borderColor: getPalette(colorScheme, 0, 1),
                 borderWidth: 2,
                 data: [generateBoxArray(plotData.m1, plotData.s1, plotData.med1, plotData.iqr1, plotData.min1, plotData.max1)]
             });
             chartDatasets.push({
                 label: plotData.name2 || 'Group 2',
-                backgroundColor: 'rgba(236, 72, 153, 0.5)', // Pink theme
-                borderColor: '#ec4899',
+                backgroundColor: getPalette(colorScheme, 1, 0.5),
+                borderColor: getPalette(colorScheme, 1, 1),
                 borderWidth: 2,
                 data: [generateBoxArray(plotData.m2, plotData.s2, plotData.med2, plotData.iqr2, plotData.min2, plotData.max2)]
             });
         } else if (testType === 'paired-t') {
-            chartDatasets.push({
-                label: plotData.diffName || 'Difference Scores',
-                backgroundColor: 'rgba(251, 191, 36, 0.5)',
-                borderColor: '#fbbf24',
-                borderWidth: 2,
-                data: [generateBoxArray(plotData.meanDiff, plotData.sdDiff, plotData.medDiff, plotData.iqrDiff, plotData.minDiff, plotData.maxDiff)]
-            });
+            // Check if Pre/Post data is present for side-by-side view
+            if (!isNaN(plotData.preM) && !isNaN(plotData.postM)) {
+                chartDatasets.push({
+                    label: 'Pre-Intervention',
+                    backgroundColor: getPalette(colorScheme, 2, 0.5),
+                    borderColor: getPalette(colorScheme, 2, 1),
+                    borderWidth: 2,
+                    data: [generateBoxArray(plotData.preM, plotData.sharedSD || plotData.sdDiff, NaN, NaN, NaN, NaN)]
+                });
+                chartDatasets.push({
+                    label: 'Post-Intervention',
+                    backgroundColor: getPalette(colorScheme, 3, 0.5),
+                    borderColor: getPalette(colorScheme, 3, 1),
+                    borderWidth: 2,
+                    data: [generateBoxArray(plotData.postM, plotData.sharedSD || plotData.sdDiff, NaN, NaN, NaN, NaN)]
+                });
+            } else {
+                chartDatasets.push({
+                    label: plotData.diffName || 'Mean Difference',
+                    backgroundColor: getPalette(colorScheme, 0, 0.5),
+                    borderColor: getPalette(colorScheme, 0, 1),
+                    borderWidth: 2,
+                    data: [generateBoxArray(plotData.meanDiff, plotData.sdDiff, plotData.medDiff, plotData.iqrDiff, plotData.minDiff, plotData.maxDiff)]
+                });
+            }
         } else if (testType === 'anova') {
             plotData.groups.forEach((g, idx) => {
-                const colors = ['#60a5fa', '#f472b6', '#fbbf24', '#34d399', '#a78bfa', '#f87171'];
-                const color = colors[idx % colors.length];
                 chartDatasets.push({
                     label: g.name,
-                    backgroundColor: color + '80', // 50% opacity
-                    borderColor: color,
+                    backgroundColor: getPalette(colorScheme, idx, 0.5),
+                    borderColor: getPalette(colorScheme, idx, 1),
                     borderWidth: 2,
-                    data: [generateBoxArray(g.m, g.s, NaN, NaN, NaN, NaN)] // Summary ANOVA usually doesn't have median/min/max unless we add inputs
+                    data: [generateBoxArray(g.m, g.s, g.med, g.iqr, g.min, g.max)]
                 });
             });
         }
@@ -2237,25 +2488,27 @@ function drawSummaryChart(testType, plotData) {
         config = {
             type: 'boxplot',
             data: {
-                labels: ['Distribution Overview'],
+                labels: [axisLabel],
                 datasets: chartDatasets
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: aspRatio,
                 plugins: {
-                    title: { display: true, text: testType === 'anova' || testType === 'unpaired-t' || testType === 'paired-t' ? 'Box Plot Comparison' : 'Distribution Viewer', color: '#fff', font: { size: 16 } },
-                    subtitle: { display: true, text: testType === 'anova' ? 'Summary-based Box Plot approximations (Mean \u00B1 3SD)' : 'Boxes show IQR. Whiskers show True Min/Max.', color: '#94a3b8' },
-                    legend: { labels: { color: '#cbd5e1' } }
+                    title: { display: true, text: customTitle, color: textColor, font: { size: 16 } },
+                    subtitle: { display: !!customSubtitle, text: customSubtitle, color: textColor },
+                    legend: { display: showLegend, labels: { color: textColor } }
                 },
                 scales: {
-                    x: { ticks: { color: '#cbd5e1' }, grid: { display: false } },
-                    y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    x: { ticks: { color: textColor }, grid: { display: gridStyle === 'both', color: gridColor } },
+                    y: { ticks: { color: textColor }, grid: { display: gridStyle !== 'none', color: gridColor } }
                 }
             }
         };
     }
 
-    // Render Request
+    // Move Chart constructor to end of function to work for all testTypes
     const ctx = canvas.getContext('2d');
     summaryResultChart = new Chart(ctx, config);
 }

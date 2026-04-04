@@ -354,6 +354,9 @@
             <div class="tab" onclick="switchTab('normal')">Distributions & Contexts</div>
             <div class="tab" onclick="switchTab('shape')">Shape Analysis (Skew & Kurtosis)</div>
             <div class="tab" onclick="switchTab('z')">Standard Normal (Z-Score)</div>
+            <div class="tab" onclick="switchTab('variables')">Types of Variables</div>
+            <div class="tab" onclick="switchTab('errors')">Statistical Errors (Power)</div>
+            <div class="tab" onclick="switchTab('prevention')">Levels of Prevention</div>
         </div>
 
         <div id="normal-viz" class="viz-card">
@@ -824,6 +827,459 @@
 
 
 
+    <div id="variables-viz" class="viz-card" style="display: none;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="color: #fff; font-size: 2.2rem; margin-bottom: 0.5rem;">Types of <span style="color: var(--primary-pink);">Variables</span></h2>
+            <p style="color: #94a3b8; font-size: 1.1rem;">The foundation of any statistical analysis starts with understanding your data types.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <!-- Qualitative / Categorical -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 1.5rem; border-top: 4px solid #60a5fa;">
+                <h4 style="color: #60a5fa; margin-bottom: 1rem; font-size: 1.3rem;"><i class="fas fa-tags"></i> Qualitative (Categorical)</h4>
+                <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 1.5rem; min-height: 50px;">Describes qualities or characteristics. Values are labels or names.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                        <strong style="color: #fff; display: block; margin-bottom: 5px;">Nominal</strong>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Naming only. No intrinsic order.</span>
+                        <div style="margin-top: 10px; font-size: 0.85rem; color: #00e5ff;">Example: Blood Group (A, B, AB, O), Gender, Eye Color</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                        <strong style="color: #fff; display: block; margin-bottom: 5px;">Ordinal</strong>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Order exists, but distances between points are unknown.</span>
+                        <div style="margin-top: 10px; font-size: 0.85rem; color: #00e5ff;">Example: Pain Scale (Mild, Moderate, Severe), Cancer Stage (I, II, III, IV)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantitative / Numerical -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 1.5rem; border-top: 4px solid #f472b6;">
+                <h4 style="color: #f472b6; margin-bottom: 1rem; font-size: 1.3rem;"><i class="fas fa-calculator"></i> Quantitative (Numerical)</h4>
+                <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 1.5rem; min-height: 50px;">Measured quantities. Values are expressed as numbers.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                        <strong style="color: #fff; display: block; margin-bottom: 5px;">Discrete</strong>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Whole numbers only. Counts of items.</span>
+                        <div style="margin-top: 10px; font-size: 0.85rem; color: #00e5ff;">Example: Number of patients in a ward, Heart rate (beats/min)</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05);">
+                        <strong style="color: #fff; display: block; margin-bottom: 5px;">Continuous (Interval/Ratio)</strong>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Can take any value in a range (decimals).</span>
+                        <div style="margin-top: 10px; font-size: 0.85rem; color: #00e5ff;">Example: Height, Weight, Blood Glucose, Blood Pressure</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scientific Zero Section -->
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 20px; padding: 2.5rem; margin-bottom: 3rem; box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.05);">
+            <h3 style="color: #fff; margin-bottom: 2rem; text-align: center;"><i class="fas fa-atom"></i> Understanding Scale properties & Absolute Zero</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: stretch;">
+                <div style="background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); padding: 1.5rem; border-radius: 16px;">
+                    <h4 style="color: #60a5fa; margin-bottom: 0.8rem;">Interval Scale</h4>
+                    <p style="font-size: 1rem; color: #cbd5e1; line-height: 1.6;">Characterized by <strong>equal intervals</strong> between successive values but lacking a true zero point.</p>
+                    <div style="margin-top: 1rem; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.9rem; color: #94a3b8;">
+                        <strong style="color: #fff;">Scientific Note:</strong> Zero is an arbitrary label. 0°C represents the freezing point of water, not the complete absence of thermal energy. Consequently, ratios are mathematically invalid (e.g., 40°C is not "twice as hot" as 20°C).
+                    </div>
+                </div>
+
+                <div style="background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.3); padding: 1.5rem; border-radius: 16px;">
+                    <h4 style="color: #f472b6; margin-bottom: 0.8rem;">Ratio Scale</h4>
+                    <p style="font-size: 1rem; color: #cbd5e1; line-height: 1.6;">Possesses all properties of an interval scale with the addition of an <strong>Absolute Zero</strong> point.</p>
+                    <div style="margin-top: 1rem; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.9rem; color: #94a3b8;">
+                        <strong style="color: #fff;">Scientific Note:</strong> Zero represents the total absence of the variable. 0 Kelvin represents the theoretical state of zero molecular motion. This allows for proportional comparisons (e.g., 200 mg is exactly twice the mass of 100 mg).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization Library -->
+        <h3 style="color: #fff; margin-bottom: 1.5rem; text-align: center;"><i class="fas fa-microscope"></i> Visualization Library</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); border-radius: 15px; overflow: hidden;">
+                <thead style="background: rgba(255,255,255,0.05);">
+                    <tr>
+                        <th style="padding: 1.2rem; text-align: left; color: #00e5ff;">Main Category</th>
+                        <th style="padding: 1.2rem; text-align: left; color: #00e5ff;">Variable Type</th>
+                        <th style="padding: 1.2rem; text-align: left; color: #00e5ff;">Scientific Plot Types</th>
+                    </tr>
+                </thead>
+                <tbody style="color: #cbd5e1;">
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td rowspan="2" style="padding: 1.5rem; border-right: 1px solid rgba(255,255,255,0.05); font-weight: bold; color: #fff;">Qualitative</td>
+                        <td style="padding: 1rem;">Nominal / Ordinal</td>
+                        <td style="padding: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('pie')">Pie Chart</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('grouped-bar')">Grouped Bar</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('stacked-bar')">Stacked Bar</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('venn')">Venn Diagram</button>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem;">Associations</td>
+                        <td style="padding: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('treemap')">Treemap</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('sankey')">Sankey Plot</button>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td rowspan="3" style="padding: 1.5rem; border-right: 1px solid rgba(255,255,255,0.05); font-weight: bold; color: #fff;">Quantitative</td>
+                        <td style="padding: 1rem;">Discrete / Continuous</td>
+                        <td style="padding: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('histogram')">Histogram</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('kde')">Freq. Polygon / KDE</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('box-plot')">Box Plot</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('swarm-box')">Swarm + Box</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('scatter')">Scatter Plot</button>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem;">Associations</td>
+                        <td style="padding: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('correlation')">Correlation Plot</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('heatmap-sci')">Scientific Heatmap</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1rem;">Clustering</td>
+                        <td style="padding: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('violin')">Violin Plot</button>
+                            <button class="btn-generate btn-pill btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;" onclick="showGraphDemo('dendrogram')">Dendrogram</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Graph Demo Modal Area (Dynamic) -->
+        <div id="graph-demo-container" style="display: none; margin-top: 2rem; padding: 2rem; background: rgba(0,0,0,0.3); border-radius: 24px; border: 1px solid rgba(0, 229, 255, 0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <div>
+                    <h4 id="graph-demo-title" style="margin: 0; color: #fff; font-size: 1.2rem;">Visualization Library</h4>
+                    <p id="graph-demo-subtitle" style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.85rem;">Scientific Data Insight</p>
+                </div>
+                <button onclick="document.getElementById('graph-demo-container').style.display='none'" style="background: rgba(255,255,255,0.05); border: none; color: #fff; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="demo-vis-area" style="height: 400px; width: 100%; position: relative; display: flex; align-items: center; justify-content: center;">
+                <canvas id="demoChart"></canvas>
+                <!-- SVG overlays for complex plots -->
+                <div id="svg-export-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center;"></div>
+            </div>
+            <!-- Explanation Section (populated dynamically) -->
+            <div id="graph-demo-explanation" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: rgba(0,0,0,0.25); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06);"></div>
+        </div>
+    </div>
+
+    <!-- LEVELS OF PREVENTION MODULE -->
+    <div id="prevention-viz" class="viz-card" style="display: none;">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+            <h2 style="color: #fff; font-size: 2.2rem; margin-bottom: 0.5rem;">Levels of <span style="color: #4ade80;">Prevention</span></h2>
+            <p style="color: #94a3b8; font-size: 1.1rem;">A framework for disease control and health preservation.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <!-- Primary -->
+            <div style="background: rgba(74, 222, 128, 0.05); border: 1px solid rgba(74, 222, 128, 0.2); border-radius: 20px; padding: 2rem; border-top: 5px solid #4ade80;">
+                <h3 style="color: #4ade80; margin-bottom: 1rem;"><i class="fas fa-heartbeat"></i> Primary Prevention</h3>
+                <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                    Actions taken <strong>prior to the onset</strong> of disease to remove the possibility that it will ever occur. Target: Healthy Population.
+                </p>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 3px solid #4ade80;">
+                    <strong style="color: #fff; font-size: 0.85rem;">Clinical Example:</strong>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 5px;">Immunization (COVID-19/Polio), use of seatbelts, nutritional supplementation (Folic acid in pregnancy).</p>
+                </div>
+            </div>
+
+            <!-- Secondary -->
+            <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 20px; padding: 2rem; border-top: 5px solid #60a5fa;">
+                <h3 style="color: #60a5fa; margin-bottom: 1rem;"><i class="fas fa-search-plus"></i> Secondary Prevention</h3>
+                <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                    Actions which <strong>halt the progress</strong> of a disease at its incipient stage and prevent complications. Target: Early Disease.
+                </p>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 3px solid #60a5fa;">
+                    <strong style="color: #fff; font-size: 0.85rem;">Clinical Example:</strong>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 5px;">Mammography for breast cancer screening, Pap smears, BP screening, early treatment of hypertension.</p>
+                </div>
+            </div>
+
+            <!-- Tertiary -->
+            <div style="background: rgba(244, 114, 182, 0.05); border: 1px solid rgba(244, 114, 182, 0.2); border-radius: 20px; padding: 2rem; border-top: 5px solid #f472b6;">
+                <h3 style="color: #f472b6; margin-bottom: 1rem;"><i class="fas fa-wheelchair"></i> Tertiary Prevention</h3>
+                <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                    Measures available in the <strong>late stages</strong> to mitigate impact, limit disability, and rehabilitate. Target: Established Disease.
+                </p>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 3px solid #f472b6;">
+                    <strong style="color: #fff; font-size: 0.85rem;">Clinical Example:</strong>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 5px;">Physiotherapy for stroke patients, cardiac rehabilitation after MI, speech therapy after neurological insult.</p>
+                </div>
+            </div>
+
+            <!-- Quaternary -->
+            <div style="background: rgba(167, 139, 250, 0.05); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 20px; padding: 2rem; border-top: 5px solid #a78bfa;">
+                <h3 style="color: #a78bfa; margin-bottom: 1rem;"><i class="fas fa-shield-alt"></i> Quaternary Prevention</h3>
+                <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                    Actions taken to identify patients at risk of <strong>over-medicalization</strong> and protect from unnecessary interventions. Target: At-risk of iatrogenesis.
+                </p>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border-left: 3px solid #a78bfa;">
+                    <strong style="color: #fff; font-size: 0.85rem;">Clinical Example:</strong>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 5px;">Avoiding unwarranted prostate biopsy in elderly, depumping patients from polypharmacy, ethical end-of-life care.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PREVENTION MATRIX VISUALIZATION -->
+        <div style="margin-top: 2.5rem;">
+            <h3 style="color: #fff; text-align: center; margin-bottom: 1.5rem; font-size: 1.3rem;">
+                🔬 Prevention Matrix: <span style="color: #4ade80;">Disease Timeline</span> × <span style="color: #60a5fa;">Intervention Level</span>
+            </h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 4px; min-width: 700px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.8rem; background: rgba(255,255,255,0.03); color: #94a3b8; border-radius: 8px; font-size: 0.85rem;">Disease Stage ↓</th>
+                            <th style="padding: 0.8rem; background: rgba(74,222,128,0.1); color: #4ade80; border-radius: 8px; text-align: center; font-size: 0.85rem;">🛡️ Primary</th>
+                            <th style="padding: 0.8rem; background: rgba(96,165,250,0.1); color: #60a5fa; border-radius: 8px; text-align: center; font-size: 0.85rem;">🔍 Secondary</th>
+                            <th style="padding: 0.8rem; background: rgba(244,114,182,0.1); color: #f472b6; border-radius: 8px; text-align: center; font-size: 0.85rem;">🏥 Tertiary</th>
+                            <th style="padding: 0.8rem; background: rgba(167,139,250,0.1); color: #a78bfa; border-radius: 8px; text-align: center; font-size: 0.85rem;">⚖️ Quaternary</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.03); color: #fff; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">Well / Susceptible</td>
+                            <td style="padding: 0.7rem; background: rgba(74,222,128,0.15); border-radius: 8px; text-align: center; border: 1px solid rgba(74,222,128,0.3);">
+                                <span style="color: #4ade80; font-weight: bold; font-size: 0.8rem;">Vaccination</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">Health education</span>
+                            </td>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; color: #475569; font-size: 0.75rem;">—</td>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; color: #475569; font-size: 0.75rem;">—</td>
+                            <td style="padding: 0.7rem; background: rgba(167,139,250,0.1); border-radius: 8px; text-align: center; border: 1px solid rgba(167,139,250,0.2);">
+                                <span style="color: #a78bfa; font-weight: bold; font-size: 0.8rem;">Avoid over-screening</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">Prevent incidentalomas</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.03); color: #fff; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">Pre-clinical / Latent</td>
+                            <td style="padding: 0.7rem; background: rgba(74,222,128,0.08); border-radius: 8px; text-align: center; border: 1px solid rgba(74,222,128,0.15);">
+                                <span style="color: #86efac; font-size: 0.8rem;">Chemoprophylaxis</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">e.g., Statins in high-risk</span>
+                            </td>
+                            <td style="padding: 0.7rem; background: rgba(96,165,250,0.15); border-radius: 8px; text-align: center; border: 1px solid rgba(96,165,250,0.3);">
+                                <span style="color: #60a5fa; font-weight: bold; font-size: 0.8rem;">Screening</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">Mammography, Pap smear</span>
+                            </td>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; color: #475569; font-size: 0.75rem;">—</td>
+                            <td style="padding: 0.7rem; background: rgba(167,139,250,0.08); border-radius: 8px; text-align: center; border: 1px solid rgba(167,139,250,0.15);">
+                                <span style="color: #c4b5fd; font-size: 0.8rem;">Right test, right patient</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.03); color: #fff; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">Clinical Disease</td>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; color: #475569; font-size: 0.75rem;">—</td>
+                            <td style="padding: 0.7rem; background: rgba(96,165,250,0.1); border-radius: 8px; text-align: center; border: 1px solid rgba(96,165,250,0.2);">
+                                <span style="color: #93c5fd; font-size: 0.8rem;">Early treatment</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">Reduce severity</span>
+                            </td>
+                            <td style="padding: 0.7rem; background: rgba(244,114,182,0.15); border-radius: 8px; text-align: center; border: 1px solid rgba(244,114,182,0.3);">
+                                <span style="color: #f472b6; font-weight: bold; font-size: 0.8rem;">Definitive treatment</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">Surgery, chemo, ICU</span>
+                            </td>
+                            <td style="padding: 0.7rem; background: rgba(167,139,250,0.1); border-radius: 8px; text-align: center; border: 1px solid rgba(167,139,250,0.2);">
+                                <span style="color: #a78bfa; font-size: 0.8rem;">Avoid polypharmacy</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.03); color: #fff; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">Disability / Sequelae</td>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; color: #475569; font-size: 0.75rem;">—</td>
+                            <td style="padding: 0.7rem; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; color: #475569; font-size: 0.75rem;">—</td>
+                            <td style="padding: 0.7rem; background: rgba(244,114,182,0.12); border-radius: 8px; text-align: center; border: 1px solid rgba(244,114,182,0.2);">
+                                <span style="color: #f9a8d4; font-size: 0.8rem;">Rehabilitation</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">Physio, prosthetics</span>
+                            </td>
+                            <td style="padding: 0.7rem; background: rgba(167,139,250,0.12); border-radius: 8px; text-align: center; border: 1px solid rgba(167,139,250,0.25);">
+                                <span style="color: #a78bfa; font-weight: bold; font-size: 0.8rem;">Ethical end-of-life</span><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">Palliative care dignity</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.75rem; margin-top: 1rem;">
+                <strong style="color: #4ade80;">█</strong> Active intervention zone &nbsp;&nbsp;
+                <strong style="color: #475569;">—</strong> Not applicable at this stage &nbsp;&nbsp;
+                Cells color-intensity indicates relevance strength.
+            </p>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- TYPES OF ERRORS VIZ -->
+    <div id="errors-viz" class="viz-card" style="display: none;">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+            <h2 style="color: #fff; font-size: 2.2rem; margin-bottom: 0.5rem;">Statistical <span style="color: var(--primary-pink);">Errors & Power</span></h2>
+            <p style="color: #94a3b8; font-size: 1.1rem;">Understanding the outcome of hypothesis testing: Being right, or being wrong.</p>
+        </div>
+
+        <div class="viz-layout">
+            <div class="controls-panel">
+                <div style="background: rgba(255,255,255,0.03); border-left: 4px solid var(--primary-blue); padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; margin: 0;">
+                        Slide the parameters below to see how alpha, sample size, and effect size impact our ability to detect a true difference (Power).
+                    </p>
+                </div>
+
+                <!-- Controls -->
+                <div class="control-group">
+                    <label>Significance Level (α): <span id="alpha-val">5%</span></label>
+                    <input type="range" id="alpha-slider" min="1" max="20" value="5" step="1" oninput="updateErrorChart()">
+                    <span style="font-size: 0.7rem; color: #94a3b8;">Risk of Type I error (False Positive)</span>
+                </div>
+
+                <div class="control-group" style="margin-top: 1.5rem;">
+                    <label>Effect Size (Δ): <span id="effect-val">2.0</span></label>
+                    <input type="range" id="effect-slider" min="0" max="5" value="2" step="0.1" oninput="updateErrorChart()">
+                    <span style="font-size: 0.7rem; color: #94a3b8;">Difference between Group Means</span>
+                </div>
+
+                <div class="control-group" style="margin-top: 1.5rem;">
+                    <label>Sample Precision (1/σ): <span id="precision-val">1.0</span></label>
+                    <input type="range" id="precision-slider" min="0.5" max="3" value="1" step="0.1" oninput="updateErrorChart()">
+                    <span style="font-size: 0.7rem; color: #94a3b8;">1/σ = inverse of Standard Error (SE = σ/√n). Higher precision means either a <strong>larger sample size (n)</strong> or <strong>lower variability (σ)</strong>. Both make the sampling distributions narrower, making it easier to distinguish H₀ from Ha. Increasing this slider simulates collecting more data or using more precise measurements.</span>
+                </div>
+
+                <!-- Stats Summary -->
+                <div style="margin-top: 2rem; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #60a5fa; font-weight: bold;">Type I Error (α):</span>
+                            <span id="stat-alpha" style="color: #fff;">0.05</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #fbbf24; font-weight: bold;">Type II Error (β):</span>
+                            <span id="stat-beta" style="color: #fff;">0.20</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <span style="color: #00e676; font-weight: bold; font-size: 1.1rem;">Power (1-β):</span>
+                            <span id="stat-power" style="color: #fff; font-weight: bold; font-size: 1.1rem;">80%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="chart-wrapper">
+                    <canvas id="errorChart"></canvas>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); padding: 1rem; border-radius: 12px;">
+                        <strong style="color: #60a5fa; display: block; margin-bottom: 5px;">Type I Error (α) — "False Alarm"</strong>
+                        <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0;">Rejecting H₀ when it is actually true. Saying a drug works when it doesn't.</p>
+                    </div>
+                    <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); padding: 1rem; border-radius: 12px;">
+                        <strong style="color: #fbbf24; display: block; margin-bottom: 5px;">Type II Error (β) — "Missed Discovery"</strong>
+                        <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0;">Failing to reject H₀ when Ha is true. Missing a drug that actually works.</p>
+                    </div>
+                </div>
+
+                <!-- DECISION MATRIX -->
+                <div style="margin-top: 2rem;">
+                    <h4 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;">📊 Decision Matrix: Reality vs. Conclusion</h4>
+                    <table style="width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden;">
+                        <thead>
+                            <tr>
+                                <th style="background: rgba(255,255,255,0.05); padding: 0.8rem; color: #94a3b8; font-size: 0.85rem;"></th>
+                                <th style="background: rgba(255,255,255,0.05); padding: 0.8rem; color: #4ade80; font-size: 0.85rem; text-align: center;">H₀ True<br><span style="font-size: 0.7rem; color: #94a3b8;">(No real effect)</span></th>
+                                <th style="background: rgba(255,255,255,0.05); padding: 0.8rem; color: #f472b6; font-size: 0.85rem; text-align: center;">H₀ False<br><span style="font-size: 0.7rem; color: #94a3b8;">(Real effect exists)</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.8rem; color: #fff; font-weight: bold; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">Reject H₀</td>
+                                <td style="padding: 0.8rem; text-align: center; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239,68,68,0.2);">
+                                    <strong style="color: #ef4444;">❌ Type I Error (α)</strong><br>
+                                    <span style="font-size: 0.75rem; color: #fca5a5;">False Positive</span>
+                                </td>
+                                <td style="padding: 0.8rem; text-align: center; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74,222,128,0.2);">
+                                    <strong style="color: #4ade80;">✅ Correct (Power = 1−β)</strong><br>
+                                    <span style="font-size: 0.75rem; color: #86efac;">True Positive</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.8rem; color: #fff; font-weight: bold; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">Fail to Reject H₀</td>
+                                <td style="padding: 0.8rem; text-align: center; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74,222,128,0.2);">
+                                    <strong style="color: #4ade80;">✅ Correct (1−α)</strong><br>
+                                    <span style="font-size: 0.75rem; color: #86efac;">True Negative</span>
+                                </td>
+                                <td style="padding: 0.8rem; text-align: center; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251,191,36,0.2);">
+                                    <strong style="color: #fbbf24;">⚠️ Type II Error (β)</strong><br>
+                                    <span style="font-size: 0.75rem; color: #fde68a;">False Negative</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- CLINICAL EXAMPLE -->
+                <div style="margin-top: 2rem; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);">
+                    <h4 style="color: #fff; margin-bottom: 1rem;">🏥 Clinical Example: Antihypertensive Drug Trial</h4>
+                    <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.7; margin: 0 0 1rem 0;">
+                        A pharma company tests Drug X (new) vs Placebo for reducing systolic BP.<br>
+                        <strong>H₀:</strong> Drug X = Placebo (no difference in SBP reduction).<br>
+                        <strong>Ha:</strong> Drug X ≠ Placebo (Drug X reduces SBP more).
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: rgba(239,68,68,0.08); padding: 1rem; border-radius: 10px; border-left: 3px solid #ef4444;">
+                            <strong style="color: #ef4444; font-size: 0.85rem;">If Type I Error occurs:</strong>
+                            <p style="color: #fca5a5; font-size: 0.8rem; margin: 5px 0 0 0;">Drug Controlling Authority approves Drug X even though it has <em>no real benefit</em>. Patients take an ineffective drug with possible side effects. Resources wasted.</p>
+                        </div>
+                        <div style="background: rgba(251,191,36,0.08); padding: 1rem; border-radius: 10px; border-left: 3px solid #fbbf24;">
+                            <strong style="color: #fbbf24; font-size: 0.85rem;">If Type II Error occurs:</strong>
+                            <p style="color: #fde68a; font-size: 0.8rem; margin: 5px 0 0 0;">Study concludes Drug X doesn't work, so it's shelved. Patients <em>miss out</em> on an effective treatment that could have saved lives.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HOW TO CONTROL -->
+                <div style="margin-top: 2rem;">
+                    <h4 style="color: #fff; margin-bottom: 1rem;">🎯 How to Control These Errors</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: rgba(96,165,250,0.05); border: 1px solid rgba(96,165,250,0.2); padding: 1.2rem; border-radius: 14px;">
+                            <strong style="color: #60a5fa; display: block; margin-bottom: 8px;">Controlling Type I Error (α)</strong>
+                            <ul style="color: #cbd5e1; font-size: 0.8rem; line-height: 1.8; margin: 0; padding-left: 1.2rem;">
+                                <li>Lower the significance threshold (e.g., α = 0.01 instead of 0.05)</li>
+                                <li>Apply <strong>Bonferroni correction</strong> for multiple comparisons</li>
+                                <li>Use <strong>pre-registration</strong> to prevent p-hacking — <em style="color: #94a3b8;">p-hacking means analyzing data in many different ways (testing multiple variables, subgroups, or endpoints) until a statistically significant p-value appears by chance. Pre-registration means publicly declaring your hypothesis, primary outcome, sample size, and analysis plan <strong>before</strong> collecting data (e.g., on ClinicalTrials.gov), so you cannot cherry-pick results after the fact.</em></li>
+                                <li>Apply <strong>False Discovery Rate (FDR)</strong> control in genomics</li>
+                            </ul>
+                        </div>
+                        <div style="background: rgba(251,191,36,0.05); border: 1px solid rgba(251,191,36,0.2); padding: 1.2rem; border-radius: 14px;">
+                            <strong style="color: #fbbf24; display: block; margin-bottom: 8px;">Controlling Type II Error (β)</strong>
+                            <ul style="color: #cbd5e1; font-size: 0.8rem; line-height: 1.8; margin: 0; padding-left: 1.2rem;">
+                                <li><strong>Increase sample size</strong> — the single most effective method</li>
+                                <li>Use a <strong>larger effect size</strong> threshold (clinically meaningful)</li>
+                                <li>Reduce measurement variability (better instruments, training)</li>
+                                <li>Use <strong>one-tailed tests</strong> when direction is known a priori</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.15); padding: 1rem; border-radius: 12px;">
+                        <p style="color: #94a3b8; font-size: 0.8rem; margin: 0; line-height: 1.6;">
+                            <strong style="color: #00e5ff;">⚡ Key Insight:</strong> Type I and Type II errors have an <strong>inverse relationship</strong>. Making α stricter (reducing false positives) increases β (more false negatives), and vice versa. The only way to reduce <em>both</em> simultaneously is to <strong>increase sample size</strong>.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <div id="sampling-viz" class="viz-card" style="display: none;">
         <div class="viz-layout" style="display: block;">
             <!-- Full width layout for sampling -->
@@ -1179,6 +1635,27 @@
     </div>
 
     <script>
+        // --- Scientific Chart Defaults (Plotly Style) ---
+        Chart.defaults.font.family = "'Inter', 'Roboto', 'Helvetica Neue', sans-serif";
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+        Chart.defaults.plugins.legend.labels.padding = 20;
+        Chart.defaults.elements.point.radius = 0; // Default to no points for lines
+        Chart.defaults.elements.line.borderWidth = 2;
+        Chart.defaults.datasets.line.tension = 0.4;
+        
+        const ScientificPalette = [
+            '#636EFA', // Plotly Blue
+            '#EF553B', // Plotly Red
+            '#00CC96', // Plotly Green
+            '#AB63FA', // Plotly Purple
+            '#FFA15A', // Plotly Orange
+            '#19D3F3', // Plotly Cyan
+            '#FF6692', // Plotly Pink
+            '#B6E880'  // Plotly Light Green
+        ];
+
         let normalChart, zChart, morphChart, cltChart, popChart;
         let skewnessChart, kurtosisChart, ciChart;
 
@@ -2461,35 +2938,49 @@
         }
 
         function updateMorphChart() {
-            const initMean = parseFloat(document.getElementById('morph-mean-slider').value);
-            const initSD = parseFloat(document.getElementById('morph-sd-slider').value);
-            const progress = parseFloat(document.getElementById('morph-slider').value) / 100;
+            const meanSlider = document.getElementById('morph-mean-slider');
+            const sdSlider = document.getElementById('morph-sd-slider');
+            const progSlider = document.getElementById('morph-slider');
+            
+            if (!meanSlider || !sdSlider || !progSlider) return;
 
-            document.getElementById('morph-mean-val').innerText = initMean;
-            document.getElementById('morph-sd-val').innerText = initSD;
+            const initMean = parseFloat(meanSlider.value);
+            const initSD = parseFloat(sdSlider.value);
+            const progress = parseFloat(progSlider.value) / 100;
 
-            // Interpolate
+            const meanValSpan = document.getElementById('morph-mean-val');
+            const sdValSpan = document.getElementById('morph-sd-val');
+            
+            if (meanValSpan) meanValSpan.innerText = initMean;
+            if (sdValSpan) sdValSpan.innerText = initSD;
+
+            // Interpolate towards Standard Normal (Mean=0, SD=1)
             const currMean = initMean + (0 - initMean) * progress;
             const currSD = initSD + (1 - initSD) * progress;
 
-            document.getElementById('curr-mean').innerText = currMean.toFixed(2);
-            document.getElementById('curr-mean').style.color = (Math.abs(currMean) < 0.1) ? '#00e676' : '#fff'; // Green when close to 0
-
-            document.getElementById('curr-sd').innerText = currSD.toFixed(2);
-            document.getElementById('curr-sd').style.color = (Math.abs(currSD - 1) < 0.1) ? '#00e676' : '#fff'; // Green when close to 1
+            const currMeanEl = document.getElementById('curr-mean');
+            const currSDEl = document.getElementById('curr-sd');
+            
+            if (currMeanEl) {
+                currMeanEl.innerText = currMean.toFixed(2);
+                currMeanEl.style.color = (Math.abs(currMean) < 0.1) ? '#00e676' : '#fff';
+            }
+            
+            if (currSDEl) {
+                currSDEl.innerText = currSD.toFixed(2);
+                currSDEl.style.color = (Math.abs(currSD - 1) < 0.1) ? '#00e676' : '#fff';
+            }
 
             const data = [];
-
-            // We use scatter data format {x, y} since X axis is linear/continuous
-            // Range -40 to 140
+            // Use same range/step as Goal dataset for visual consistency
             for (let x = -40; x <= 140; x += 0.5) {
-                const y = normalPDF(x, currMean, currSD);
-                data.push({ x: x, y: y });
+                data.push({ x: x, y: normalPDF(x, currMean, currSD) });
             }
 
             if (morphChart) {
                 morphChart.data.datasets[0].data = data;
-                morphChart.update();
+                // Use 'none' to skip internal animations during manual slider manipulation
+                morphChart.update('none');
             }
         }
 
@@ -3304,49 +3795,832 @@
 
         function switchTab(tab) {
             // Update Tab UI
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            const tabs = document.querySelectorAll('.tab');
-
-            // Tab indices: 0: Sampling, 1: Normal, 2: Shape, 3: Z
-            if (tab === 'sampling') tabs[0].classList.add('active');
-            if (tab === 'normal') tabs[1].classList.add('active');
-            if (tab === 'shape') tabs[2].classList.add('active');
-            if (tab === 'z') tabs[3].classList.add('active');
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+                if (t.getAttribute('onclick').includes(`'${tab}'`)) {
+                    t.classList.add('active');
+                }
+            });
 
             // Hide all viz cards
             document.querySelectorAll('.viz-card').forEach(c => c.style.display = 'none');
 
-            // Stop Galton Animation if defined (unless we are on normal tab)
+            // Stop animations
             if (tab !== 'normal' && tab !== 'shape') {
                 if (typeof isRunning !== 'undefined') isRunning = false;
+                if (typeof morphInterval !== 'undefined') clearInterval(morphInterval);
             }
 
             // Show selected
-            if (tab === 'normal') {
-                document.getElementById('normal-viz').style.display = 'block';
-                if (!normalChart) initNormalChart();
-            } else if (tab === 'shape') {
-                document.getElementById('shape-viz').style.display = 'block';
-                if (!skewnessChart) initSkewnessChart();
-                if (!kurtosisChart) initKurtosisChart();
-            } else if (tab === 'z') {
-                document.getElementById('z-viz').style.display = 'block';
+            const targetViz = document.getElementById(`${tab}-viz`) || document.getElementById(`${tab === 'sampling' ? 'sampling' : tab}-viz`);
+            if (targetViz) targetViz.style.display = 'block';
+
+            // Initialization logic
+            if (tab === 'normal' && !normalChart) initNormalChart();
+            if (tab === 'shape') { if (!skewnessChart) initSkewnessChart(); if (!kurtosisChart) initKurtosisChart(); }
+            if (tab === 'z') {
                 if (!zChart) initZChart();
-                if (!morphChart) {
-                    initMorphChart();
-                } else {
-                    morphChart.update();
-                    updateMorphChart();
-                }
-            } else if (tab === 'sampling') {
-                document.getElementById('sampling-viz').style.display = 'block';
-                if (!cltChart) {
-                    plotPopulation();
-                    updateCLTChart();
-                }
-            } else if (tab === 'clt') {
-                switchTab('sampling');
+                if (!morphChart) initMorphChart(); else { morphChart.update(); updateMorphChart(); }
             }
+            if (tab === 'sampling' && !cltChart) { plotPopulation(); updateCLTChart(); }
+            if (tab === 'errors' && !errorChartInstance) initErrorChart();
+            if (tab === 'prevention') {
+                // Prevention module is content-heavy, handled in DOM
+            }
+        }
+
+        // --- Visualization Library Support ---
+        let demoChart = null;
+        function showGraphDemo(type) {
+            const container = document.getElementById('graph-demo-container');
+            const demoCanvas = document.getElementById('demoChart');
+            const svgBox = document.getElementById('svg-export-container');
+            const title = document.getElementById('graph-demo-title');
+            const sub = document.getElementById('graph-demo-subtitle');
+            
+            container.style.display = 'block';
+            demoCanvas.style.display = 'block';
+            svgBox.style.display = 'none';
+            svgBox.innerHTML = '';
+
+            // --- Explanation Database ---
+            const explainDB = {
+                'pie': { meaning: 'A <strong>Pie Chart</strong> shows proportional composition of categories as slices of a circle. Each slice angle = (category count / total) × 360°. Best for showing parts-of-a-whole when categories ≤ 6.', howto: '1. Calculate % for each category. 2. Convert % to degrees (% × 3.6). 3. Draw arcs from center. 4. Label each slice with category and %. <em>Avoid for >6 categories — use bar chart instead.</em>' },
+                'grouped-bar': { meaning: 'A <strong>Grouped Bar Chart</strong> compares values across categories for multiple groups. Each cluster has bars side-by-side, making it easy to spot between-group differences at each category.', howto: '1. Define categories (X-axis) and groups (legend). 2. For each category, draw adjacent bars per group using different colors. 3. Keep bar widths equal. 4. Add axis labels and legend. <em>Best for ≤4 groups; beyond that, use facets.</em>' },
+                'stacked-bar': { meaning: 'A <strong>Stacked Bar Chart</strong> shows total magnitude AND internal composition. Each bar segment represents a sub-category. Useful for comparing both totals and breakdowns.', howto: '1. Calculate sub-category values for each bar. 2. Stack segments bottom-up. 3. Color-code each sub-category consistently. 4. Add legend. <em>Limitation: hard to compare non-baseline segments — consider 100% stacked bar for pure composition.</em>' },
+                'histogram': { meaning: 'A <strong>Histogram</strong> groups continuous data into bins (intervals) and shows frequency per bin. Unlike bar charts, bins are contiguous — no gaps — because the data is continuous. Shape reveals distribution (normal, skewed, bimodal).', howto: '1. Choose bin width (Sturges rule: k = 1 + 3.322 log₁₀(n)). 2. Count observations falling in each bin. 3. Draw adjacent bars with height = frequency. 4. X-axis = variable range, Y-axis = frequency/count. <em>Too few bins → oversimplified; too many → noisy.</em>' },
+                'kde': { meaning: 'A <strong>Frequency Polygon</strong> connects midpoints of histogram bars with straight lines, showing the shape of a distribution without bar clutter. A <strong>KDE (Kernel Density Estimate)</strong> smooths this further using a Gaussian kernel at each data point, producing a continuous probability density curve (area under curve = 1).', howto: '1. Build a histogram. 2. For a <em>Frequency Polygon</em>: mark the midpoint of each bin top, connect with straight lines. 3. For <em>KDE</em>: place a Gaussian kernel at each observation, sum all kernels, normalize. Bandwidth (h) controls smoothness — too small → jagged, too large → over-smoothed. <em>Use Silverman\'s rule: h = 0.9 × min(σ, IQR/1.34) × n⁻¹/⁵.</em>' },
+                'swarm-box': { meaning: 'A <strong>Swarm + Box Plot</strong> combines summary statistics (box = IQR, line = median, whiskers = range) with individual data points. The box covers Q1–Q3 (middle 50%), whiskers extend to min/max (or 1.5×IQR). Swarm dots show actual data distribution and sample size.', howto: '1. Calculate Q1, Median (Q2), Q3. 2. Draw box from Q1 to Q3. 3. Draw median line inside box. 4. Extend whiskers to min/max within 1.5×IQR. 5. Mark outliers beyond whiskers. 6. Overlay jittered dots for each observation. <em>Essential for small samples where histograms fail.</em>' },
+                'violin': { meaning: 'A <strong>Violin Plot</strong> mirrors a KDE (kernel density estimate) on both sides of a central axis, giving a symmetric "violin" shape. Width at any point = probability density. It reveals modality (unimodal vs bimodal), skew, and spread — more informative than a box plot alone.', howto: '1. Compute KDE for each group. 2. Mirror the density curve on both sides of the group axis. 3. Optionally add a box plot inside (IQR + median). 4. Scale violins to equal width or equal area. <em>Use equal-width for comparing shapes; equal-area for comparing densities.</em>' },
+                'venn': { meaning: 'A <strong>Venn Diagram</strong> shows overlapping sets using circles. Overlapping areas represent shared elements. In epidemiology, it visualizes disease comorbidity — patients with multiple conditions simultaneously.', howto: '1. Draw circles for each set (2–3 sets ideal). 2. Position circles so overlap area is proportional to shared count. 3. Label each unique region with count or %. <em>For >3 sets, use UpSet plots instead — Venn becomes unreadable.</em>' },
+                'heatmap-sci': { meaning: 'A <strong>Heatmap</strong> encodes numeric values as colors in a matrix grid. Rows and columns represent two categorical variables; cell color intensity shows the measurement value. Used extensively in genomics (gene expression), metabolomics, and clinical lab panels to spot patterns across many variables at once.', howto: '1. Organize data as a matrix (rows × columns). 2. Normalize values if units differ. 3. Map values to a color gradient (e.g., green = low, red = high). 4. Add row/column labels. 5. Include a color legend with scale. <em>Optional: cluster rows/columns by similarity (hierarchical clustering).</em>' },
+                'correlation': { meaning: 'A <strong>Correlation Matrix</strong> displays pairwise Pearson R coefficients between variables. R ranges from −1 (perfect inverse) to +1 (perfect positive). The diagonal is always 1.00 (variable correlated with itself). Color intensity indicates strength; useful for identifying collinear predictors before regression.', howto: '1. For each pair of variables, compute R = Σ(xi−x̄)(yi−ȳ) / √[Σ(xi−x̄)² × Σ(yi−ȳ)²]. 2. Arrange in a symmetric n×n matrix. 3. Color-code cells by |R| (e.g., green = strong, blue = weak). 4. Display R value in each cell. <em>Note: R measures linear association only — always check scatterplots for non-linear patterns.</em>' },
+                'sankey': { meaning: 'A <strong>Sankey Diagram</strong> shows flow and quantity between stages. Band width is proportional to flow volume. In healthcare, it tracks patient pathways (triage → ward → outcome). Reveals where patients are "lost" or diverted.', howto: '1. Identify nodes (stages) and flows (transitions). 2. Draw node bars proportional to total flow. 3. Connect nodes with curved bands — width = flow count. 4. Color-code flows by category. <em>Keep flow direction left-to-right. Avoid >4 levels — chart becomes unreadable.</em>' },
+                'treemap': { meaning: 'A <strong>Treemap</strong> represents hierarchical data as nested rectangles. Area of each rectangle is proportional to its value. Used for showing disease classification, resource allocation, or population breakdown where total adds to 100%.', howto: '1. Calculate proportions for each category. 2. Use squarified layout to fill a rectangle with sub-rectangles proportional to values. 3. Color-code by category. 4. Label with category name + %. <em>Treemaps are space-efficient but hard to compare similar-sized regions — supplement with tables.</em>' },
+                'dendrogram': { meaning: 'A <strong>Dendrogram</strong> is a tree diagram showing hierarchical clustering results. The height at which two branches merge represents the <em>distance</em> (dissimilarity) between clusters. Lower merge = more similar. Used in phylogenetics, gene clustering, and strain typing.', howto: '1. Compute a distance matrix (e.g., Euclidean, Manhattan). 2. Apply agglomerative clustering (Ward, Complete, or Average linkage). 3. Draw leaves (samples) at the bottom/left. 4. Connect pairs by horizontal/vertical lines at the merge distance. 5. Add a distance scale axis. <em>Linkage method matters: Ward minimizes variance, Complete uses max distance, Average uses mean.</em>' },
+                'box-plot': { meaning: 'A <strong>Box Plot</strong> (box-and-whisker) summarizes a distribution via five statistics: Min, Q1, Median, Q3, Max. The box spans the <strong>Interquartile Range (IQR = Q3 − Q1)</strong>. Whiskers extend to 1.5×IQR; points beyond are outliers. It reveals center, spread, skewness, and outliers at a glance.', howto: '1. Sort data. 2. Calculate Q1 (25th percentile), Median (50th), Q3 (75th). 3. Compute IQR = Q3 − Q1. 4. Draw box from Q1 to Q3 with a line at the median. 5. Extend lower whisker to max(min, Q1 − 1.5×IQR) and upper whisker to min(max, Q3 + 1.5×IQR). 6. Plot outliers beyond whiskers as individual dots. <em>Compare groups side-by-side for quick visual hypothesis testing.</em>' },
+                'scatter': { meaning: 'A <strong>Scatter Plot</strong> displays the relationship between two continuous variables. Each dot represents one observation (x, y). Pattern indicates correlation: upward slope = positive (e.g., age vs blood pressure), downward slope = negative (e.g., exercise vs BMI). A <strong>regression line</strong> (least-squares fit) summarizes the trend: ŷ = a + bx.', howto: '1. Plot each observation as a dot at (x, y). 2. Compute slope b = Σ(xi−x̄)(yi−ȳ) / Σ(xi−x̄)² and intercept a = ȳ − b·x̄. 3. Draw the regression line. 4. Compute R² to measure fit (% variance explained). 5. Assess residuals for non-linearity. <em>Always check for influential outliers and confounders before interpreting causation.</em>' }
+            };
+            const explBox = document.getElementById('graph-demo-explanation');
+            if (explainDB[type]) {
+                explBox.style.display = 'block';
+                explBox.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div>
+                            <h5 style="color: #60a5fa; margin: 0 0 0.5rem 0; font-size: 0.95rem;">📖 What It Means</h5>
+                            <p style="color: #cbd5e1; font-size: 0.82rem; line-height: 1.7; margin: 0;">${explainDB[type].meaning}</p>
+                        </div>
+                        <div>
+                            <h5 style="color: #4ade80; margin: 0 0 0.5rem 0; font-size: 0.95rem;">✏️ How to Draw</h5>
+                            <p style="color: #cbd5e1; font-size: 0.82rem; line-height: 1.7; margin: 0;">${explainDB[type].howto}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                explBox.style.display = 'none';
+            } 
+
+            if (demoChart) {
+                demoChart.destroy();
+                demoChart = null;
+            }
+
+            const ctx = demoCanvas.getContext('2d');
+            let config = {
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'top', labels: { color: '#cbd5e1', boxWidth: 12, usePointStyle: true } },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', bodyColor: '#cbd5e1', padding: 12, cornerRadius: 8 }
+                    },
+                    scales: {
+                        x: { grid: { borderDash: [4, 4], color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { borderDash: [4, 4], color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            };
+
+            if (type === 'pie') {
+                title.innerText = "Pie Chart: Etiology of Tropical Fever";
+                sub.innerText = "Proportional representation of disease causes in a cohort.";
+                config.type = 'pie';
+                config.data = {
+                    labels: ['Malaria', 'Dengue', 'Typhoid', 'Leptospirosis', 'Unknown'],
+                    datasets: [{
+                        data: [45, 25, 15, 10, 5],
+                        backgroundColor: ScientificPalette,
+                        borderWidth: 0
+                    }]
+                };
+                delete config.options.scales;
+            } else if (type === 'grouped-bar') {
+                title.innerText = "Grouped Bar: Vaccine Efficacy by Variant";
+                sub.innerText = "Symmetric comparison across multiple vaccine doses.";
+                config.type = 'bar';
+                config.data = {
+                    labels: ['Alpha', 'Delta', 'Omicron'],
+                    datasets: [
+                        { label: 'Dose 1', data: [80, 65, 30], backgroundColor: ScientificPalette[0] },
+                        { label: 'Dose 2', data: [95, 88, 70], backgroundColor: ScientificPalette[1] }
+                    ]
+                };
+            } else if (type === 'stacked-bar') {
+                title.innerText = "Stacked Bar: Clinical Outcomes by Department";
+                sub.innerText = "Visualizing composition and totals in a single view.";
+                config.type = 'bar';
+                config.data = {
+                    labels: ['Medicine', 'Surgery', 'Paediatrics', 'OBG'],
+                    datasets: [
+                        { label: 'Discharged', data: [340, 280, 150, 410], backgroundColor: ScientificPalette[2] },
+                        { label: 'Transferred', data: [20, 15, 5, 10], backgroundColor: ScientificPalette[4] },
+                        { label: 'Died', data: [40, 5, 2, 0], backgroundColor: ScientificPalette[1] }
+                    ]
+                };
+                config.options.scales.x.stacked = true;
+                config.options.scales.y.stacked = true;
+            } else if (type === 'histogram') {
+                title.innerText = "Histogram: Distribution of Incubation Period";
+                sub.innerText = "Frequency distribution for continuous patient data.";
+                config.type = 'bar';
+                config.data = {
+                    labels: Array.from({length: 12}, (_, i) => `${i+1}d`),
+                    datasets: [{
+                        label: 'Patient Count',
+                        data: [2, 8, 15, 28, 55, 42, 30, 20, 12, 6, 3, 1],
+                        backgroundColor: 'rgba(99, 110, 250, 0.4)',
+                        borderColor: '#636EFA',
+                        borderWidth: 1,
+                        barPercentage: 1, categoryPercentage: 1
+                    }]
+                };
+            } else if (type === 'kde') {
+                title.innerText = "Frequency Polygon / KDE: Incubation Period";
+                sub.innerText = "Toggle between Frequency Polygon (midpoints) and Gaussian KDE curve.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                window._kdeMode = window._kdeMode || 'both';
+                const kdeMode = window._kdeMode;
+                // Data: bin counts for days 1-12
+                const kdeCounts = [2, 8, 15, 28, 55, 42, 30, 20, 12, 6, 3, 1];
+                const kdeMax = Math.max(...kdeCounts);
+                const bw = 36, bx0 = 65, by0 = 255, bh = 195;
+                let kdeSvg = `<svg viewBox="0 0 530 310" width="100%" height="310">`;
+                // Axes
+                kdeSvg += `<line x1="55" y1="${by0}" x2="500" y2="${by0}" stroke="#94a3b8" stroke-width="1.5" />`;
+                kdeSvg += `<line x1="55" y1="${by0}" x2="55" y2="30" stroke="#94a3b8" stroke-width="1.5" />`;
+                kdeSvg += `<text x="280" y="295" fill="#94a3b8" text-anchor="middle" font-size="11">Incubation Period (days)</text>`;
+                kdeSvg += `<text x="18" y="145" fill="#94a3b8" text-anchor="middle" font-size="11" transform="rotate(-90,18,145)">Frequency (n)</text>`;
+                // Y ticks
+                [0, 10, 20, 30, 40, 50, 60].forEach(v => {
+                    const ty = by0 - (v / kdeMax) * bh;
+                    kdeSvg += `<text x="48" y="${ty+3}" fill="#94a3b8" font-size="9" text-anchor="end">${v}</text>`;
+                    kdeSvg += `<line x1="52" y1="${ty}" x2="55" y2="${ty}" stroke="#94a3b8" />`;
+                });
+                // Histogram bars (always shown) + midpoints
+                const midPoints = [];
+                kdeCounts.forEach((c, i) => {
+                    const x = bx0 + i * bw;
+                    const h = (c / kdeMax) * bh;
+                    kdeSvg += `<rect x="${x}" y="${by0 - h}" width="${bw - 2}" height="${h}" fill="rgba(99,110,250,0.18)" stroke="rgba(99,110,250,0.4)" />`;
+                    midPoints.push({ x: x + (bw-2)/2, y: by0 - h });
+                    kdeSvg += `<text x="${x + (bw-2)/2}" y="${by0 + 15}" fill="#94a3b8" font-size="9" text-anchor="middle">${i+1}d</text>`;
+                });
+                // Frequency polygon (shown in 'polygon' and 'both' modes)
+                if (kdeMode === 'polygon' || kdeMode === 'both') {
+                    let polyPath = `M ${midPoints[0].x} ${by0}`;
+                    midPoints.forEach(p => { polyPath += ` L ${p.x} ${p.y}`; });
+                    polyPath += ` L ${midPoints[midPoints.length-1].x} ${by0}`;
+                    kdeSvg += `<path d="${polyPath}" fill="rgba(0, 204, 150, 0.08)" stroke="#00cc96" stroke-width="2" />`;
+                    midPoints.forEach(p => { kdeSvg += `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#00cc96" />`; });
+                }
+                // KDE smooth curve (shown in 'kde' and 'both' modes)
+                if (kdeMode === 'kde' || kdeMode === 'both') {
+                    const kdeSmooth = midPoints.map((p, i) => {
+                        if (i === 0) return `M ${p.x} ${p.y}`;
+                        const prev = midPoints[i-1];
+                        const cx = (prev.x + p.x) / 2;
+                        return `C ${cx} ${prev.y}, ${cx} ${p.y}, ${p.x} ${p.y}`;
+                    }).join(' ');
+                    kdeSvg += `<path d="${kdeSmooth}" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="6,3" />`;
+                }
+                // Static legend inside SVG
+                kdeSvg += `<rect x="370" y="38" width="12" height="12" fill="rgba(99,110,250,0.3)" stroke="rgba(99,110,250,0.6)" />`;
+                kdeSvg += `<text x="388" y="48" fill="#cbd5e1" font-size="10">Histogram</text>`;
+                if (kdeMode === 'polygon' || kdeMode === 'both') {
+                    kdeSvg += `<line x1="370" y1="58" x2="382" y2="58" stroke="#00cc96" stroke-width="2" />`;
+                    kdeSvg += `<circle cx="376" cy="58" r="2.5" fill="#00cc96" />`;
+                    kdeSvg += `<text x="388" y="62" fill="#cbd5e1" font-size="10">Freq. Polygon</text>`;
+                }
+                if (kdeMode === 'kde' || kdeMode === 'both') {
+                    const ky = (kdeMode === 'both') ? 74 : 58;
+                    kdeSvg += `<line x1="370" y1="${ky}" x2="382" y2="${ky}" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,2" />`;
+                    kdeSvg += `<text x="388" y="${ky+4}" fill="#cbd5e1" font-size="10">KDE (Gaussian)</text>`;
+                }
+                kdeSvg += `</svg>`;
+                svgBox.innerHTML = kdeSvg;
+                // Add toggle buttons
+                const kdeBtnWrap = document.createElement('div');
+                kdeBtnWrap.style.cssText = 'display:flex; gap:0.8rem; justify-content:center; margin-top:0.8rem; width:100%;';
+                const mkKdeBtn = (label, m, color) => {
+                    const b = document.createElement('button');
+                    b.textContent = label;
+                    const isActive = kdeMode === m;
+                    b.style.cssText = `padding:0.4rem 1.2rem; border-radius:20px; font-size:0.78rem; cursor:pointer; border:1.5px solid ${color}; background:${isActive ? color : 'transparent'}; color:${isActive ? '#000' : color}; font-weight:bold; transition:all 0.2s;`;
+                    b.onclick = () => { window._kdeMode = m; showGraphDemo('kde'); };
+                    return b;
+                };
+                kdeBtnWrap.appendChild(mkKdeBtn('◆ Freq. Polygon', 'polygon', '#00cc96'));
+                kdeBtnWrap.appendChild(mkKdeBtn('∿ KDE Curve', 'kde', '#a855f7'));
+                kdeBtnWrap.appendChild(mkKdeBtn('◉ Both', 'both', '#60a5fa'));
+                svgBox.appendChild(kdeBtnWrap);
+                return;
+            } else if (type === 'swarm-box') {
+                title.innerText = "Swarm + Box: CRP Levels — Sepsis vs Control";
+                sub.innerText = "Box-whisker with IQR, median, and individual data points.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                svgBox.innerHTML = `
+                    <svg viewBox="0 0 500 320" width="100%" height="320">
+                        <!-- Y Axis -->
+                        <line x1="55" y1="15" x2="55" y2="270" stroke="#94a3b8" stroke-width="1.5" />
+                        <line x1="55" y1="270" x2="460" y2="270" stroke="#94a3b8" stroke-width="1.5" />
+                        <text x="15" y="145" fill="#94a3b8" text-anchor="middle" font-size="11" transform="rotate(-90,15,145)">CRP (mg/L)</text>
+                        <!-- Y ticks -->
+                        ${[0,20,40,60,80,100,120,140].map((v,i) => `<text x="48" y="${268-i*32}" fill="#94a3b8" font-size="9" text-anchor="end">${v}</text><line x1="52" y1="${268-i*32}" x2="55" y2="${268-i*32}" stroke="#94a3b8" />`).join('')}
+                        <!-- CONTROL GROUP -->
+                        <g transform="translate(160, 0)">
+                            <text x="0" y="295" fill="#fff" text-anchor="middle" font-size="13" font-weight="bold">Control</text>
+                            <!-- Upper whisker -->
+                            <line x1="0" y1="220" x2="0" y2="195" stroke="${ScientificPalette[0]}" stroke-width="1.5" />
+                            <line x1="-12" y1="195" x2="12" y2="195" stroke="${ScientificPalette[0]}" stroke-width="1.5" />
+                            <!-- Box (IQR) Q1=2 to Q3=12 → y=264 to y=232 -->
+                            <rect x="-25" y="232" width="50" height="32" fill="rgba(88, 28, 135, 0.25)" stroke="${ScientificPalette[0]}" stroke-width="2" rx="2" />
+                            <!-- Median line -->
+                            <line x1="-25" y1="248" x2="25" y2="248" stroke="#fff" stroke-width="2.5" />
+                            <!-- Lower whisker -->
+                            <line x1="0" y1="264" x2="0" y2="268" stroke="${ScientificPalette[0]}" stroke-width="1.5" />
+                            <line x1="-12" y1="268" x2="12" y2="268" stroke="${ScientificPalette[0]}" stroke-width="1.5" />
+                            <!-- Swarm points -->
+                            ${Array.from({length: 25}, () => `<circle cx="${-18 + Math.random()*36}" cy="${195 + Math.random()*73}" r="3" fill="${ScientificPalette[0]}" opacity="0.55" />`).join('')}
+                        </g>
+                        <!-- SEPSIS GROUP -->
+                        <g transform="translate(350, 0)">
+                            <text x="0" y="295" fill="#fff" text-anchor="middle" font-size="13" font-weight="bold">Sepsis</text>
+                            <!-- Upper whisker -->
+                            <line x1="0" y1="46" x2="0" y2="15" stroke="${ScientificPalette[1]}" stroke-width="1.5" />
+                            <line x1="-12" y1="15" x2="12" y2="15" stroke="${ScientificPalette[1]}" stroke-width="1.5" />
+                            <!-- Box (IQR) Q1=45 to Q3=95 → y=166 to y=46 -->
+                            <rect x="-25" y="46" width="50" height="120" fill="rgba(239, 68, 68, 0.2)" stroke="${ScientificPalette[1]}" stroke-width="2" rx="2" />
+                            <!-- Median line -->
+                            <line x1="-25" y1="106" x2="25" y2="106" stroke="#fff" stroke-width="2.5" />
+                            <!-- Lower whisker -->
+                            <line x1="0" y1="166" x2="0" y2="200" stroke="${ScientificPalette[1]}" stroke-width="1.5" />
+                            <line x1="-12" y1="200" x2="12" y2="200" stroke="${ScientificPalette[1]}" stroke-width="1.5" />
+                            <!-- Swarm points -->
+                            ${Array.from({length: 25}, () => `<circle cx="${-18 + Math.random()*36}" cy="${20 + Math.random()*180}" r="3" fill="${ScientificPalette[1]}" opacity="0.55" />`).join('')}
+                        </g>
+                    </svg>
+                `;
+                return;
+            } else if (type === 'violin') {
+                title.innerText = "Violin Plot: Blood Glucose by Diagnosis";
+                sub.innerText = "KDE mirrored density with embedded box plot — Normal vs Pre-DM vs DM.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                // Three groups with distinct shapes
+                const vGroups = [
+                    { label: 'Normal', color: ScientificPalette[2], median: 92, q1y: 188, q3y: 158, 
+                      left: 'M 0 245 Q -8 235, -18 220 Q -30 195, -38 170 Q -42 145, -35 125 Q -28 110, -18 100 Q -10 95, 0 92',
+                      right: 'M 0 245 Q 8 235, 18 220 Q 30 195, 38 170 Q 42 145, 35 125 Q 28 110, 18 100 Q 10 95, 0 92',
+                      tx: 130, medY: 172, data: [95,88,102,90,87,98,100,85,93,91,84,96,89,94,97,86,99,92,88,90] },
+                    { label: 'Pre-DM', color: ScientificPalette[4], median: 118, q1y: 168, q3y: 128,
+                      left: 'M 0 250 Q -10 240, -22 220 Q -38 190, -48 155 Q -52 125, -45 95 Q -35 75, -22 62 Q -10 56, 0 54',
+                      right: 'M 0 250 Q 10 240, 22 220 Q 38 190, 48 155 Q 52 125, 45 95 Q 35 75, 22 62 Q 10 56, 0 54',
+                      tx: 280, medY: 148, data: [115,122,110,125,130,112,108,120,118,128,105,135,116,124,119,126,111,123,117,121] },
+                    { label: 'Diabetes', color: ScientificPalette[1], median: 185, q1y: 138, q3y: 72,
+                      left: 'M 0 248 Q -6 240, -12 225 Q -22 200, -35 170 Q -48 130, -55 95 Q -50 60, -40 40 Q -28 25, -15 18 Q -8 15, 0 14',
+                      right: 'M 0 248 Q 6 240, 12 225 Q 22 200, 35 170 Q 48 130, 55 95 Q 50 60, 40 40 Q 28 25, 15 18 Q 8 15, 0 14',
+                      tx: 430, medY: 105, data: [165,195,210,180,175,225,190,188,172,200,240,155,182,198,170,185,215,192,178,205] }
+                ];
+                let vSvg = `<svg viewBox="0 0 550 340" width="100%" height="340">`;
+                // Axes
+                vSvg += `<line x1="55" y1="270" x2="510" y2="270" stroke="#94a3b8" stroke-width="1.5" />`;
+                vSvg += `<line x1="55" y1="270" x2="55" y2="10" stroke="#94a3b8" stroke-width="1.5" />`;
+                vSvg += `<text x="18" y="140" fill="#94a3b8" text-anchor="middle" font-size="10" transform="rotate(-90,18,140)">Fasting Blood Glucose (mg/dL)</text>`;
+                // Y ticks: 60 to 260
+                [60,100,140,180,220,260].forEach((v,i) => {
+                    const ty = 262 - (v-60)*1.28;
+                    vSvg += `<text x="48" y="${ty+3}" fill="#94a3b8" font-size="8" text-anchor="end">${v}</text>`;
+                    vSvg += `<line x1="52" y1="${ty}" x2="55" y2="${ty}" stroke="rgba(148,163,184,0.3)" />`;
+                    vSvg += `<line x1="55" y1="${ty}" x2="510" y2="${ty}" stroke="rgba(148,163,184,0.04)" />`;
+                });
+                // Draw each violin
+                vGroups.forEach(g => {
+                    vSvg += `<g transform="translate(${g.tx}, 0)">`;
+                    // KDE shape
+                    vSvg += `<path d="${g.left}" fill="${g.color}" opacity="0.3" stroke="${g.color}" stroke-width="1.5" />`;
+                    vSvg += `<path d="${g.right}" fill="${g.color}" opacity="0.3" stroke="${g.color}" stroke-width="1.5" />`;
+                    // IQR bar
+                    vSvg += `<rect x="-5" y="${g.q3y}" width="10" height="${g.q1y - g.q3y}" fill="rgba(255,255,255,0.25)" rx="4" />`;
+                    // Whisker lines
+                    const whiskerTop = g.q3y - 25;
+                    const whiskerBot = g.q1y + 20;
+                    vSvg += `<line x1="0" y1="${g.q3y}" x2="0" y2="${whiskerTop}" stroke="#fff" stroke-width="1" />`;
+                    vSvg += `<line x1="-6" y1="${whiskerTop}" x2="6" y2="${whiskerTop}" stroke="#fff" stroke-width="1" />`;
+                    vSvg += `<line x1="0" y1="${g.q1y}" x2="0" y2="${whiskerBot}" stroke="#fff" stroke-width="1" />`;
+                    vSvg += `<line x1="-6" y1="${whiskerBot}" x2="6" y2="${whiskerBot}" stroke="#fff" stroke-width="1" />`;
+                    // Median dot
+                    vSvg += `<circle cx="0" cy="${g.medY}" r="5" fill="#fff" stroke="${g.color}" stroke-width="1.5" />`;
+                    // Jittered data points
+                    g.data.forEach(d => {
+                        const dy = 262 - (d - 60) * 1.28;
+                        const dx = -8 + Math.random() * 16;
+                        vSvg += `<circle cx="${dx}" cy="${dy}" r="2" fill="${g.color}" opacity="0.4" />`;
+                    });
+                    // Labels
+                    vSvg += `<text x="0" y="290" fill="#fff" text-anchor="middle" font-size="11" font-weight="bold">${g.label}</text>`;
+                    vSvg += `<text x="0" y="305" fill="#94a3b8" text-anchor="middle" font-size="8">Med: ${g.median} mg/dL</text>`;
+                    vSvg += `</g>`;
+                });
+                // Legend — placed as HTML below SVG to avoid overlap
+                vSvg += `</svg>`;
+                svgBox.innerHTML = vSvg;
+                // HTML legend strip
+                const vLegend = document.createElement('div');
+                vLegend.style.cssText = 'display:flex; gap:1.5rem; justify-content:center; align-items:center; margin-top:0.5rem; width:100%; padding:0.4rem 0;';
+                vLegend.innerHTML = `
+                    <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;border:1.5px solid #94a3b8;"></span><span style="color:#cbd5e1;font-size:0.75rem;">Median</span></span>
+                    <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:6px;height:12px;border-radius:3px;background:rgba(255,255,255,0.3);"></span><span style="color:#cbd5e1;font-size:0.75rem;">IQR</span></span>
+                    <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#94a3b8;opacity:0.6;"></span><span style="color:#cbd5e1;font-size:0.75rem;">Data Points</span></span>
+                    <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:1.5px;background:#fff;"></span><span style="color:#cbd5e1;font-size:0.75rem;">Whiskers</span></span>
+                `;
+                svgBox.appendChild(vLegend);
+                return;
+            } else if (type === 'box-plot') {
+                title.innerText = "Box Plot: Hemoglobin Levels by Age Group";
+                sub.innerText = "Five-number summary with outlier detection — pediatric, adult, geriatric.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                const bpGroups = [
+                    { label: 'Pediatric', color: ScientificPalette[0], min: 10.5, q1: 11.2, med: 12.0, q3: 12.8, max: 13.5, outliers: [9.2], unit: 'g/dL' },
+                    { label: 'Adult', color: ScientificPalette[2], min: 12.0, q1: 13.5, med: 14.5, q3: 15.5, max: 16.5, outliers: [17.8], unit: 'g/dL' },
+                    { label: 'Geriatric', color: ScientificPalette[1], min: 9.0, q1: 10.5, med: 11.8, q3: 13.0, max: 14.0, outliers: [7.5, 8.0], unit: 'g/dL' }
+                ];
+                const bpYmin = 6, bpYmax = 19, bpH = 230, bpBase = 265;
+                const toY = v => bpBase - ((v - bpYmin) / (bpYmax - bpYmin)) * bpH;
+                let bpSvg = `<svg viewBox="0 0 480 330" width="100%" height="330">`;
+                // Axes
+                bpSvg += `<line x1="60" y1="${bpBase}" x2="440" y2="${bpBase}" stroke="#94a3b8" stroke-width="1.5" />`;
+                bpSvg += `<line x1="60" y1="${bpBase}" x2="60" y2="${bpBase - bpH - 5}" stroke="#94a3b8" stroke-width="1.5" />`;
+                bpSvg += `<text x="22" y="150" fill="#94a3b8" text-anchor="middle" font-size="10" transform="rotate(-90,22,150)">Hemoglobin (g/dL)</text>`;
+                // Y ticks
+                for (let v = 7; v <= 18; v += 1) {
+                    const ty = toY(v);
+                    bpSvg += `<text x="54" y="${ty+3}" fill="#94a3b8" font-size="8" text-anchor="end">${v}</text>`;
+                    bpSvg += `<line x1="57" y1="${ty}" x2="60" y2="${ty}" stroke="#94a3b8" />`;
+                    bpSvg += `<line x1="60" y1="${ty}" x2="440" y2="${ty}" stroke="rgba(148,163,184,0.04)" />`;
+                }
+                // Draw boxes
+                const bpXPositions = [155, 250, 345];
+                const bpW = 60;
+                bpGroups.forEach((g, idx) => {
+                    const cx = bpXPositions[idx];
+                    const yQ1 = toY(g.q1), yQ3 = toY(g.q3), yMed = toY(g.med), yMin = toY(g.min), yMax = toY(g.max);
+                    // Whiskers
+                    bpSvg += `<line x1="${cx}" y1="${yQ3}" x2="${cx}" y2="${yMax}" stroke="${g.color}" stroke-width="1.5" />`;
+                    bpSvg += `<line x1="${cx-12}" y1="${yMax}" x2="${cx+12}" y2="${yMax}" stroke="${g.color}" stroke-width="1.5" />`;
+                    bpSvg += `<line x1="${cx}" y1="${yQ1}" x2="${cx}" y2="${yMin}" stroke="${g.color}" stroke-width="1.5" />`;
+                    bpSvg += `<line x1="${cx-12}" y1="${yMin}" x2="${cx+12}" y2="${yMin}" stroke="${g.color}" stroke-width="1.5" />`;
+                    // Box
+                    bpSvg += `<rect x="${cx - bpW/2}" y="${yQ3}" width="${bpW}" height="${yQ1 - yQ3}" fill="${g.color}" opacity="0.2" stroke="${g.color}" stroke-width="2" rx="3" />`;
+                    // Median
+                    bpSvg += `<line x1="${cx - bpW/2}" y1="${yMed}" x2="${cx + bpW/2}" y2="${yMed}" stroke="#fff" stroke-width="2.5" />`;
+                    // Outliers
+                    g.outliers.forEach(o => {
+                        bpSvg += `<circle cx="${cx}" cy="${toY(o)}" r="4" fill="none" stroke="${g.color}" stroke-width="1.5" />`;
+                        bpSvg += `<text x="${cx + 10}" y="${toY(o)+3}" fill="#94a3b8" font-size="7">${o}</text>`;
+                    });
+                    // Labels
+                    bpSvg += `<text x="${cx}" y="${bpBase + 18}" fill="#fff" text-anchor="middle" font-size="11" font-weight="bold">${g.label}</text>`;
+                    bpSvg += `<text x="${cx}" y="${bpBase + 30}" fill="#94a3b8" text-anchor="middle" font-size="8">Med: ${g.med} ${g.unit}</text>`;
+                });
+                // Legend
+                bpSvg += `<line x1="350" y1="16" x2="362" y2="16" stroke="#fff" stroke-width="2" />`;
+                bpSvg += `<text x="368" y="19" fill="#cbd5e1" font-size="8">Median</text>`;
+                bpSvg += `<circle cx="412" cy="16" r="3.5" fill="none" stroke="#94a3b8" stroke-width="1.5" />`;
+                bpSvg += `<text x="420" y="19" fill="#cbd5e1" font-size="8">Outlier</text>`;
+                bpSvg += `</svg>`;
+                svgBox.innerHTML = bpSvg;
+                return;
+            } else if (type === 'scatter') {
+                title.innerText = "Scatter Plot: Age vs Systolic BP";
+                sub.innerText = "Click buttons to toggle positive, negative, or no correlation with regression line.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                // Build interactive scatter with toggle buttons
+                window._scatterMode = window._scatterMode || 'positive';
+                const mode = window._scatterMode;
+                // Generate fixed-seed data for each mode
+                const sRand = (seed) => { let s = seed; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; };
+                const rng = sRand(mode === 'positive' ? 42 : mode === 'negative' ? 99 : 7);
+                const scN = 40;
+                let scData = [];
+                for (let i = 0; i < scN; i++) {
+                    const x = 20 + rng() * 60;
+                    let y;
+                    if (mode === 'positive') y = 80 + x * 0.8 + (rng() - 0.5) * 30;
+                    else if (mode === 'negative') y = 180 - x * 0.7 + (rng() - 0.5) * 25;
+                    else y = 100 + (rng() - 0.5) * 60;
+                    scData.push({ x, y });
+                }
+                // Regression
+                const scMx = scData.reduce((s, d) => s + d.x, 0) / scN;
+                const scMy = scData.reduce((s, d) => s + d.y, 0) / scN;
+                let scNum = 0, scDenX = 0, scDenY = 0;
+                scData.forEach(d => { scNum += (d.x - scMx) * (d.y - scMy); scDenX += (d.x - scMx) ** 2; scDenY += (d.y - scMy) ** 2; });
+                const scSlope = scDenX > 0 ? scNum / scDenX : 0;
+                const scInt = scMy - scSlope * scMx;
+                const scR = (scDenX > 0 && scDenY > 0) ? scNum / Math.sqrt(scDenX * scDenY) : 0;
+                // SVG coordinates
+                const scOx = 65, scOy = 260, scW = 400, scH = 220;
+                const scXmin = 15, scXmax = 85, scYmin = 60, scYmax = 200;
+                const toSx = v => scOx + ((v - scXmin) / (scXmax - scXmin)) * scW;
+                const toSy = v => scOy - ((v - scYmin) / (scYmax - scYmin)) * scH;
+                let scSvg = `<svg viewBox="0 0 540 330" width="100%" height="330">`;
+                // Axes
+                scSvg += `<line x1="${scOx}" y1="${scOy}" x2="${scOx + scW}" y2="${scOy}" stroke="#94a3b8" stroke-width="1.5" />`;
+                scSvg += `<line x1="${scOx}" y1="${scOy}" x2="${scOx}" y2="${scOy - scH - 5}" stroke="#94a3b8" stroke-width="1.5" />`;
+                scSvg += `<text x="${scOx + scW/2}" y="295" fill="#94a3b8" text-anchor="middle" font-size="10">Age (years)</text>`;
+                scSvg += `<text x="22" y="${scOy - scH/2}" fill="#94a3b8" text-anchor="middle" font-size="10" transform="rotate(-90,22,${scOy - scH/2})">Systolic BP (mmHg)</text>`;
+                // Ticks
+                [20, 30, 40, 50, 60, 70, 80].forEach(v => {
+                    scSvg += `<text x="${toSx(v)}" y="${scOy + 14}" fill="#94a3b8" font-size="8" text-anchor="middle">${v}</text>`;
+                });
+                [80, 100, 120, 140, 160, 180].forEach(v => {
+                    scSvg += `<text x="${scOx - 5}" y="${toSy(v) + 3}" fill="#94a3b8" font-size="8" text-anchor="end">${v}</text>`;
+                    scSvg += `<line x1="${scOx}" y1="${toSy(v)}" x2="${scOx + scW}" y2="${toSy(v)}" stroke="rgba(148,163,184,0.05)" />`;
+                });
+                // Data points
+                const dotColor = mode === 'positive' ? '#4ade80' : mode === 'negative' ? '#f87171' : '#94a3b8';
+                scData.forEach(d => {
+                    scSvg += `<circle cx="${toSx(d.x)}" cy="${toSy(d.y)}" r="4" fill="${dotColor}" opacity="0.7" />`;
+                });
+                // Regression line
+                const regY1 = scInt + scSlope * scXmin;
+                const regY2 = scInt + scSlope * scXmax;
+                const lineColor = mode === 'positive' ? '#22c55e' : mode === 'negative' ? '#ef4444' : '#64748b';
+                scSvg += `<line x1="${toSx(scXmin)}" y1="${toSy(regY1)}" x2="${toSx(scXmax)}" y2="${toSy(regY2)}" stroke="${lineColor}" stroke-width="2" stroke-dasharray="6,3" />`;
+                // R value badge
+                const rLabel = `R = ${scR.toFixed(2)} (${mode})`;
+                scSvg += `<rect x="${scOx + scW - 155}" y="18" width="150" height="22" rx="6" fill="rgba(0,0,0,0.5)" stroke="${lineColor}" />`;
+                scSvg += `<text x="${scOx + scW - 80}" y="33" fill="${lineColor}" font-size="10" text-anchor="middle" font-weight="bold">${rLabel}</text>`;
+                scSvg += `</svg>`;
+                // Build toggle buttons outside SVG
+                svgBox.innerHTML = scSvg;
+                // Add toggle buttons below SVG
+                const btnWrap = document.createElement('div');
+                btnWrap.style.cssText = 'display:flex; gap:0.8rem; justify-content:center; margin-top:0.8rem; width:100%;';
+                const mkBtn = (label, m, color) => {
+                    const b = document.createElement('button');
+                    b.textContent = label;
+                    b.style.cssText = `padding:0.4rem 1.2rem; border-radius:20px; font-size:0.78rem; cursor:pointer; border:1.5px solid ${color}; background:${mode === m ? color : 'transparent'}; color:${mode === m ? '#000' : color}; font-weight:bold; transition:all 0.2s;`;
+                    b.onclick = () => { window._scatterMode = m; showGraphDemo('scatter'); };
+                    return b;
+                };
+                btnWrap.appendChild(mkBtn('⬆ Positive', 'positive', '#4ade80'));
+                btnWrap.appendChild(mkBtn('⬇ Negative', 'negative', '#f87171'));
+                btnWrap.appendChild(mkBtn('⊘ No Correlation', 'none', '#94a3b8'));
+                svgBox.appendChild(btnWrap);
+                return;
+            } else if (type === 'venn') {
+                title.innerText = "Venn Diagram: Disease Comorbidity";
+                sub.innerText = "Intersection of Diabetes, Hypertension, and CKD.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                svgBox.innerHTML = `
+                    <svg viewBox="0 0 500 300" width="100%" height="300">
+                        <circle cx="200" cy="120" r="80" fill="${ScientificPalette[0]}" opacity="0.5" stroke="#fff" />
+                        <circle cx="300" cy="120" r="80" fill="${ScientificPalette[2]}" opacity="0.5" stroke="#fff" />
+                        <circle cx="250" cy="200" r="80" fill="${ScientificPalette[1]}" opacity="0.5" stroke="#fff" />
+                        <text x="160" y="100" fill="#fff" font-size="12">Diabetes</text>
+                        <text x="340" y="100" fill="#fff" font-size="12">HTN</text>
+                        <text x="250" y="260" fill="#fff" font-size="12" text-anchor="middle">CKD</text>
+                        <text x="250" y="150" fill="#fff" font-weight="bold">Core</text>
+                    </svg>
+                `;
+                return;
+            } else if (type === 'heatmap-sci') {
+                title.innerText = "Clinical Heatmap: Metabolic Panel";
+                sub.innerText = "Serum concentration across patients — color intensity = magnitude.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                const hmMarkers = ['Glucose', 'Urea', 'Creat.', 'Na⁺', 'K⁺', 'Ca²⁺'];
+                const hmPatients = ['Pt 1', 'Pt 2', 'Pt 3', 'Pt 4', 'Pt 5'];
+                const hmData = [
+                    [92, 28, 0.9, 140, 4.2, 9.5],
+                    [240, 65, 3.2, 128, 5.8, 7.8],
+                    [110, 32, 1.1, 138, 4.0, 9.8],
+                    [180, 85, 5.1, 122, 6.5, 7.2],
+                    [95, 30, 1.0, 142, 3.9, 10.1]
+                ];
+                const hmMax = [240, 85, 5.1, 142, 6.5, 10.1];
+                const cw = 60, ch = 38, ox = 65, oy = 35;
+                let hmSvg = `<svg viewBox="0 0 440 310" width="100%" height="310">`;
+                // Column headers
+                hmMarkers.forEach((m, j) => { hmSvg += `<text x="${ox + j*cw + cw/2}" y="${oy-8}" fill="#cbd5e1" font-size="10" text-anchor="middle" font-weight="bold">${m}</text>`; });
+                // Rows
+                hmPatients.forEach((p, i) => {
+                    hmSvg += `<text x="${ox-8}" y="${oy + i*ch + ch/2 + 4}" fill="#cbd5e1" font-size="10" text-anchor="end" font-weight="bold">${p}</text>`;
+                    hmMarkers.forEach((_, j) => {
+                        const v = hmData[i][j];
+                        const norm = v / hmMax[j];
+                        const r = Math.round(60 + norm * 179);
+                        const g = Math.round(60 + (1-norm) * 100);
+                        const b = Math.round(60 + (1-norm) * 60);
+                        hmSvg += `<rect x="${ox + j*cw}" y="${oy + i*ch}" width="${cw-2}" height="${ch-2}" fill="rgb(${r},${g},${b})" rx="3" stroke="rgba(255,255,255,0.1)" />`;
+                        hmSvg += `<text x="${ox + j*cw + cw/2 - 1}" y="${oy + i*ch + ch/2 + 4}" fill="#fff" font-size="10" text-anchor="middle" font-weight="bold">${v}</text>`;
+                    });
+                });
+                // Color Scale Legend
+                const ly = oy + 5*ch + 12;
+                hmSvg += `<text x="${ox}" y="${ly + 4}" fill="#94a3b8" font-size="9">Low</text>`;
+                for (let s = 0; s < 10; s++) {
+                    const sn = s / 9;
+                    const sr = Math.round(60 + sn * 179);
+                    const sg = Math.round(60 + (1-sn) * 100);
+                    const sb = Math.round(60 + (1-sn) * 60);
+                    hmSvg += `<rect x="${ox + 30 + s*18}" y="${ly - 7}" width="18" height="12" fill="rgb(${sr},${sg},${sb})" />`;
+                }
+                hmSvg += `<text x="${ox + 30 + 10*18 + 5}" y="${ly + 4}" fill="#94a3b8" font-size="9">High</text>`;
+                hmSvg += `<text x="${ox + 30 + 90}" y="${ly + 20}" fill="#64748b" font-size="8" text-anchor="middle">Color Intensity = Concentration</text>`;
+                hmSvg += `</svg>`;
+                svgBox.innerHTML = hmSvg;
+                return;
+            } else if (type === 'correlation') {
+                title.innerText = "Correlation Matrix: Cardiometabolic Markers";
+                sub.innerText = "Pearson R coefficients — fixed, clinically plausible values.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                const cMarkers = ['Age', 'BMI', 'SBP', 'LDL', 'HbA1c'];
+                const cMatrix = [
+                    [1.00, 0.12, 0.45, 0.18, 0.30],
+                    [0.12, 1.00, 0.38, 0.42, 0.55],
+                    [0.45, 0.38, 1.00, 0.28, 0.35],
+                    [0.18, 0.42, 0.28, 1.00, 0.48],
+                    [0.30, 0.55, 0.35, 0.48, 1.00]
+                ];
+                const ccw = 70, cch = 44, cox = 65, coy = 40;
+                let cSvg = `<svg viewBox="0 0 440 300" width="100%" height="300">`;
+                // Column headers
+                cMarkers.forEach((m, j) => { cSvg += `<text x="${cox + j*ccw + ccw/2}" y="${coy-10}" fill="#cbd5e1" font-size="11" text-anchor="middle" font-weight="bold">${m}</text>`; });
+                // Row headers + cells
+                cMarkers.forEach((m, i) => {
+                    cSvg += `<text x="${cox-8}" y="${coy + i*cch + cch/2 + 4}" fill="#cbd5e1" font-size="11" text-anchor="end" font-weight="bold">${m}</text>`;
+                    cMarkers.forEach((_, j) => {
+                        const r = cMatrix[i][j];
+                        const absR = Math.abs(r);
+                        let cellColor;
+                        if (r >= 0.9) cellColor = 'rgba(0, 204, 150, 0.8)';
+                        else if (r >= 0.5) cellColor = 'rgba(0, 204, 150, ' + (0.2 + absR*0.5) + ')';
+                        else if (r >= 0.3) cellColor = 'rgba(99, 110, 250, ' + (0.15 + absR*0.4) + ')';
+                        else cellColor = 'rgba(99, 110, 250, 0.12)';
+                        cSvg += `<rect x="${cox + j*ccw}" y="${coy + i*cch}" width="${ccw-2}" height="${cch-2}" fill="${cellColor}" rx="4" stroke="rgba(255,255,255,0.08)" />`;
+                        cSvg += `<text x="${cox + j*ccw + ccw/2 - 1}" y="${coy + i*cch + cch/2 + 5}" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">${r.toFixed(2)}</text>`;
+                    });
+                });
+                // Legend
+                cSvg += `<text x="${cox}" y="${coy + 5*cch + 22}" fill="#94a3b8" font-size="9">Weak (R<0.3)</text>`;
+                cSvg += `<rect x="${cox + 90}" y="${coy + 5*cch + 12}" width="12" height="12" fill="rgba(99,110,250,0.12)" rx="2" />`;
+                cSvg += `<text x="${cox + 115}" y="${coy + 5*cch + 22}" fill="#94a3b8" font-size="9">Moderate</text>`;
+                cSvg += `<rect x="${cox + 170}" y="${coy + 5*cch + 12}" width="12" height="12" fill="rgba(99,110,250,0.35)" rx="2" />`;
+                cSvg += `<text x="${cox + 195}" y="${coy + 5*cch + 22}" fill="#94a3b8" font-size="9">Strong (R>0.5)</text>`;
+                cSvg += `<rect x="${cox + 265}" y="${coy + 5*cch + 12}" width="12" height="12" fill="rgba(0,204,150,0.5)" rx="2" />`;
+                cSvg += `</svg>`;
+                svgBox.innerHTML = cSvg;
+                return;
+            } else if (type === 'sankey') {
+                title.innerText = "Sankey Plot: Patient Flow Analysis";
+                sub.innerText = "Visualizing transitions from admission to clinical outcome.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                svgBox.innerHTML = `
+                    <svg viewBox="0 0 500 300" width="100%" height="300" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 50 50 C 150 50, 150 110, 250 110" stroke="${ScientificPalette[0]}" stroke-width="45" fill="none" opacity="0.3" />
+                        <path d="M 50 160 C 150 160, 150 130, 250 120" stroke="${ScientificPalette[1]}" stroke-width="25" fill="none" opacity="0.3" />
+                        <path d="M 250 110 C 350 110, 350 60, 450 60" stroke="${ScientificPalette[2]}" stroke-width="35" fill="none" opacity="0.3" />
+                        <rect x="35" y="30" width="15" height="240" fill="#fff" rx="4" />
+                        <rect x="240" y="80" width="15" height="150" fill="#fff" rx="4" />
+                        <rect x="450" y="20" width="15" height="260" fill="#fff" rx="4" />
+                        <text x="45" y="22" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">TRIAGE</text>
+                        <text x="247" y="72" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">HOSPITAL</text>
+                        <text x="457" y="15" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">DISCHARGE</text>
+                    </svg>
+                `;
+                return;
+            } else if (type === 'treemap') {
+                title.innerText = "Treemap: Diagnosis Classification";
+                sub.innerText = "Area-proportional representation of nested categories.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                svgBox.innerHTML = `
+                    <svg viewBox="0 0 500 300" width="100%" height="300">
+                        <rect x="5" y="5" width="290" height="190" fill="${ScientificPalette[0]}" opacity="0.75" stroke="#fff" rx="2" />
+                        <rect x="300" y="5" width="195" height="290" fill="${ScientificPalette[2]}" opacity="0.75" stroke="#fff" rx="2" />
+                        <rect x="5" y="200" width="290" height="95" fill="${ScientificPalette[1]}" opacity="0.75" stroke="#fff" rx="2" />
+                        <text x="150" y="100" fill="#fff" text-anchor="middle" font-weight="bold" font-size="16">Acute (58%)</text>
+                        <text x="397" y="150" fill="#fff" text-anchor="middle" font-weight="bold" font-size="16">Chronic (32%)</text>
+                        <text x="150" y="255" fill="#fff" text-anchor="middle" font-size="14">Other (10%)</text>
+                    </svg>
+                `;
+                return;
+
+            } else if (type === 'dendrogram') {
+                title.innerText = "Dendrogram: Pathogen Strain Similarity";
+                sub.innerText = "Agglomerative hierarchical clustering (Ward linkage) — genetic distance.";
+                demoCanvas.style.display = 'none';
+                svgBox.style.display = 'flex';
+                svgBox.innerHTML = `
+                    <svg viewBox="0 0 520 340" width="100%" height="340">
+                        <!-- Distance axis (top) -->
+                        <line x1="190" y1="25" x2="460" y2="25" stroke="#94a3b8" stroke-width="1" />
+                        <text x="325" y="15" fill="#94a3b8" font-size="10" text-anchor="middle">Genetic Distance (Ward)</text>
+                        ${[0, 0.2, 0.4, 0.6, 0.8, 1.0].map((v,i) => `<line x1="${190+i*54}" y1="22" x2="${190+i*54}" y2="28" stroke="#94a3b8" /><text x="${190+i*54}" y="38" fill="#94a3b8" font-size="8" text-anchor="middle">${v.toFixed(1)}</text>`).join('')}
+                        <!-- Leaves (5 strains) -->
+                        <circle cx="170" cy="70" r="6" fill="${ScientificPalette[0]}" />
+                        <text x="160" y="74" fill="#fff" font-size="10" text-anchor="end" font-weight="bold">S. Alpha</text>
+                        <circle cx="170" cy="120" r="6" fill="${ScientificPalette[0]}" />
+                        <text x="160" y="124" fill="#fff" font-size="10" text-anchor="end" font-weight="bold">S. Alpha-2</text>
+                        <circle cx="170" cy="175" r="6" fill="${ScientificPalette[1]}" />
+                        <text x="160" y="179" fill="#fff" font-size="10" text-anchor="end" font-weight="bold">S. Beta</text>
+                        <circle cx="170" cy="230" r="6" fill="${ScientificPalette[2]}" />
+                        <text x="160" y="234" fill="#fff" font-size="10" text-anchor="end" font-weight="bold">S. Delta</text>
+                        <circle cx="170" cy="280" r="6" fill="${ScientificPalette[3]}" />
+                        <text x="160" y="284" fill="#fff" font-size="10" text-anchor="end" font-weight="bold">S. Gamma</text>
+                        <!-- Cluster 1: Alpha + Alpha-2 at d=0.15 -->
+                        <line x1="170" y1="70" x2="230" y2="70" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="170" y1="120" x2="230" y2="120" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="230" y1="70" x2="230" y2="120" stroke="#60a5fa" stroke-width="2" />
+                        <text x="236" y="92" fill="#60a5fa" font-size="8">d=0.15</text>
+                        <!-- Cluster 2: Cluster1 + Beta at d=0.45 -->
+                        <line x1="230" y1="95" x2="330" y2="95" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="170" y1="175" x2="330" y2="175" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="330" y1="95" x2="330" y2="175" stroke="#60a5fa" stroke-width="2" />
+                        <text x="336" y="132" fill="#60a5fa" font-size="8">d=0.45</text>
+                        <!-- Cluster 3: Delta + Gamma at d=0.35 -->
+                        <line x1="170" y1="230" x2="290" y2="230" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="170" y1="280" x2="290" y2="280" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="290" y1="230" x2="290" y2="280" stroke="#60a5fa" stroke-width="2" />
+                        <text x="296" y="252" fill="#60a5fa" font-size="8">d=0.35</text>
+                        <!-- Root: Cluster2 + Cluster3 at d=0.85 -->
+                        <line x1="330" y1="135" x2="420" y2="135" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="290" y1="255" x2="420" y2="255" stroke="#60a5fa" stroke-width="2" />
+                        <line x1="420" y1="135" x2="420" y2="255" stroke="#60a5fa" stroke-width="2" />
+                        <text x="426" y="192" fill="#60a5fa" font-size="8">d=0.85</text>
+                        <!-- Dashed grid lines to distance axis -->
+                        <line x1="230" y1="25" x2="230" y2="120" stroke="rgba(96,165,250,0.15)" stroke-dasharray="3,3" />
+                        <line x1="290" y1="25" x2="290" y2="280" stroke="rgba(96,165,250,0.15)" stroke-dasharray="3,3" />
+                        <line x1="330" y1="25" x2="330" y2="175" stroke="rgba(96,165,250,0.15)" stroke-dasharray="3,3" />
+                        <line x1="420" y1="25" x2="420" y2="255" stroke="rgba(96,165,250,0.15)" stroke-dasharray="3,3" />
+                    </svg>
+                `;
+                return;
+            }
+
+            demoChart = new Chart(ctx, config);
+        }
+
+        // --- Types of Errors Support ---
+        let errorChartInstance = null;
+        function initErrorChart() {
+            const ctx = document.getElementById('errorChart').getContext('2d');
+            errorChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { labels: { color: '#fff', usePointStyle: true } },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: { type: 'linear', min: -4, max: 10, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { display: false, min: 0 }
+                    }
+                }
+            });
+            updateErrorChart();
+        }
+
+        function updateErrorChart() {
+            if (!errorChartInstance) return;
+
+            const alpha = parseFloat(document.getElementById('alpha-slider').value) / 100;
+            const delta = parseFloat(document.getElementById('effect-slider').value);
+            const precision = parseFloat(document.getElementById('precision-slider').value);
+            const sd = 1 / precision;
+
+            document.getElementById('alpha-val').innerText = (alpha * 100).toFixed(0) + "%";
+            document.getElementById('effect-val').innerText = delta.toFixed(1);
+            document.getElementById('precision-val').innerText = precision.toFixed(1);
+
+            const labels = [];
+            const h0Data = [];
+            const haData = [];
+            const alphaRegion = [];
+            const betaRegion = [];
+            const powerRegion = [];
+
+            // Critical Value for H0 (assumed mean 0)
+            // Using jStat if available, or approx for Normal
+            const zCrit = 1.645; // Approx for 0.05 one-tailed
+            // Calculate exact zCrit for alpha
+            // approximation for inverse normal cdf
+            const q = 1 - alpha;
+            const p = q > 0.5 ? 1 - q : q;
+            const t = Math.sqrt(-2 * Math.log(p));
+            let z = t - (2.30753 + 0.27061 * t) / (1 + 0.99229 * t + 0.04481 * t * t);
+            const criticalValue = (q > 0.5 ? z : -z) * sd;
+
+            for (let x = -4; x <= 10; x += 0.1) {
+                const y0 = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow(x / sd, 2));
+                const ya = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - delta) / sd, 2));
+
+                h0Data.push({ x: x, y: y0 });
+                haData.push({ x: x, y: ya });
+
+                if (x >= criticalValue) {
+                    alphaRegion.push({ x: x, y: y0 });
+                    powerRegion.push({ x: x, y: ya });
+                } else {
+                    betaRegion.push({ x: Ha_X_Point(x, delta, sd) ? x : Ha_X_Point(x, delta, sd), y: ya });
+                }
+            }
+
+            function Ha_X_Point(x, d, s) { return (1 / (s * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - d) / s, 2)); }
+
+            // Beta Calculation (approx)
+            const betaZ = (criticalValue - delta) / sd;
+            const beta = 0.5 * (1 + Erf(betaZ / Math.sqrt(2)));
+            const power = 1 - beta;
+
+            function Erf(x) {
+                const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+                const sign = (x < 0) ? -1 : 1;
+                x = Math.abs(x);
+                const t = 1.0 / (1.0 + p * x);
+                const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+                return sign * y;
+            }
+
+            document.getElementById('stat-alpha').innerText = alpha.toFixed(2);
+            document.getElementById('stat-beta').innerText = beta.toFixed(2);
+            document.getElementById('stat-power').innerText = (power * 100).toFixed(1) + "%";
+
+            errorChartInstance.data.datasets = [
+                {
+                    label: 'Null Hypothesis (H0)',
+                    data: h0Data,
+                    borderColor: '#60a5fa',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                },
+                {
+                    label: 'Alternative (Ha)',
+                    data: haData,
+                    borderColor: '#f472b6',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                },
+                {
+                    label: 'Type I Error (α)',
+                    data: alphaRegion,
+                    backgroundColor: 'rgba(96, 165, 250, 0.5)',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0
+                },
+                {
+                    label: 'Type II Error (β)',
+                    data: haData.filter(d => d.x < criticalValue),
+                    backgroundColor: 'rgba(251, 191, 36, 0.4)',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0
+                },
+                {
+                    label: 'Power (1-β)',
+                    data: haData.filter(d => d.x >= criticalValue),
+                    backgroundColor: 'rgba(0, 230, 118, 0.3)',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ];
+
+            errorChartInstance.update('none');
         }
 
         // --- Concrete 20-Number Example Dataset Flow ---
