@@ -2223,101 +2223,120 @@
                     <div class="odc-setup-card">
                         <h3 style="color: var(--text-white); margin-bottom: 0.5rem; font-size: 1.2rem;">🔧 One-Time Google Cloud Setup</h3>
                         <p style="color: var(--text-dim); font-size: 0.88rem; margin-bottom: 1.5rem; line-height: 1.6;">
-                            To connect your forms with Google Sheets, you need a free Google Cloud project. This takes ~5 minutes and only needs to be done once.
+                            To connect your forms with Google Sheets, you need a free Google Cloud project. This takes <strong>~5 minutes</strong> and only needs to be done once per researcher.
                         </p>
 
                         <div class="odc-status-bar disconnected" id="odc-status-bar">
                             <span>⚠️</span>
-                            <span id="odc-status-text">Google API not configured — Follow the steps below</span>
+                            <span id="odc-status-text">Google API not configured — Follow the simple steps below</span>
                         </div>
 
+                        <!-- Step 1 -->
                         <div class="odc-accordion open" id="odc-acc-1">
                             <div class="odc-accordion-header" onclick="odcToggleAccordion(1)">
                                 <div class="odc-accordion-num">1</div>
-                                <div class="odc-accordion-title">Create a Google Cloud Project</div>
+                                <div class="odc-accordion-title">Create Your Project</div>
                                 <div class="odc-accordion-arrow">▼</div>
                             </div>
                             <div class="odc-accordion-body">
                                 <ol>
-                                    <li>Go to <a href="https://console.cloud.google.com/" target="_blank" style="color: var(--primary-blue);">console.cloud.google.com</a></li>
-                                    <li>Sign in with your Google account</li>
-                                    <li>Click the project dropdown at the top → <strong>"New Project"</strong></li>
-                                    <li>Enter project name: <code>EpiSense Research</code> (or any name)</li>
-                                    <li>Click <strong>"Create"</strong></li>
+                                    <li>Open the <a href="https://console.cloud.google.com/" target="_blank" style="color: var(--primary-blue); font-weight: 600;">Google Cloud Console</a>.</li>
+                                    <li>Sign in with your standard Google/Gmail account.</li>
+                                    <li>At the very top, click the <strong>Project Dropdown</strong> (it might say "Select a project").</li>
+                                    <li>In the popup window, click the <strong>"NEW PROJECT"</strong> button at the top right.</li>
+                                    <li>Name it: <code>EpiSense Research</code> and click <strong>"Create"</strong>.</li>
+                                    <li>Wait a few seconds, then ensure "EpiSense Research" is selected in that top dropdown.</li>
                                 </ol>
                             </div>
                         </div>
 
+                        <!-- Step 2 -->
                         <div class="odc-accordion" id="odc-acc-2">
                             <div class="odc-accordion-header" onclick="odcToggleAccordion(2)">
                                 <div class="odc-accordion-num">2</div>
-                                <div class="odc-accordion-title">Enable Google Sheets API</div>
+                                <div class="odc-accordion-title">Enable Google Sheets & Drive</div>
                                 <div class="odc-accordion-arrow">▼</div>
                             </div>
                             <div class="odc-accordion-body">
+                                <p style="font-size: 0.85rem; margin-bottom: 0.8rem; color: var(--text-dim);">This allows EpiSense to talk to your spreadsheets and save your form settings.</p>
                                 <ol>
-                                    <li>In the Google Cloud Console, go to <strong>"APIs & Services" → "Library"</strong></li>
-                                    <li>Search for <code>Google Sheets API</code></li>
-                                    <li>Click on it and press <strong>"Enable"</strong></li>
-                                    <li>Go back to Library and also search for <code>Google Drive API</code></li>
-                                    <li>Enable it too</li>
+                                    <li>On the left sidebar, click <strong>"APIs & Services"</strong> → <strong>"Library"</strong>.</li>
+                                    <li>In the search box, type <code>Google Sheets API</code> and press Enter.</li>
+                                    <li>Click on the result and click the blue <strong>"ENABLE"</strong> button.</li>
+                                    <li>Go <strong>back</strong> to the Library search.</li>
+                                    <li>Search for <code>Google Drive API</code> and click <strong>"ENABLE"</strong> for it as well.</li>
                                 </ol>
                             </div>
                         </div>
 
+                        <!-- Step 3 -->
                         <div class="odc-accordion" id="odc-acc-3">
                             <div class="odc-accordion-header" onclick="odcToggleAccordion(3)">
                                 <div class="odc-accordion-num">3</div>
-                                <div class="odc-accordion-title">Configure OAuth Consent Screen</div>
+                                <div class="odc-accordion-title">Setup Consent Screen (CRITICAL)</div>
                                 <div class="odc-accordion-arrow">▼</div>
                             </div>
                             <div class="odc-accordion-body">
                                 <ol>
-                                    <li>Go to <strong>"APIs & Services" → "OAuth consent screen"</strong></li>
-                                    <li>Select <strong>"External"</strong> and click Create</li>
-                                    <li>Fill in the App name: <code>EpiSense Data Collection</code></li>
-                                    <li>Add your email as the User support email</li>
-                                    <li>Add your email under Developer contact information</li>
-                                    <li>Click <strong>"Save and Continue"</strong> through the remaining steps</li>
-                                    <li>Under <strong>"Test users"</strong>, add your own Google email</li>
-                                    <li>Click <strong>"Save and Continue"</strong></li>
+                                    <li>Go to <strong>"APIs & Services"</strong> → <strong>"OAuth consent screen"</strong>.</li>
+                                    <li>Select <strong>"External"</strong> and click <strong>"Create"</strong>.</li>
+                                    <li><strong>App Info:</strong> Enter <code>EpiSense</code> for App name and select your email for User support.</li>
+                                    <li><strong>Developer Info:</strong> Scroll to the bottom and enter your own email again. Click <strong>"Save and Continue"</strong>.</li>
+                                    <li><strong>Scopes:</strong> Just click <strong>"Save and Continue"</strong> (we handle this in the app).</li>
+                                    <li><strong>Test Users (VERY IMPORTANT):</strong> Click <strong>"+ ADD USERS"</strong> and enter your own Gmail address. 
+                                        <br><em style="color: #fca5a5;">(If you skip this, you will get an "Access Denied" error later!)</em>
+                                    </li>
+                                    <li>Click <strong>"Save and Continue"</strong> and then <strong>"Back to Dashboard"</strong>.</li>
                                 </ol>
                             </div>
                         </div>
 
+                        <!-- Step 4 -->
                         <div class="odc-accordion" id="odc-acc-4">
                             <div class="odc-accordion-header" onclick="odcToggleAccordion(4)">
                                 <div class="odc-accordion-num">4</div>
-                                <div class="odc-accordion-title">Create OAuth 2.0 Client ID</div>
+                                <div class="odc-accordion-title">Get Your Client ID</div>
                                 <div class="odc-accordion-arrow">▼</div>
                             </div>
                             <div class="odc-accordion-body">
                                 <ol>
-                                    <li>Go to <strong>"APIs & Services" → "Credentials"</strong></li>
-                                    <li>Click <strong>"+ CREATE CREDENTIALS" → "OAuth client ID"</strong></li>
-                                    <li>Application type: <strong>"Web application"</strong></li>
-                                    <li>Name: <code>EpiSense Web Client</code></li>
-                                    <li>Under <strong>"Authorized JavaScript origins"</strong>, add:
-                                        <br><code>http://localhost</code> (for local testing)
-                                        <br>And your deployment URL if you have one (e.g., <code>https://yourdomain.github.io</code>)
+                                    <li>Go to <strong>"APIs & Services"</strong> → <strong>"Credentials"</strong>.</li>
+                                    <li>Click <strong>"+ CREATE CREDENTIALS"</strong> at the top → <strong>"OAuth client ID"</strong>.</li>
+                                    <li><strong>Application type:</strong> Select <strong>"Web application"</strong>.</li>
+                                    <li><strong>Name:</strong> <code>EpiSense Web</code>.</li>
+                                    <li><strong>Authorized JavaScript origins:</strong> Click <strong>"+ ADD URI"</strong> and paste:
+                                        <br><code>http://localhost</code>
+                                        <br>Also add your website URL (e.g. <code>https://arka1985.github.io</code>) if you are hosted.
                                     </li>
-                                    <li>Click <strong>"Create"</strong></li>
-                                    <li>Copy the <strong>Client ID</strong> — it looks like: <code>123456789-abc.apps.googleusercontent.com</code></li>
+                                    <li>Click <strong>"Create"</strong>. A popup will appear with your <strong>Client ID</strong>. Copy it!</li>
                                 </ol>
                             </div>
                         </div>
 
+                        <!-- Step 5 -->
                         <div class="odc-accordion" id="odc-acc-5">
                             <div class="odc-accordion-header" onclick="odcToggleAccordion(5)">
                                 <div class="odc-accordion-num">5</div>
-                                <div class="odc-accordion-title">Paste Your Client ID Below</div>
+                                <div class="odc-accordion-title">Final Save & Security Tip</div>
                                 <div class="odc-accordion-arrow">▼</div>
                             </div>
                             <div class="odc-accordion-body">
-                                <p>Paste the Client ID you copied from the previous step. It will be saved securely in your browser's local storage.</p>
+                                <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.8rem;">
+                                    Paste your Client ID below and click Save.
+                                </p>
                                 <div class="odc-client-id-input">
                                     <input type="text" id="odc-client-id" placeholder="e.g. 123456789-abc.apps.googleusercontent.com">
                                     <button class="odc-btn odc-btn-primary" onclick="odcSaveClientId()">💾 Save</button>
+                                </div>
+                                
+                                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px;">
+                                    <h4 style="color: #38bdf8; font-size: 0.9rem; margin-bottom: 0.5rem;">🔐 Important Security Warning</h4>
+                                    <p style="font-size: 0.82rem; line-height: 1.5; color: var(--text-dim);">
+                                        When you log in for the first time, Google will say <strong>"Google hasn't verified this app"</strong>. 
+                                        This is normal because you just created it!
+                                        <br><br>
+                                        To proceed: Click <strong>"Advanced"</strong> → Click <strong>"Go to EpiSense (unsafe)"</strong>.
+                                    </p>
                                 </div>
                             </div>
                         </div>
