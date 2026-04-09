@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - EpiSense</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #38bdf8;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+        }
+        h1 { color: var(--primary); font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { color: var(--primary); font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        p { margin-bottom: 1rem; color: var(--text-dim); }
+        ul { margin-bottom: 1rem; color: var(--text-dim); padding-left: 20px; }
+        li { margin-bottom: 0.5rem; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover { text-decoration: underline; }
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Dashboard</a>
+        <h1>Privacy Policy</h1>
+        <p>Last Updated: April 9, 2026</p>
+
+        <section>
+            <h2>1. Introduction</h2>
+            <p>Welcome to EpiSense. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how our application handles information when you use our Online Data Collection tools and Google Drive integration.</p>
+        </section>
+
+        <section>
+            <h2>2. Data We Do NOT Collect</h2>
+            <p>EpiSense is a client-side application. This means:</p>
+            <ul>
+                <li><strong>No Central Server:</strong> We do not have a backend server. We do not store your research data, form configurations, or Google credentials on our servers.</li>
+                <li><strong>No Tracking:</strong> We do not use tracking cookies or analytics to monitor your individual activity.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>3. Data Stored Locally</h2>
+            <p>To improve your experience, some information is stored locally in your browser's <code>localStorage</code>:</p>
+            <ul>
+                <li><strong>Form Configurations:</strong> The structure of the forms you build (questions, types, sections).</li>
+                <li><strong>Google Client ID:</strong> The ID you provide during setup to enable Google API communication.</li>
+                <li><strong>Application Settings:</strong> Your preferences within the app.</li>
+            </ul>
+            <p>This data remains on your device and is never transmitted to us.</p>
+        </section>
+
+        <section>
+            <h2>4. Google API Integration</h2>
+            <p>When you use the "Online Data Collection" module, the app interacts directly with Google Services using your own Google Account:</p>
+            <ul>
+                <li><strong>Google Sheets API:</strong> Used to create spreadsheets and append research data. The data flows directly from your browser to your Google Sheet.</li>
+                <li><strong>Google Drive API:</strong> Used to save and backup your form configuration files in your own Google Drive.</li>
+            </ul>
+            <p>EpiSense only accesses the specific files it creates (<code>drive.file</code> scope). We do not have access to your other private documents or emails.</p>
+        </section>
+
+        <section>
+            <h2>5. Security</h2>
+            <p>Transmissions to Google are encrypted via HTTPS. Your OAuth access tokens are stored in the temporary memory of your browser and expire automatically. We recommend using the tool on a private and secure device.</p>
+        </section>
+
+        <section>
+            <h2>6. Contact</h2>
+            <p>If you have any questions about this Privacy Policy, please contact Dr. Arkaprabha Sau at <a href="mailto:arka.doctor@gmail.com" style="color: var(--primary);">arka.doctor@gmail.com</a>.</p>
+        </section>
+    </div>
+    <footer>
+        &copy; 2026 EpiSense · Educational Research Suite
+    </footer>
+</body>
+</html>
