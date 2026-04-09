@@ -1040,6 +1040,1058 @@
             top: 50%;
             z-index: -1;
         }
+        /* ============================================= */
+        /* ONLINE DATA COLLECTION (ODC) STYLES          */
+        /* All prefixed with .odc- to avoid collision   */
+        /* ============================================= */
+
+        /* Stepper Progress Bar */
+        .odc-stepper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .odc-step-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .odc-step-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .odc-step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .odc-step-item.active .odc-step-num {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+            box-shadow: 0 0 20px rgba(96,165,250,0.4);
+        }
+
+        .odc-step-item.completed .odc-step-num {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .odc-step-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            transition: color 0.3s;
+        }
+
+        .odc-step-item.active .odc-step-label {
+            color: var(--primary-blue);
+        }
+
+        .odc-step-item.completed .odc-step-label {
+            color: #10b981;
+        }
+
+        .odc-step-connector {
+            width: 60px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        .odc-step-connector.completed {
+            background: #10b981;
+        }
+
+        /* ODC Panels */
+        .odc-panel {
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .odc-panel.active {
+            display: block;
+        }
+
+        /* Setup Wizard */
+        .odc-setup-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .odc-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .odc-status-bar.disconnected {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            color: #f87171;
+        }
+
+        .odc-status-bar.connected {
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.2);
+            color: #34d399;
+        }
+
+        .odc-accordion {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .odc-accordion-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .odc-accordion-header:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .odc-accordion-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .odc-accordion-title {
+            flex: 1;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-white);
+        }
+
+        .odc-accordion-arrow {
+            color: var(--text-dim);
+            transition: transform 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .odc-accordion.open .odc-accordion-arrow {
+            transform: rotate(180deg);
+        }
+
+        .odc-accordion-body {
+            display: none;
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.88rem;
+            color: var(--text-dim);
+            line-height: 1.7;
+        }
+
+        .odc-accordion.open .odc-accordion-body {
+            display: block;
+        }
+
+        .odc-accordion-body ol {
+            margin-left: 1.2rem;
+            margin-top: 0.5rem;
+        }
+
+        .odc-accordion-body ol li {
+            margin-bottom: 0.5rem;
+        }
+
+        .odc-accordion-body code {
+            background: rgba(96,165,250,0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            color: #93c5fd;
+        }
+
+        .odc-client-id-input {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            align-items: stretch;
+        }
+
+        .odc-client-id-input input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .odc-client-id-input input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .odc-client-id-input input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .odc-btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-main);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .odc-btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), #818cf8);
+            color: white;
+            box-shadow: 0 4px 15px rgba(96,165,250,0.3);
+        }
+
+        .odc-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(96,165,250,0.4);
+        }
+
+        .odc-btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-dim);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .odc-btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .odc-btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+        }
+
+        .odc-btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16,185,129,0.4);
+        }
+
+        .odc-btn-danger {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .odc-btn-danger:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .odc-btn-google {
+            background: white;
+            color: #3c4043;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 0.8rem 2rem;
+            font-size: 0.95rem;
+        }
+
+        .odc-btn-google:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .odc-btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Form Builder */
+        .odc-form-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .odc-form-meta {
+                grid-template-columns: 1fr;
+            }
+            .odc-stepper {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .odc-step-connector {
+                display: none;
+            }
+        }
+
+        .odc-form-meta .input-group input,
+        .odc-form-meta .input-group textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            color: white;
+            font-family: var(--font-main);
+        }
+
+        .odc-form-meta .input-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .odc-sections-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .odc-section-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .odc-section-card:hover {
+            border-color: rgba(96,165,250,0.3);
+        }
+
+        .odc-section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: rgba(96,165,250,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .odc-section-badge {
+            background: var(--primary-blue);
+            color: white;
+            font-weight: 800;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .odc-section-title-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.3rem 0;
+            font-family: var(--font-main);
+        }
+
+        .odc-section-title-input:focus {
+            outline: none;
+            border-bottom-color: var(--primary-blue);
+        }
+
+        .odc-section-title-input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .odc-section-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .odc-section-actions button {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .odc-section-actions button:hover {
+            color: white;
+        }
+
+        .odc-section-actions button.odc-delete-btn:hover {
+            color: #f87171;
+        }
+
+        .odc-section-desc-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            padding: 0.5rem 1.5rem;
+            font-family: var(--font-main);
+        }
+
+        .odc-section-desc-input:focus {
+            outline: none;
+            border-bottom-color: rgba(96,165,250,0.3);
+        }
+
+        .odc-section-desc-input::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+
+        .odc-questions-list {
+            padding: 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .odc-question-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .odc-question-item:hover {
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .odc-question-row {
+            display: grid;
+            grid-template-columns: 1fr 180px auto auto;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .odc-question-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+
+        .odc-question-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed rgba(255,255,255,0.15);
+            color: white;
+            font-size: 0.9rem;
+            padding: 0.4rem 0;
+            font-family: var(--font-main);
+            width: 100%;
+        }
+
+        .odc-question-input:focus {
+            outline: none;
+            border-bottom-color: var(--primary-blue);
+            border-bottom-style: solid;
+        }
+
+        .odc-question-input::placeholder {
+            color: rgba(255,255,255,0.25);
+        }
+
+        .odc-type-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: var(--text-dim);
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+            font-family: var(--font-main);
+            cursor: pointer;
+        }
+
+        .odc-type-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .odc-type-select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .odc-required-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .odc-required-toggle input {
+            accent-color: var(--primary-pink);
+            cursor: pointer;
+        }
+
+        .odc-q-delete {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 2px;
+            transition: color 0.2s;
+        }
+
+        .odc-q-delete:hover {
+            color: #f87171;
+        }
+
+        .odc-options-area {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .odc-options-area .odc-option-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .odc-option-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px dotted rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            font-size: 0.82rem;
+            padding: 0.25rem 0;
+            font-family: var(--font-main);
+        }
+
+        .odc-option-row input:focus {
+            outline: none;
+            border-bottom-color: var(--primary-blue);
+        }
+
+        .odc-option-row input::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+
+        .odc-option-icon {
+            color: rgba(255,255,255,0.2);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .odc-option-remove {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.15);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0 2px;
+        }
+
+        .odc-option-remove:hover {
+            color: #f87171;
+        }
+
+        .odc-add-option-btn {
+            background: none;
+            border: none;
+            color: var(--primary-blue);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.3rem 0;
+            margin-top: 0.25rem;
+        }
+
+        .odc-add-option-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* Matrix / Grid specific */
+        .odc-matrix-config {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .odc-matrix-config label {
+            font-size: 0.75rem;
+            color: var(--primary-pink);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .odc-matrix-config textarea {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--text-dim);
+            font-size: 0.82rem;
+            padding: 0.5rem;
+            font-family: var(--font-main);
+            resize: vertical;
+            height: 60px;
+        }
+
+        .odc-matrix-config textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .odc-matrix-config textarea::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+
+        .odc-add-question-bar {
+            padding: 0.5rem 1.5rem 1rem;
+        }
+
+        /* Linear Scale Config */
+        .odc-scale-config {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .odc-scale-config label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .odc-scale-config input[type="number"] {
+            width: 60px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            color: white;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .odc-scale-config input[type="text"] {
+            width: 120px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px dotted rgba(255,255,255,0.15);
+            color: var(--text-dim);
+            padding: 0.3rem 0;
+            font-size: 0.8rem;
+            font-family: var(--font-main);
+        }
+
+        /* Connect Panel */
+        .odc-connect-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .odc-connect-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .odc-connect-card h3 {
+            color: var(--text-white);
+            margin-bottom: 0.75rem;
+            font-size: 1.3rem;
+        }
+
+        .odc-connect-card p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            max-width: 500px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.6;
+        }
+
+        .odc-sheet-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(16,185,129,0.05);
+            border: 1px solid rgba(16,185,129,0.15);
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .odc-sheet-info h4 {
+            color: #34d399;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .odc-sheet-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+
+        .odc-sheet-link a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+
+        .odc-sheet-link a:hover {
+            text-decoration: underline;
+        }
+
+        .odc-copy-link {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .odc-copy-link:hover {
+            color: white;
+        }
+
+        /* Saved Forms List */
+        .odc-saved-forms {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .odc-saved-forms h4 {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .odc-saved-form-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 1rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .odc-saved-form-item:hover {
+            border-color: rgba(96,165,250,0.3);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .odc-saved-form-item span {
+            color: var(--text-white);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .odc-saved-form-item small {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+
+        .odc-saved-form-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Toast */
+        .odc-toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            animation: slideUp 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Data Entry Mode */
+        .odc-data-entry-panel {
+            margin-top: 2rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .odc-entry-header {
+            background: rgba(96,165,250,0.08);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .odc-entry-header h4 {
+            color: var(--primary-blue);
+            font-size: 0.95rem;
+        }
+
+        .odc-entry-form {
+            padding: 1.5rem;
+        }
+
+        .odc-entry-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .odc-entry-section h5 {
+            color: var(--primary-pink);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .odc-entry-field {
+            margin-bottom: 1rem;
+        }
+
+        .odc-entry-field label {
+            display: block;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+
+        .odc-entry-field label .odc-required-star {
+            color: #f87171;
+            margin-left: 2px;
+        }
+
+        .odc-entry-field input[type="text"],
+        .odc-entry-field input[type="number"],
+        .odc-entry-field input[type="date"],
+        .odc-entry-field textarea,
+        .odc-entry-field select {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: white;
+            padding: 0.6rem 0.8rem;
+            font-family: var(--font-main);
+            font-size: 0.85rem;
+        }
+
+        .odc-entry-field textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .odc-entry-field input:focus,
+        .odc-entry-field textarea:focus,
+        .odc-entry-field select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .odc-entry-field select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .odc-entry-radio-group,
+        .odc-entry-checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .odc-entry-radio-group label,
+        .odc-entry-checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 0.3rem 0;
+        }
+
+        .odc-entry-radio-group input,
+        .odc-entry-checkbox-group input {
+            accent-color: var(--primary-blue);
+        }
+
+        .odc-scale-display {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .odc-scale-display label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .odc-scale-display label:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .odc-scale-display input {
+            accent-color: var(--primary-blue);
+        }
+
+        .odc-scale-labels {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Matrix Entry Styling */
+        .odc-matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        .odc-matrix-table th {
+            background: rgba(96,165,250,0.1);
+            color: var(--primary-blue);
+            font-size: 0.75rem;
+            padding: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .odc-matrix-table td {
+            padding: 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .odc-matrix-table td:first-child {
+            text-align: left;
+            color: var(--text-dim);
+            font-size: 0.82rem;
+        }
+
+        .odc-matrix-table input[type="radio"] {
+            accent-color: var(--primary-blue);
+        }
+
+        .odc-entry-submit {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            justify-content: center;
+        }
+
+        .odc-response-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(96,165,250,0.1);
+            color: var(--primary-blue);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
     </style>
 </head>
 
@@ -1102,42 +2154,274 @@
 
         <!-- Navigation Grid -->
         <div class="nav-grid">
-            <div class="nav-btn active" id="btn-1" onclick="switchPath('generator', 1)">
+            <div class="nav-btn active" id="btn-1" onclick="switchPath('online-data', 1)">
+                <span class="btn-icon">📋</span>
+                <span>Online Data Collection</span>
+            </div>
+            <div class="nav-btn" id="btn-2" onclick="switchPath('generator', 2)">
                 <span class="btn-icon">🔢</span>
                 <span>Random Number Generator</span>
             </div>
-            <div class="nav-btn" id="btn-2" onclick="switchPath('randomization', 2)">
+            <div class="nav-btn" id="btn-3" onclick="switchPath('randomization', 3)">
                 <span class="btn-icon">🎲</span>
                 <span>Randomization</span>
             </div>
-            <div class="nav-btn" id="btn-3" onclick="switchPath('matching', 3)">
+            <div class="nav-btn" id="btn-4" onclick="switchPath('matching', 4)">
                 <span class="btn-icon">🤝</span>
                 <span>Matching</span>
             </div>
-            <div class="nav-btn" id="btn-4" onclick="switchPath('sampling', 4)">
+            <div class="nav-btn" id="btn-5" onclick="switchPath('sampling', 5)">
                 <span class="btn-icon">🎯</span>
                 <span>Sampling</span>
             </div>
-            <div class="nav-btn" id="btn-5" onclick="switchPath('epi-research', 5)">
+            <div class="nav-btn" id="btn-6" onclick="switchPath('epi-research', 6)">
                 <span class="btn-icon">🔬</span>
                 <span>Epi Research Types</span>
             </div>
-            <div class="nav-btn" id="btn-6" onclick="switchPath('biases', 6)">
+            <div class="nav-btn" id="btn-7" onclick="switchPath('biases', 7)">
                 <span class="btn-icon">⚠️</span>
                 <span>Types of Biases</span>
             </div>
-            <div class="nav-btn" id="btn-7" onclick="switchPath('med-mod', 7)">
+            <div class="nav-btn" id="btn-8" onclick="switchPath('med-mod', 8)">
                 <span class="btn-icon">⛓️</span>
                 <span>Mediation & Moderation</span>
             </div>
-            <div class="nav-btn" id="btn-8" onclick="switchPath('bradford-hill', 8)">
+            <div class="nav-btn" id="btn-9" onclick="switchPath('bradford-hill', 9)">
                 <span class="btn-icon">📜</span>
                 <span>Bradford Hill Criteria</span>
             </div>
         </div>
 
+        <!-- Section 0: Online Data Collection -->
+        <div id="path-online-data" class="path-section active">
+            <div class="tile">
+                <div class="section-header">
+                    <h2 class="section-title">📋 Online Data Collection</h2>
+                    <p class="section-subtitle">Build research data collection forms, connect to Google Sheets, and manage your field data — all from one place.</p>
+                </div>
+
+                <!-- 3-Step Progress -->
+                <div class="odc-stepper">
+                    <div class="odc-step-item active" onclick="odcSwitchPanel(1)">
+                        <div class="odc-step-num">1</div>
+                        <div class="odc-step-label">Google Setup</div>
+                    </div>
+                    <div class="odc-step-connector" id="odc-conn-1"></div>
+                    <div class="odc-step-item" onclick="odcSwitchPanel(2)">
+                        <div class="odc-step-num">2</div>
+                        <div class="odc-step-label">Build Form</div>
+                    </div>
+                    <div class="odc-step-connector" id="odc-conn-2"></div>
+                    <div class="odc-step-item" onclick="odcSwitchPanel(3)">
+                        <div class="odc-step-num">3</div>
+                        <div class="odc-step-label">Connect & Collect</div>
+                    </div>
+                </div>
+
+                <!-- ====== PANEL 1: GOOGLE SETUP WIZARD ====== -->
+                <div class="odc-panel active" id="odc-panel-1">
+                    <div class="odc-setup-card">
+                        <h3 style="color: var(--text-white); margin-bottom: 0.5rem; font-size: 1.2rem;">🔧 One-Time Google Cloud Setup</h3>
+                        <p style="color: var(--text-dim); font-size: 0.88rem; margin-bottom: 1.5rem; line-height: 1.6;">
+                            To connect your forms with Google Sheets, you need a free Google Cloud project. This takes ~5 minutes and only needs to be done once.
+                        </p>
+
+                        <div class="odc-status-bar disconnected" id="odc-status-bar">
+                            <span>⚠️</span>
+                            <span id="odc-status-text">Google API not configured — Follow the steps below</span>
+                        </div>
+
+                        <div class="odc-accordion open" id="odc-acc-1">
+                            <div class="odc-accordion-header" onclick="odcToggleAccordion(1)">
+                                <div class="odc-accordion-num">1</div>
+                                <div class="odc-accordion-title">Create a Google Cloud Project</div>
+                                <div class="odc-accordion-arrow">▼</div>
+                            </div>
+                            <div class="odc-accordion-body">
+                                <ol>
+                                    <li>Go to <a href="https://console.cloud.google.com/" target="_blank" style="color: var(--primary-blue);">console.cloud.google.com</a></li>
+                                    <li>Sign in with your Google account</li>
+                                    <li>Click the project dropdown at the top → <strong>"New Project"</strong></li>
+                                    <li>Enter project name: <code>EpiSense Research</code> (or any name)</li>
+                                    <li>Click <strong>"Create"</strong></li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="odc-accordion" id="odc-acc-2">
+                            <div class="odc-accordion-header" onclick="odcToggleAccordion(2)">
+                                <div class="odc-accordion-num">2</div>
+                                <div class="odc-accordion-title">Enable Google Sheets API</div>
+                                <div class="odc-accordion-arrow">▼</div>
+                            </div>
+                            <div class="odc-accordion-body">
+                                <ol>
+                                    <li>In the Google Cloud Console, go to <strong>"APIs & Services" → "Library"</strong></li>
+                                    <li>Search for <code>Google Sheets API</code></li>
+                                    <li>Click on it and press <strong>"Enable"</strong></li>
+                                    <li>Go back to Library and also search for <code>Google Drive API</code></li>
+                                    <li>Enable it too</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="odc-accordion" id="odc-acc-3">
+                            <div class="odc-accordion-header" onclick="odcToggleAccordion(3)">
+                                <div class="odc-accordion-num">3</div>
+                                <div class="odc-accordion-title">Configure OAuth Consent Screen</div>
+                                <div class="odc-accordion-arrow">▼</div>
+                            </div>
+                            <div class="odc-accordion-body">
+                                <ol>
+                                    <li>Go to <strong>"APIs & Services" → "OAuth consent screen"</strong></li>
+                                    <li>Select <strong>"External"</strong> and click Create</li>
+                                    <li>Fill in the App name: <code>EpiSense Data Collection</code></li>
+                                    <li>Add your email as the User support email</li>
+                                    <li>Add your email under Developer contact information</li>
+                                    <li>Click <strong>"Save and Continue"</strong> through the remaining steps</li>
+                                    <li>Under <strong>"Test users"</strong>, add your own Google email</li>
+                                    <li>Click <strong>"Save and Continue"</strong></li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="odc-accordion" id="odc-acc-4">
+                            <div class="odc-accordion-header" onclick="odcToggleAccordion(4)">
+                                <div class="odc-accordion-num">4</div>
+                                <div class="odc-accordion-title">Create OAuth 2.0 Client ID</div>
+                                <div class="odc-accordion-arrow">▼</div>
+                            </div>
+                            <div class="odc-accordion-body">
+                                <ol>
+                                    <li>Go to <strong>"APIs & Services" → "Credentials"</strong></li>
+                                    <li>Click <strong>"+ CREATE CREDENTIALS" → "OAuth client ID"</strong></li>
+                                    <li>Application type: <strong>"Web application"</strong></li>
+                                    <li>Name: <code>EpiSense Web Client</code></li>
+                                    <li>Under <strong>"Authorized JavaScript origins"</strong>, add:
+                                        <br><code>http://localhost</code> (for local testing)
+                                        <br>And your deployment URL if you have one (e.g., <code>https://yourdomain.github.io</code>)
+                                    </li>
+                                    <li>Click <strong>"Create"</strong></li>
+                                    <li>Copy the <strong>Client ID</strong> — it looks like: <code>123456789-abc.apps.googleusercontent.com</code></li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="odc-accordion" id="odc-acc-5">
+                            <div class="odc-accordion-header" onclick="odcToggleAccordion(5)">
+                                <div class="odc-accordion-num">5</div>
+                                <div class="odc-accordion-title">Paste Your Client ID Below</div>
+                                <div class="odc-accordion-arrow">▼</div>
+                            </div>
+                            <div class="odc-accordion-body">
+                                <p>Paste the Client ID you copied from the previous step. It will be saved securely in your browser's local storage.</p>
+                                <div class="odc-client-id-input">
+                                    <input type="text" id="odc-client-id" placeholder="e.g. 123456789-abc.apps.googleusercontent.com">
+                                    <button class="odc-btn odc-btn-primary" onclick="odcSaveClientId()">💾 Save</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 2rem;">
+                            <button class="odc-btn odc-btn-primary" onclick="odcSwitchPanel(2)" style="padding: 0.9rem 2.5rem; font-size: 0.95rem;">
+                                Next: Build Your Form →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== PANEL 2: FORM BUILDER ====== -->
+                <div class="odc-panel" id="odc-panel-2">
+                    <div class="odc-setup-card">
+                        <div class="odc-form-meta">
+                            <div class="input-group">
+                                <label>📝 Project / Form Name</label>
+                                <input type="text" id="odc-form-name" placeholder="e.g. COVID-19 Vaccination Survey">
+                            </div>
+                            <div class="input-group">
+                                <label>📄 Description</label>
+                                <textarea id="odc-form-desc" placeholder="Brief description of the research project..."></textarea>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+                            <button class="odc-btn odc-btn-primary" onclick="odcAddSection()">➕ Add Section</button>
+                            <button class="odc-btn odc-btn-secondary" onclick="odcSaveFormLocally()">💾 Save Form</button>
+                            <button class="odc-btn odc-btn-secondary" onclick="odcExportFormJSON()">📤 Export JSON</button>
+                            <button class="odc-btn odc-btn-secondary" onclick="odcImportFormJSON()">📥 Import JSON</button>
+                            <input type="file" id="odc-import-file" accept=".json" style="display:none" onchange="odcHandleImport(event)">
+                        </div>
+
+                        <div class="odc-sections-container" id="odc-sections-container"></div>
+
+                        <div class="odc-saved-forms" id="odc-saved-forms-area">
+                            <h4>📂 Saved Forms</h4>
+                            <div id="odc-saved-forms-list">
+                                <p style="color: var(--text-dim); font-size: 0.85rem; font-style: italic;">No saved forms yet.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                            <button class="odc-btn odc-btn-secondary" onclick="odcSwitchPanel(1)">← Back to Setup</button>
+                            <button class="odc-btn odc-btn-primary" onclick="odcSwitchPanel(3)" style="padding: 0.9rem 2.5rem; font-size: 0.95rem;">Next: Connect & Collect →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== PANEL 3: CONNECT & COLLECT ====== -->
+                <div class="odc-panel" id="odc-panel-3">
+                    <div class="odc-connect-card">
+                        <div class="odc-connect-icon">🔗</div>
+                        <h3>Connect to Google Sheets</h3>
+                        <p>Authenticate with Google to automatically create a spreadsheet for your research project. Each section becomes a sheet tab with question headers.</p>
+
+                        <div id="odc-auth-area">
+                            <button class="odc-btn odc-btn-google" onclick="odcInitGoogleAuth()" id="odc-google-btn">
+                                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                                Sign in with Google
+                            </button>
+                        </div>
+
+                        <div id="odc-post-auth" style="display: none;">
+                            <div style="margin-bottom: 1.5rem;">
+                                <span style="color: #34d399; font-weight: 700;">✅ Authenticated as </span>
+                                <span id="odc-user-email" style="color: var(--primary-blue); font-weight: 600;"></span>
+                            </div>
+                            <button class="odc-btn odc-btn-success" onclick="odcCreateSpreadsheet()" id="odc-create-sheet-btn" style="padding: 0.9rem 2.5rem; font-size: 0.95rem;">📊 Create Google Sheet for This Form</button>
+
+                            <div class="odc-sheet-info" id="odc-sheet-info" style="display: none;">
+                                <h4>✅ Google Sheet Created Successfully!</h4>
+                                <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.75rem;">Each section has been created as a separate sheet tab with question headers.</p>
+                                <div class="odc-sheet-link">
+                                    <a id="odc-sheet-url" href="#" target="_blank">Open in Google Sheets</a>
+                                    <button class="odc-copy-link" onclick="odcCopySheetLink()">📋 Copy</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="odc-data-entry-panel" id="odc-data-entry" style="display: none;">
+                            <div class="odc-entry-header">
+                                <h4>📝 Enter Research Data</h4>
+                                <div><span class="odc-response-count" id="odc-response-count">0 responses</span></div>
+                            </div>
+                            <div class="odc-entry-form" id="odc-entry-form"></div>
+                            <div class="odc-entry-submit">
+                                <button class="odc-btn odc-btn-success" onclick="odcSubmitResponse()" style="padding: 0.8rem 2.5rem;">✅ Submit Response to Google Sheet</button>
+                                <button class="odc-btn odc-btn-secondary" onclick="odcClearEntryForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <button class="odc-btn odc-btn-secondary" onclick="odcSwitchPanel(2)">← Back to Form Builder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Section 1: Generator -->
-        <div id="path-generator" class="path-section active">
+        <div id="path-generator" class="path-section">
+
             <div class="tile">
                 <div class="section-header">
                     <h2 class="section-title">🔢 Random Number Generator</h2>
@@ -1602,6 +2886,7 @@
             if (path === 'biases') toggleBiasCategory('selection', null);
             if (path === 'med-mod') switchMedMod('mediation');
             if (path === 'bradford-hill') renderBradfordHill();
+            if (path === 'online-data') odcInitPanel();
         }
 
         function updateMethodActive(selector, clickedBtn) {
@@ -4903,10 +6188,820 @@
             });
         }
 
+        // ====================================================
+        // ONLINE DATA COLLECTION (ODC) — COMPLETE MODULE
+        // ====================================================
+        let odcSectionCounter = 0;
+        let odcQuestionCounter = 0;
+        let odcAccessToken = null;
+        let odcSpreadsheetId = null;
+        let odcResponseCount = 0;
+        const ODC_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+        const ODC_QUESTION_TYPES = [
+            { value: 'short_text', label: 'Short Text' },
+            { value: 'long_text', label: 'Long Text' },
+            { value: 'mcq', label: 'Multiple Choice' },
+            { value: 'checkbox', label: 'Checkbox' },
+            { value: 'dropdown', label: 'Dropdown' },
+            { value: 'linear_scale', label: 'Linear Scale' },
+            { value: 'date', label: 'Date' },
+            { value: 'number', label: 'Number' },
+            { value: 'matrix', label: 'Matrix / Grid' }
+        ];
+
+        // --- Init ---
+        function odcInitPanel() {
+            odcLoadClientIdStatus();
+            odcLoadSavedFormsList();
+        }
+
+        // --- Panel Navigation ---
+        function odcSwitchPanel(n) {
+            if (n < 1 || n > 3) return;
+            document.querySelectorAll('.odc-panel').forEach(p => p.classList.remove('active'));
+            const targetPanel = document.getElementById(`odc-panel-${n}`);
+            if (targetPanel) targetPanel.classList.add('active');
+            
+            document.querySelectorAll('.odc-step-item').forEach((s, i) => {
+                s.classList.remove('active', 'completed');
+                if (i + 1 < n) s.classList.add('completed');
+                if (i + 1 === n) s.classList.add('active');
+            });
+            document.querySelectorAll('.odc-step-connector').forEach((c, i) => {
+                c.classList.toggle('completed', i + 1 < n);
+            });
+            
+            if (n === 2) {
+                odcLoadSavedFormsList();
+            }
+            if (n === 3) {
+                odcRenderDataEntryForm();
+            }
+            
+            // Scroll to top of the module
+            document.getElementById('path-online-data').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function odcNextStep() {
+            const activeStep = Array.from(document.querySelectorAll('.odc-step-item')).findIndex(s => s.classList.contains('active')) + 1;
+            odcSwitchPanel(activeStep + 1);
+        }
+
+        function odcPrevStep() {
+            const activeStep = Array.from(document.querySelectorAll('.odc-step-item')).findIndex(s => s.classList.contains('active')) + 1;
+            odcSwitchPanel(activeStep - 1);
+        }
+
+        // --- Accordion ---
+        function odcToggleAccordion(n) {
+            const acc = document.getElementById(`odc-acc-${n}`);
+            acc.classList.toggle('open');
+        }
+
+        // --- Client ID ---
+        function odcSaveClientId() {
+            const id = document.getElementById('odc-client-id').value.trim();
+            if (!id || !id.includes('.apps.googleusercontent.com')) {
+                odcShowToast('❌ Invalid Client ID format', '#ef4444');
+                return;
+            }
+            localStorage.setItem('odc_client_id', id);
+            odcLoadClientIdStatus();
+            odcShowToast('✅ Client ID saved successfully!');
+        }
+
+        function odcGetClientId() {
+            return localStorage.getItem('odc_client_id') || '';
+        }
+
+        function odcLoadClientIdStatus() {
+            const id = odcGetClientId();
+            const bar = document.getElementById('odc-status-bar');
+            const text = document.getElementById('odc-status-text');
+            const input = document.getElementById('odc-client-id');
+            if (id) {
+                bar.className = 'odc-status-bar connected';
+                text.textContent = '✅ Google API configured — Client ID saved';
+                if (input) input.value = id;
+            } else {
+                bar.className = 'odc-status-bar disconnected';
+                text.textContent = '⚠️ Google API not configured — Follow the steps below';
+            }
+        }
+
+        // --- Toast ---
+        function odcShowToast(msg, color) {
+            const existing = document.querySelector('.odc-toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = 'odc-toast';
+            if (color) toast.style.borderColor = color;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // --- Form Builder: Add Section ---
+        function odcAddSection() {
+            odcSectionCounter++;
+            const sId = `odc-sec-${odcSectionCounter}`;
+            const container = document.getElementById('odc-sections-container');
+            const div = document.createElement('div');
+            div.className = 'odc-section-card';
+            div.id = sId;
+            div.setAttribute('data-section-num', odcSectionCounter);
+            div.innerHTML = `
+                <div class="odc-section-header">
+                    <span class="odc-section-badge">Section ${container.children.length + 1}</span>
+                    <input type="text" class="odc-section-title-input" placeholder="Section Title (e.g. Demographics)" data-field="title">
+                    <div class="odc-section-actions">
+                        <button title="Move Up" onclick="odcMoveSection('${sId}', -1)">⬆</button>
+                        <button title="Move Down" onclick="odcMoveSection('${sId}', 1)">⬇</button>
+                        <button class="odc-delete-btn" title="Delete Section" onclick="odcRemoveSection('${sId}')">🗑️</button>
+                    </div>
+                </div>
+                <input type="text" class="odc-section-desc-input" placeholder="Section description (optional)" data-field="desc">
+                <div class="odc-questions-list" id="${sId}-questions"></div>
+                <div class="odc-add-question-bar">
+                    <button class="odc-btn odc-btn-secondary" onclick="odcAddQuestion('${sId}')" style="font-size: 0.82rem; padding: 0.5rem 1rem;">+ Add Question</button>
+                </div>
+            `;
+            container.appendChild(div);
+            odcAddQuestion(sId);
+        }
+
+        function odcRemoveSection(sId) {
+            if (!confirm('Delete this section and all its questions?')) return;
+            document.getElementById(sId).remove();
+            odcRenumberSections();
+        }
+
+        function odcMoveSection(sId, dir) {
+            const card = document.getElementById(sId);
+            const container = card.parentElement;
+            const sibling = dir === -1 ? card.previousElementSibling : card.nextElementSibling;
+            if (!sibling) return;
+            if (dir === -1) container.insertBefore(card, sibling);
+            else container.insertBefore(sibling, card);
+            odcRenumberSections();
+        }
+
+        function odcRenumberSections() {
+            const cards = document.querySelectorAll('#odc-sections-container .odc-section-card');
+            cards.forEach((c, i) => {
+                c.querySelector('.odc-section-badge').textContent = `Section ${i + 1}`;
+            });
+        }
+
+        // --- Form Builder: Add Question ---
+        function odcAddQuestion(sId) {
+            odcQuestionCounter++;
+            const qId = `odc-q-${odcQuestionCounter}`;
+            const list = document.getElementById(`${sId}-questions`);
+            const div = document.createElement('div');
+            div.className = 'odc-question-item';
+            div.id = qId;
+
+            const typeOptions = ODC_QUESTION_TYPES.map(t => `<option value="${t.value}">${t.label}</option>`).join('');
+
+            div.innerHTML = `
+                <div class="odc-question-row">
+                    <input type="text" class="odc-question-input" placeholder="Enter your question..." data-field="text">
+                    <select class="odc-type-select" data-field="type" onchange="odcUpdateQuestionType('${qId}')">
+                        ${typeOptions}
+                    </select>
+                    <label class="odc-required-toggle">
+                        <input type="checkbox" data-field="required"> Req.
+                    </label>
+                    <button class="odc-q-delete" onclick="odcRemoveQuestion('${qId}')">✕</button>
+                </div>
+                <div class="odc-question-extra" id="${qId}-extra"></div>
+            `;
+            list.appendChild(div);
+        }
+
+        function odcRemoveQuestion(qId) {
+            document.getElementById(qId).remove();
+        }
+
+        function odcUpdateQuestionType(qId) {
+            const item = document.getElementById(qId);
+            const type = item.querySelector('[data-field="type"]').value;
+            const extra = document.getElementById(`${qId}-extra`);
+            extra.innerHTML = '';
+
+            if (['mcq', 'checkbox', 'dropdown'].includes(type)) {
+                const icon = type === 'mcq' ? '○' : type === 'checkbox' ? '☐' : '▾';
+                extra.innerHTML = `
+                    <div class="odc-options-area" id="${qId}-options">
+                        <div class="odc-option-row">
+                            <span class="odc-option-icon">${icon}</span>
+                            <input type="text" placeholder="Option 1" data-opt>
+                            <button class="odc-option-remove" onclick="this.parentElement.remove()">✕</button>
+                        </div>
+                        <div class="odc-option-row">
+                            <span class="odc-option-icon">${icon}</span>
+                            <input type="text" placeholder="Option 2" data-opt>
+                            <button class="odc-option-remove" onclick="this.parentElement.remove()">✕</button>
+                        </div>
+                        <button class="odc-add-option-btn" onclick="odcAddOption('${qId}', '${icon}')">+ Add Option</button>
+                    </div>
+                `;
+            } else if (type === 'linear_scale') {
+                extra.innerHTML = `
+                    <div class="odc-scale-config">
+                        <label>Min:</label> <input type="number" value="1" data-scale-min>
+                        <label>Max:</label> <input type="number" value="5" data-scale-max>
+                        <label>Low Label:</label> <input type="text" placeholder="e.g. Strongly Disagree" data-scale-low>
+                        <label>High Label:</label> <input type="text" placeholder="e.g. Strongly Agree" data-scale-high>
+                    </div>
+                `;
+            } else if (type === 'matrix') {
+                extra.innerHTML = `
+                    <div class="odc-matrix-config">
+                        <label>Row Labels (one per line):</label>
+                        <textarea placeholder="e.g.\nPhysical Health\nMental Health\nSocial Life" data-matrix-rows></textarea>
+                        <label>Column Labels (one per line):</label>
+                        <textarea placeholder="e.g.\nVery Poor\nPoor\nFair\nGood\nExcellent" data-matrix-cols></textarea>
+                    </div>
+                `;
+            }
+        }
+
+        function odcAddOption(qId, icon) {
+            const area = document.getElementById(`${qId}-options`);
+            const btn = area.querySelector('.odc-add-option-btn');
+            const count = area.querySelectorAll('.odc-option-row').length + 1;
+            const row = document.createElement('div');
+            row.className = 'odc-option-row';
+            row.innerHTML = `
+                <span class="odc-option-icon">${icon}</span>
+                <input type="text" placeholder="Option ${count}" data-opt>
+                <button class="odc-option-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            area.insertBefore(row, btn);
+        }
+
+        // --- Form Config: Build JSON ---
+        function odcGetFormConfig() {
+            const config = {
+                name: document.getElementById('odc-form-name').value.trim() || 'Untitled Form',
+                description: document.getElementById('odc-form-desc').value.trim(),
+                sections: [],
+                createdAt: new Date().toISOString()
+            };
+            document.querySelectorAll('#odc-sections-container .odc-section-card').forEach(sec => {
+                const section = {
+                    title: sec.querySelector('[data-field="title"]').value.trim() || 'Untitled Section',
+                    description: sec.querySelector('[data-field="desc"]')?.value.trim() || '',
+                    questions: []
+                };
+                sec.querySelectorAll('.odc-question-item').forEach(q => {
+                    const qData = {
+                        text: q.querySelector('[data-field="text"]').value.trim() || 'Untitled Question',
+                        type: q.querySelector('[data-field="type"]').value,
+                        required: q.querySelector('[data-field="required"]').checked
+                    };
+                    if (['mcq', 'checkbox', 'dropdown'].includes(qData.type)) {
+                        qData.options = [];
+                        q.querySelectorAll('[data-opt]').forEach(o => {
+                            if (o.value.trim()) qData.options.push(o.value.trim());
+                        });
+                    }
+                    if (qData.type === 'linear_scale') {
+                        const minEl = q.querySelector('[data-scale-min]');
+                        const maxEl = q.querySelector('[data-scale-max]');
+                        qData.scaleMin = minEl ? parseInt(minEl.value) || 1 : 1;
+                        qData.scaleMax = maxEl ? parseInt(maxEl.value) || 5 : 5;
+                        qData.scaleLow = q.querySelector('[data-scale-low]')?.value || '';
+                        qData.scaleHigh = q.querySelector('[data-scale-high]')?.value || '';
+                    }
+                    if (qData.type === 'matrix') {
+                        const rowsEl = q.querySelector('[data-matrix-rows]');
+                        const colsEl = q.querySelector('[data-matrix-cols]');
+                        qData.matrixRows = rowsEl ? rowsEl.value.split('\n').map(r => r.trim()).filter(Boolean) : [];
+                        qData.matrixCols = colsEl ? colsEl.value.split('\n').map(c => c.trim()).filter(Boolean) : [];
+                    }
+                    section.questions.push(qData);
+                });
+                config.sections.push(section);
+            });
+            return config;
+        }
+
+        // --- Form Config: Load from JSON ---
+        function odcLoadFormFromConfig(config) {
+            document.getElementById('odc-form-name').value = config.name || '';
+            document.getElementById('odc-form-desc').value = config.description || '';
+            document.getElementById('odc-sections-container').innerHTML = '';
+            odcSectionCounter = 0;
+            odcQuestionCounter = 0;
+            config.sections.forEach(sec => {
+                odcSectionCounter++;
+                const sId = `odc-sec-${odcSectionCounter}`;
+                const container = document.getElementById('odc-sections-container');
+                const div = document.createElement('div');
+                div.className = 'odc-section-card';
+                div.id = sId;
+                div.innerHTML = `
+                    <div class="odc-section-header">
+                        <span class="odc-section-badge">Section ${container.children.length + 1}</span>
+                        <input type="text" class="odc-section-title-input" placeholder="Section Title" data-field="title" value="${sec.title}">
+                        <div class="odc-section-actions">
+                            <button title="Move Up" onclick="odcMoveSection('${sId}', -1)">⬆</button>
+                            <button title="Move Down" onclick="odcMoveSection('${sId}', 1)">⬇</button>
+                            <button class="odc-delete-btn" title="Delete Section" onclick="odcRemoveSection('${sId}')">🗑️</button>
+                        </div>
+                    </div>
+                    <input type="text" class="odc-section-desc-input" placeholder="Section description" data-field="desc" value="${sec.description || ''}">
+                    <div class="odc-questions-list" id="${sId}-questions"></div>
+                    <div class="odc-add-question-bar">
+                        <button class="odc-btn odc-btn-secondary" onclick="odcAddQuestion('${sId}')" style="font-size: 0.82rem; padding: 0.5rem 1rem;">+ Add Question</button>
+                    </div>
+                `;
+                container.appendChild(div);
+                sec.questions.forEach(qData => {
+                    odcQuestionCounter++;
+                    const qId = `odc-q-${odcQuestionCounter}`;
+                    const list = document.getElementById(`${sId}-questions`);
+                    const qDiv = document.createElement('div');
+                    qDiv.className = 'odc-question-item';
+                    qDiv.id = qId;
+                    const typeOptions = ODC_QUESTION_TYPES.map(t => `<option value="${t.value}" ${t.value === qData.type ? 'selected' : ''}>${t.label}</option>`).join('');
+                    qDiv.innerHTML = `
+                        <div class="odc-question-row">
+                            <input type="text" class="odc-question-input" placeholder="Enter your question..." data-field="text" value="${qData.text}">
+                            <select class="odc-type-select" data-field="type" onchange="odcUpdateQuestionType('${qId}')">${typeOptions}</select>
+                            <label class="odc-required-toggle">
+                                <input type="checkbox" data-field="required" ${qData.required ? 'checked' : ''}> Req.
+                            </label>
+                            <button class="odc-q-delete" onclick="odcRemoveQuestion('${qId}')">✕</button>
+                        </div>
+                        <div class="odc-question-extra" id="${qId}-extra"></div>
+                    `;
+                    list.appendChild(qDiv);
+                    odcUpdateQuestionType(qId);
+                    // Restore options
+                    if (qData.options && qData.options.length) {
+                        const optInputs = qDiv.querySelectorAll('[data-opt]');
+                        qData.options.forEach((o, i) => { if (optInputs[i]) optInputs[i].value = o; });
+                        // Add extra options if needed
+                        for (let i = optInputs.length; i < qData.options.length; i++) {
+                            const icon = qData.type === 'mcq' ? '○' : qData.type === 'checkbox' ? '☐' : '▾';
+                            odcAddOption(qId, icon);
+                            const newInputs = qDiv.querySelectorAll('[data-opt]');
+                            if (newInputs[i]) newInputs[i].value = qData.options[i];
+                        }
+                    }
+                    if (qData.type === 'linear_scale') {
+                        const extra = qDiv.querySelector(`#${qId}-extra`);
+                        if (extra) {
+                            const minI = extra.querySelector('[data-scale-min]'); if (minI) minI.value = qData.scaleMin || 1;
+                            const maxI = extra.querySelector('[data-scale-max]'); if (maxI) maxI.value = qData.scaleMax || 5;
+                            const lowI = extra.querySelector('[data-scale-low]'); if (lowI) lowI.value = qData.scaleLow || '';
+                            const highI = extra.querySelector('[data-scale-high]'); if (highI) highI.value = qData.scaleHigh || '';
+                        }
+                    }
+                    if (qData.type === 'matrix') {
+                        const extra = qDiv.querySelector(`#${qId}-extra`);
+                        if (extra) {
+                            const rowsT = extra.querySelector('[data-matrix-rows]'); if (rowsT) rowsT.value = (qData.matrixRows || []).join('\n');
+                            const colsT = extra.querySelector('[data-matrix-cols]'); if (colsT) colsT.value = (qData.matrixCols || []).join('\n');
+                        }
+                    }
+                });
+            });
+        }
+
+        // --- Save / Load / Export / Import ---
+        function odcSaveFormLocally() {
+            const config = odcGetFormConfig();
+            if (config.sections.length === 0) { odcShowToast('❌ Add at least one section first', '#ef4444'); return; }
+            const forms = JSON.parse(localStorage.getItem('odc_saved_forms') || '{}');
+            const key = config.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() || 'untitled';
+            forms[key] = config;
+            localStorage.setItem('odc_saved_forms', JSON.stringify(forms));
+            odcShowToast('✅ Form saved to browser!');
+            odcLoadSavedFormsList();
+        }
+
+        function odcLoadSavedFormsList() {
+            const forms = JSON.parse(localStorage.getItem('odc_saved_forms') || '{}');
+            const list = document.getElementById('odc-saved-forms-list');
+            if (Object.keys(forms).length === 0) {
+                list.innerHTML = '<p style="color: var(--text-dim); font-size: 0.85rem; font-style: italic;">No saved forms yet.</p>';
+                return;
+            }
+            list.innerHTML = '';
+            Object.entries(forms).forEach(([key, f]) => {
+                const item = document.createElement('div');
+                item.className = 'odc-saved-form-item';
+                const secCount = f.sections ? f.sections.length : 0;
+                const qCount = f.sections ? f.sections.reduce((a, s) => a + (s.questions ? s.questions.length : 0), 0) : 0;
+                item.innerHTML = `
+                    <div>
+                        <span>${f.name}</span><br>
+                        <small>${secCount} sections · ${qCount} questions · ${new Date(f.createdAt).toLocaleDateString()}</small>
+                    </div>
+                    <div class="odc-saved-form-actions">
+                        <button class="odc-btn odc-btn-secondary" onclick='odcLoadSavedForm("${key}")' style="font-size: 0.75rem; padding: 0.3rem 0.8rem;">📂 Load</button>
+                        <button class="odc-btn odc-btn-danger" onclick='odcDeleteSavedForm("${key}")' style="font-size: 0.75rem; padding: 0.3rem 0.8rem;">🗑️</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function odcLoadSavedForm(key) {
+            const forms = JSON.parse(localStorage.getItem('odc_saved_forms') || '{}');
+            if (forms[key]) {
+                odcLoadFormFromConfig(forms[key]);
+                odcShowToast('✅ Form loaded!');
+            }
+        }
+
+        function odcDeleteSavedForm(key) {
+            if (!confirm('Delete this saved form?')) return;
+            const forms = JSON.parse(localStorage.getItem('odc_saved_forms') || '{}');
+            delete forms[key];
+            localStorage.setItem('odc_saved_forms', JSON.stringify(forms));
+            odcLoadSavedFormsList();
+            odcShowToast('🗑️ Form deleted');
+        }
+
+        function odcExportFormJSON() {
+            const config = odcGetFormConfig();
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${config.name.replace(/\s+/g, '_')}_form.json`;
+            a.click(); URL.revokeObjectURL(url);
+            odcShowToast('📤 Form exported as JSON!');
+        }
+
+        function odcImportFormJSON() {
+            document.getElementById('odc-import-file').click();
+        }
+
+        function odcHandleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    odcLoadFormFromConfig(config);
+                    odcShowToast('📥 Form imported!');
+                } catch (err) {
+                    odcShowToast('❌ Invalid JSON file', '#ef4444');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // --- Google OAuth ---
+        function odcInitGoogleAuth() {
+            const clientId = odcGetClientId();
+            if (!clientId) {
+                odcShowToast('❌ Please save your Client ID first (Step 1)', '#ef4444');
+                odcSwitchPanel(1);
+                return;
+            }
+            try {
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: ODC_SCOPES,
+                    callback: (response) => {
+                        if (response.error) {
+                            odcShowToast('❌ Authentication failed: ' + response.error, '#ef4444');
+                            return;
+                        }
+                        odcAccessToken = response.access_token;
+                        odcShowToast('✅ Google authentication successful!');
+                        document.getElementById('odc-auth-area').style.display = 'none';
+                        document.getElementById('odc-post-auth').style.display = 'block';
+                        // Fetch user info
+                        fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                            headers: { 'Authorization': `Bearer ${odcAccessToken}` }
+                        }).then(r => r.json()).then(info => {
+                            document.getElementById('odc-user-email').textContent = info.email || 'Authenticated';
+                        }).catch(() => {});
+                    }
+                });
+                tokenClient.requestAccessToken();
+            } catch (err) {
+                odcShowToast('❌ Google Identity Services not loaded. Check your internet connection.', '#ef4444');
+            }
+        }
+
+        // --- Google Sheets: Create Spreadsheet ---
+        async function odcCreateSpreadsheet() {
+            const config = odcGetFormConfig();
+            if (config.sections.length === 0) {
+                odcShowToast('❌ Build your form first (Step 2)', '#ef4444');
+                return;
+            }
+            if (!odcAccessToken) {
+                odcShowToast('❌ Please sign in with Google first', '#ef4444');
+                return;
+            }
+
+            const btn = document.getElementById('odc-create-sheet-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Creating...';
+
+            try {
+                // 1. Create spreadsheet with tabs
+                const sheets = config.sections.map((sec, i) => ({
+                    properties: { title: sec.title || `Section ${i + 1}`, index: i }
+                }));
+
+                const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${odcAccessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        properties: { title: `[EpiSense] ${config.name}` },
+                        sheets: sheets
+                    })
+                });
+
+                if (!createRes.ok) throw new Error(`HTTP ${createRes.status}`);
+                const spreadsheet = await createRes.json();
+                odcSpreadsheetId = spreadsheet.spreadsheetId;
+
+                // 2. Write headers to each tab
+                const requests = [];
+                config.sections.forEach((sec, i) => {
+                    const sheetTitle = spreadsheet.sheets[i].properties.title;
+                    const headers = ['Timestamp'];
+                    sec.questions.forEach(q => {
+                        if (q.type === 'matrix' && q.matrixRows) {
+                            q.matrixRows.forEach(row => headers.push(`${q.text} [${row}]`));
+                        } else {
+                            headers.push(q.text);
+                        }
+                    });
+                    requests.push({
+                        range: `'${sheetTitle}'!A1`,
+                        values: [headers]
+                    });
+                });
+
+                await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${odcSpreadsheetId}/values:batchUpdate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${odcAccessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        valueInputOption: 'RAW',
+                        data: requests
+                    })
+                });
+
+                // 3. Delete default Sheet1 if it exists
+                const defaultSheet = spreadsheet.sheets.find(s => s.properties.title === 'Sheet1');
+                if (defaultSheet && spreadsheet.sheets.length > 1) {
+                    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${odcSpreadsheetId}:batchUpdate`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${odcAccessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            requests: [{ deleteSheet: { sheetId: defaultSheet.properties.sheetId } }]
+                        })
+                    });
+                }
+
+                // 4. Show success
+                const sheetUrl = `https://docs.google.com/spreadsheets/d/${odcSpreadsheetId}`;
+                document.getElementById('odc-sheet-info').style.display = 'block';
+                const linkEl = document.getElementById('odc-sheet-url');
+                linkEl.href = sheetUrl;
+                linkEl.textContent = sheetUrl;
+
+                // Save to localStorage for backup
+                const forms = JSON.parse(localStorage.getItem('odc_saved_forms') || '{}');
+                const key = config.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                config.spreadsheetId = odcSpreadsheetId;
+                config.spreadsheetUrl = sheetUrl;
+                forms[key] = config;
+                localStorage.setItem('odc_saved_forms', JSON.stringify(forms));
+
+                // Also backup form config to Google Drive
+                odcBackupToDrive(config);
+
+                // Show data entry form  
+                document.getElementById('odc-data-entry').style.display = 'block';
+                odcRenderDataEntryForm();
+                odcResponseCount = 0;
+                document.getElementById('odc-response-count').textContent = '0 responses';
+
+                odcShowToast('✅ Google Sheet created successfully!');
+            } catch (err) {
+                odcShowToast('❌ Error: ' + err.message, '#ef4444');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📊 Create Google Sheet for This Form';
+            }
+        }
+
+        // --- Backup form config to Google Drive ---
+        async function odcBackupToDrive(config) {
+            if (!odcAccessToken) return;
+            try {
+                const metadata = {
+                    name: `${config.name}_form_config.json`,
+                    mimeType: 'application/json'
+                };
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' }));
+                await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${odcAccessToken}` },
+                    body: form
+                });
+            } catch (e) { /* silent fail for backup */ }
+        }
+
+        function odcCopySheetLink() {
+            const url = document.getElementById('odc-sheet-url').href;
+            navigator.clipboard.writeText(url).then(() => odcShowToast('📋 Link copied!')).catch(() => {});
+        }
+
+        // --- Data Entry Form Rendering ---
+        function odcRenderDataEntryForm() {
+            const config = odcGetFormConfig();
+            const form = document.getElementById('odc-entry-form');
+            form.innerHTML = '';
+            if (config.sections.length === 0) {
+                form.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">Build your form first to see the data entry view.</p>';
+                return;
+            }
+            config.sections.forEach((sec, si) => {
+                const secDiv = document.createElement('div');
+                secDiv.className = 'odc-entry-section';
+                secDiv.innerHTML = `<h5>${sec.title}</h5>${sec.description ? `<p style="color: var(--text-dim); font-size: 0.82rem; margin-bottom: 1rem;">${sec.description}</p>` : ''}`;
+                sec.questions.forEach((q, qi) => {
+                    const fieldId = `odc-entry-s${si}-q${qi}`;
+                    const reqStar = q.required ? '<span class="odc-required-star">*</span>' : '';
+                    const fieldDiv = document.createElement('div');
+                    fieldDiv.className = 'odc-entry-field';
+                    let fieldHTML = `<label>${q.text}${reqStar}</label>`;
+
+                    switch (q.type) {
+                        case 'short_text':
+                            fieldHTML += `<input type="text" id="${fieldId}" placeholder="Enter response...">`;
+                            break;
+                        case 'long_text':
+                            fieldHTML += `<textarea id="${fieldId}" placeholder="Enter detailed response..."></textarea>`;
+                            break;
+                        case 'number':
+                            fieldHTML += `<input type="number" id="${fieldId}" placeholder="Enter number...">`;
+                            break;
+                        case 'date':
+                            fieldHTML += `<input type="date" id="${fieldId}">`;
+                            break;
+                        case 'mcq':
+                            fieldHTML += `<div class="odc-entry-radio-group" id="${fieldId}">`;
+                            (q.options || []).forEach((opt, oi) => {
+                                fieldHTML += `<label><input type="radio" name="${fieldId}" value="${opt}"> ${opt}</label>`;
+                            });
+                            fieldHTML += `</div>`;
+                            break;
+                        case 'checkbox':
+                            fieldHTML += `<div class="odc-entry-checkbox-group" id="${fieldId}">`;
+                            (q.options || []).forEach((opt, oi) => {
+                                fieldHTML += `<label><input type="checkbox" value="${opt}"> ${opt}</label>`;
+                            });
+                            fieldHTML += `</div>`;
+                            break;
+                        case 'dropdown':
+                            fieldHTML += `<select id="${fieldId}"><option value="">Select...</option>`;
+                            (q.options || []).forEach(opt => {
+                                fieldHTML += `<option value="${opt}">${opt}</option>`;
+                            });
+                            fieldHTML += `</select>`;
+                            break;
+                        case 'linear_scale':
+                            const sMin = q.scaleMin || 1, sMax = q.scaleMax || 5;
+                            fieldHTML += `<div class="odc-scale-display" id="${fieldId}">`;
+                            for (let v = sMin; v <= sMax; v++) {
+                                fieldHTML += `<label><input type="radio" name="${fieldId}" value="${v}"><span>${v}</span></label>`;
+                            }
+                            fieldHTML += `</div>`;
+                            if (q.scaleLow || q.scaleHigh) {
+                                fieldHTML += `<div class="odc-scale-labels"><span>${q.scaleLow || ''}</span><span>${q.scaleHigh || ''}</span></div>`;
+                            }
+                            break;
+                        case 'matrix':
+                            fieldHTML += `<table class="odc-matrix-table" id="${fieldId}"><thead><tr><th></th>`;
+                            (q.matrixCols || []).forEach(c => { fieldHTML += `<th>${c}</th>`; });
+                            fieldHTML += `</tr></thead><tbody>`;
+                            (q.matrixRows || []).forEach((r, ri) => {
+                                fieldHTML += `<tr><td>${r}</td>`;
+                                (q.matrixCols || []).forEach(c => {
+                                    fieldHTML += `<td><input type="radio" name="${fieldId}_row${ri}" value="${c}"></td>`;
+                                });
+                                fieldHTML += `</tr>`;
+                            });
+                            fieldHTML += `</tbody></table>`;
+                            break;
+                    }
+                    fieldDiv.innerHTML = fieldHTML;
+                    secDiv.appendChild(fieldDiv);
+                });
+                form.appendChild(secDiv);
+            });
+        }
+
+        function odcClearEntryForm() {
+            document.querySelectorAll('#odc-entry-form input, #odc-entry-form textarea, #odc-entry-form select').forEach(el => {
+                if (el.type === 'radio' || el.type === 'checkbox') el.checked = false;
+                else el.value = '';
+            });
+        }
+
+        // --- Submit Response to Google Sheet ---
+        async function odcSubmitResponse() {
+            if (!odcAccessToken || !odcSpreadsheetId) {
+                odcShowToast('❌ Create Google Sheet first', '#ef4444');
+                return;
+            }
+            const config = odcGetFormConfig();
+            const timestamp = new Date().toLocaleString();
+
+            try {
+                // Get spreadsheet info for tab names
+                const infoRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${odcSpreadsheetId}`, {
+                    headers: { 'Authorization': `Bearer ${odcAccessToken}` }
+                });
+                const info = await infoRes.json();
+
+                const requests = [];
+                config.sections.forEach((sec, si) => {
+                    const sheetTitle = info.sheets[si] ? info.sheets[si].properties.title : sec.title;
+                    const values = [timestamp];
+                    sec.questions.forEach((q, qi) => {
+                        const fieldId = `odc-entry-s${si}-q${qi}`;
+                        switch (q.type) {
+                            case 'short_text': case 'long_text': case 'number': case 'date': case 'dropdown':
+                                const el = document.getElementById(fieldId);
+                                values.push(el ? el.value : '');
+                                break;
+                            case 'mcq': case 'linear_scale':
+                                const checked = document.querySelector(`input[name="${fieldId}"]:checked`);
+                                values.push(checked ? checked.value : '');
+                                break;
+                            case 'checkbox':
+                                const cbs = document.querySelectorAll(`#${fieldId} input:checked`);
+                                values.push(Array.from(cbs).map(c => c.value).join(', '));
+                                break;
+                            case 'matrix':
+                                (q.matrixRows || []).forEach((r, ri) => {
+                                    const mc = document.querySelector(`input[name="${fieldId}_row${ri}"]:checked`);
+                                    values.push(mc ? mc.value : '');
+                                });
+                                break;
+                            default:
+                                values.push('');
+                        }
+                    });
+                    requests.push({ range: `'${sheetTitle}'!A:A`, values: [values] });
+                });
+
+                // Use append to add rows to each section's sheet
+                for (const r of requests) {
+                    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${odcSpreadsheetId}/values/${encodeURIComponent(r.range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${odcAccessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ values: r.values })
+                    });
+                }
+
+                odcResponseCount++;
+                document.getElementById('odc-response-count').textContent = `${odcResponseCount} response${odcResponseCount !== 1 ? 's' : ''}`;
+                odcClearEntryForm();
+                odcShowToast('✅ Response submitted to Google Sheet!');
+            } catch (err) {
+                odcShowToast('❌ Submit error: ' + err.message, '#ef4444');
+            }
+        }
+
         window.onload = () => {
-            switchPath('generator', 1);
+            switchPath('online-data', 1);
         };
     </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 
 </html>
