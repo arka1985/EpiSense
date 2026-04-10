@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#003B5C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NutriSense">
+  <meta name="description" content="Comprehensive Indian food nutrition calculator based on IFCT 2017 data. Search 542 foods, calculate meals, compare with WHO/RDA standards.">
+  <title>NutriSense India — Nutritional Value Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== TOP HEADER ===== -->
+  <header class="app-header">
+    <img src="icon-192.png" alt="NutriSense" class="app-logo">
+    <div class="app-title-block">
+      <div class="app-title">NutriSense India</div>
+      <div class="app-subtitle">IFCT 2017 · NIN Hyderabad</div>
+    </div>
+    <div id="bhashini-translation" class="bhashini-plugin-container bhashini-circle-wrap dont-translate bhashini-skip-translation bhashini-dropdown" title="Translate this page!"></div>
+    <div class="view-toggle" id="viewToggle">
+      <button class="view-toggle-btn active" id="btnMobileView" title="Mobile View">📱</button>
+      <button class="view-toggle-btn" id="btnDesktopView" title="Desktop View">🖥️</button>
+    </div>
+    <button class="header-action" id="btnInstallHeader" title="Install App" style="display:none">📲</button>
+  </header>
+
+  <!-- ===== SEARCH BAR ===== -->
+  <div class="search-container">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="search" id="searchInput" placeholder="Search foods, nutrients, local names..." autocomplete="off">
+      <button class="search-clear" id="searchClear">✕</button>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="app-main">
+
+    <!-- HOME / SEARCH SCREEN -->
+    <section class="screen active" id="screenHome">
+      <div class="who-banner">
+        <span class="who-banner-icon">ℹ️</span>
+        <div class="who-banner-text">
+          <strong>542 Indian foods</strong> with detailed nutritional values from the Indian Food Composition Tables 2017, published by the National Institute of Nutrition, Hyderabad.
+        </div>
+      </div>
+
+      <div class="queries-section" id="queriesSection">
+        <div class="section-title">Query NutriSense AI</div>
+        
+        <!-- Smart Query Chips -->
+        <div class="query-chips-wrap" style="padding: 4px 16px 12px; margin: 0 -16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;">
+          <button class="smart-query-btn" onclick="runSmartQuery('vitc', 'all', 'Top Vitamin C Foods')">🍋 Vitamin C</button>
+          <button class="smart-query-btn" onclick="runSmartQuery('protcnt', 'nonveg', 'Highest Protein in Meat/Fish')">🥩 High Protein (Animal)</button>
+          <button class="smart-query-btn" onclick="runSmartQuery('protcnt', 'veg', 'Highest Protein in Veg')">🌱 High Protein (Veg)</button>
+          <button class="smart-query-btn" onclick="runSmartQuery('ca', 'all', 'Calcium Rich Foods')">🦴 Calcium</button>
+          <button class="smart-query-btn" onclick="runSmartQuery('fe', 'all', 'Iron Rich Foods')">🩸 Iron</button>
+          <button class="smart-query-btn" onclick="runSmartQuery('ergcal', 'all', 'Vitamin D Sources')">☀️ Vitamin D</button>
+          <button class="smart-query-btn" onclick="runSmartQuery('fibtg', 'all', 'High Fiber Foods')">🌾 High Fiber</button>
+          <button class="smart-query-btn" id="btnCustomQuery" style="background: var(--who-navy); color: white;">🔍 Advanced Query</button>
+        </div>
+
+        <div class="query-chart-container" id="queryChartContainer">
+          <div class="query-chart-title" id="queryChartTitle">Top Foods</div>
+          <div class="query-chart-subtitle" id="queryChartSubtitle">Nutritional Value per 100g</div>
+          <div class="query-canvas-wrap" style="position: relative; height: 350px; width: 100%; padding-top: 10px;">
+            <canvas id="queryCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Food Groups <span style="font-size: 11px; font-weight: normal; color: var(--text-tertiary); float: right; margin-top: 2px;">(Per 100g)</span></div>
+      <div class="group-grid" id="groupGrid"></div>
+
+      <div id="searchResults" style="display:none">
+        <div class="search-lang-tip" id="searchLangTip" style="display:none">
+          <span class="search-lang-tip-icon">🌐</span>
+          <div class="search-lang-tip-text">
+            <strong>Multilingual Search Active</strong> — matching across English, Hindi, Bengali, Tamil, Telugu, Kannada, Malayalam, Gujarati, Marathi, Odia, Punjabi, Kashmiri, Sanskrit & more.
+          </div>
+        </div>
+        <div class="results-count" id="resultsCount"></div>
+        <ul class="food-list" id="foodList"></ul>
+      </div>
+    </section>
+
+    <!-- FOOD DETAIL SCREEN -->
+    <section class="screen" id="screenDetail">
+      <div class="detail-hero" id="detailHero">
+        <button class="detail-back" id="detailBack">← Back</button>
+        <div class="detail-food-name" id="detailName"></div>
+        <div class="detail-food-scie" id="detailScie"></div>
+        <div class="detail-food-group" id="detailGroup"></div>
+        <button class="detail-add-meal" id="detailAddMeal" title="Add to Meal">+</button>
+      </div>
+      <div class="macro-rings" id="macroRings"></div>
+      <div id="nutrientSections"></div>
+    </section>
+
+    <!-- MEAL CALCULATOR SCREEN -->
+    <section class="screen" id="screenMeal">
+      <div class="meal-header-card" id="mealHeader">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div class="meal-title">Meal Calculator</div>
+            <div class="meal-subtitle">Add foods to calculate total nutrition</div>
+          </div>
+          <button id="btnProfileSettings" class="btn-profile-meal" title="Setup Demographics">
+            <span style="margin-right: 4px; font-size: 14px;">⚙️</span> Profile
+          </button>
+        </div>
+        <div class="meal-total-kcal" id="mealTotalKcal" style="margin-top: 16px;">0</div>
+        <div class="meal-total-label">Total Kilocalories</div>
+        <div class="meal-macros-bar" id="mealMacrosBar"></div>
+        <div class="meal-macros-legend" id="mealMacrosLegend"></div>
+      </div>
+      
+      <!-- DGI 2024 Adherence Evaluation -->
+      <div class="dgi-evaluation-card" id="dgiCard" style="display:none">
+        <div class="dgi-title">Dietary Guidelines for Indians (DGI 2024)</div>
+        <div class="dgi-subtitle" style="font-size: 14px; font-weight: 800; color: var(--who-teal); margin-bottom: 12px; margin-top: -6px;">My Plate for the Day</div>
+        <div class="dgi-status" id="dgiStatus" style="display:none;"></div>
+        <div class="dgi-feedback" id="dgiFeedback"></div>
+      </div>
+
+      <button class="meal-add-btn" id="mealAddBtn">+ Add Food to Meal</button>
+      <div id="mealClearWrap" style="display:none">
+        <button class="meal-clear-btn" id="mealClearBtn">🗑️ Clear All Foods</button>
+      </div>
+      <div id="mealItems"></div>
+      <div id="mealNutrientSummary"></div>
+    </section>
+
+
+
+    <!-- ABOUT / INSTALL SCREEN -->
+    <section class="screen" id="screenAbout">
+      <div class="about-card">
+        <h3>📲 Install as App</h3>
+        <p style="margin-bottom:12px">Install NutriSense on your phone for offline access and a native app experience.</p>
+        <button class="install-btn" id="btnInstall">
+          <span>📲</span> Install NutriSense App
+        </button>
+        <div class="install-badge" id="installStatus">✓ Works offline after install</div>
+      </div>
+
+      <div class="about-card">
+        <h3>📊 About This App</h3>
+        <p>NutriSense India provides comprehensive nutritional data for <strong>542 Indian foods</strong> based on the <strong>Indian Food Composition Tables 2017 (IFCT 2017)</strong>.</p>
+        <br>
+        <p>Data source: <a class="credit-link" href="http://ifct2017.com/" target="_blank">IFCT 2017</a> by T. Longvah, R. Ananthan, K. Bhaskarachary and K. Venkaiah, published by the National Institute of Nutrition (NIN), Indian Council of Medical Research (ICMR).</p>
+        <br>
+        <p>Code data from <a class="credit-link" href="https://github.com/nodef/ifct2017" target="_blank">nodef/ifct2017</a> GitHub repository.</p>
+      </div>
+
+      <div class="about-card">
+        <h3>📋 Nutrient Reference Values</h3>
+        <p>Daily reference values are based on adult RDA (Recommended Dietary Allowances) from international guidelines including WHO, US FDA, and ICMR standards for a 2000 kcal diet.</p>
+      </div>
+
+      <div class="about-card">
+        <h3>🌐 Multilingual Search</h3>
+        <p>Search foods by their English name, scientific name, or local names in Hindi, Bengali, Tamil, Telugu, Kannada, Malayalam, Gujarati, Marathi, Odia, Punjabi, Kashmiri, Khasi, Manipuri, Sanskrit, and Urdu.</p>
+      </div>
+
+      <div class="about-card" style="text-align: center; margin-top: 32px; background: transparent; border: none; box-shadow: none;">
+        <p style="font-size: 12px; color: var(--text-tertiary);">Designed & Developed by <strong>Arka</strong></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== BOTTOM NAVIGATION ===== -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-screen="screenHome">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </button>
+
+    <button class="nav-item" data-screen="screenMeal">
+      <span class="nav-icon">🍽️</span>
+      <span class="nav-label">Meal</span>
+    </button>
+    <button class="nav-item" data-screen="screenAbout">
+      <span class="nav-icon">ℹ️</span>
+      <span class="nav-label">About</span>
+    </button>
+  </nav>
+
+  <!-- ===== PORTION MODAL ===== -->
+  <div class="modal-overlay" id="portionModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="portionModalTitle">Add to Meal</div>
+      <div class="modal-subtitle" id="portionModalSubtitle">Set portion size (per 100g values shown)</div>
+      <div class="portion-input-group">
+        <input type="number" class="portion-input" id="portionInput" value="100" min="1" max="2000" step="10">
+        <span class="portion-unit">grams</span>
+      </div>
+      <div class="portion-presets">
+        <button class="preset-btn" data-val="25">25g</button>
+        <button class="preset-btn" data-val="50">50g</button>
+        <button class="preset-btn selected" data-val="100">100g</button>
+        <button class="preset-btn" data-val="150">150g</button>
+        <button class="preset-btn" data-val="200">200g</button>
+        <button class="preset-btn" data-val="250">250g</button>
+      </div>
+      <button class="modal-confirm" id="portionConfirm">Add to Meal</button>
+      <button class="modal-cancel" id="portionCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE MODAL ===== -->
+  <div class="modal-overlay" id="profileModal" style="display:none">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Your Profile</div>
+      <div class="modal-subtitle">Used to personalize DGI 2024 Daily Plate Guidelines</div>
+      <div style="display:flex; flex-direction:column; gap:16px; margin: 16px 0;">
+        <div>
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Age & Gender Group</label>
+          <select id="profileGroup" class="query-select" style="margin-top:4px; padding:8px 12px;">
+            <option value="adult_m">Adult Male</option>
+            <option value="adult_f">Adult Female</option>
+            <option value="teen_m">Teen Boy (13-18y)</option>
+            <option value="teen_f">Teen Girl (13-18y)</option>
+            <option value="child">Child (4-12y)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Activity Level</label>
+          <select id="profileActivity" class="query-select" style="margin-top:4px; padding:8px 12px;">
+            <option value="sedentary">Sedentary (Light work)</option>
+            <option value="moderate">Moderate (Active)</option>
+            <option value="heavy">Heavy (Physical labor)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Weight (kg) - Optional</label>
+          <input type="number" id="profileWeight" class="portion-input" style="width:100%; margin-top:4px;" placeholder="e.g. 65">
+        </div>
+      </div>
+      <button class="modal-confirm" id="profileSave">Save Profile</button>
+      <button class="modal-cancel" id="profileCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===== CUSTOM QUERY MODAL ===== -->
+  <div class="modal-overlay" id="customQueryModal" style="display:none">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Advanced Query</div>
+      <div class="modal-subtitle">Search database by any nutrient</div>
+      <div style="display:flex; flex-direction:column; gap:16px; margin: 16px 0;">
+        <div>
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Select Nutrient</label>
+          <select id="advQueryNutrient" class="query-select" style="margin-top:4px; padding:8px 12px;"></select>
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Select Category</label>
+          <select id="advQueryCategory" class="query-select" style="margin-top:4px; padding:8px 12px;">
+            <option value="all">All Foods</option>
+            <option value="veg">Vegetarian</option>
+            <option value="nonveg">Animal Sources</option>
+            <optgroup label="Specific Food Groups" id="advQueryGroups"></optgroup>
+          </select>
+        </div>
+      </div>
+      <button class="modal-confirm" id="advQueryRun">Run Query</button>
+      <button class="modal-cancel" id="advQueryCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Data & App Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <!-- Bhashini Translation Plugin Array -->
+  <!-- Bhashini Translation Plugin v3 -->
+  <script 
+    async 
+    src="https://translation-plugin.bhashini.co.in/v3/website_translation_utility.js"
+    is-redirection="true" 
+    language-icon-color="#00A99D">
+  </script>
+</body>
+</html>

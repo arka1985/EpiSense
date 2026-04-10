@@ -11,9 +11,10 @@
     <link rel="stylesheet" href="main.css">
     <style>
         .module-container {
-            max-width: 1100px;
+            max-width: var(--container-width, 1100px);
             margin: 2rem auto;
             padding: 2rem;
+            transition: max-width 0.5s ease;
         }
 
         @media (max-width: 768px) {
@@ -127,6 +128,41 @@
             color: var(--text-dim);
             font-size: 1rem;
             line-height: 1.6;
+        }
+
+        /* --- Growth Chart Elite Responsiveness --- */
+        .growth-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-top: 1rem;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .path-section#path-growth-chart .tile {
+                padding: 1.5rem !important;
+            }
+            .growth-grid {
+                grid-template-columns: 1fr;
+            }
+            .growth-grid > div:first-child {
+                position: static !important;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 1rem;
+            }
+            .growth-grid .odc-setup-card {
+                margin-bottom: 0 !important;
+            }
+        }
+        
+        #path-growth-chart.path-section {
+            max-width: none !important;
+            width: 100% !important;
         }
 
         /* Interactive Simulation Controls */
@@ -2194,6 +2230,10 @@
                 <span class="btn-icon">📈</span>
                 <span>Growth Chart Tool</span>
             </div>
+            <div class="nav-btn" id="btn-11" onclick="switchPath('nutrition', 11)">
+                <span class="btn-icon">🍎</span>
+                <span>Nutrition Tool</span>
+            </div>
         </div>
 
         <!-- Section 0: Online Data Collection -->
@@ -2868,70 +2908,161 @@
             </div>
         </div>
 
-        <!-- Section 10: Growth Chart Tool -->
-        <div id="path-growth-chart" class="path-section">
-            <div class="tile">
-                <div class="section-header">
-                    <h2 class="section-title">📈 WHO Growth Chart Tool (0-5 Years)</h2>
-                    <p class="section-subtitle">Based on WHO Anthro Standards — Evaluate nutritional status via Z-scores and growth curves.</p>
+        <!-- Section 10: Growth Chart Tool (Elite Dashboard) -->
+        <div id="path-growth-chart" class="path-section" style="--growth-accent: #0ea5e9; --growth-mesh: radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0, transparent 50%), radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.3) 0, transparent 50%); min-height: 100vh;">
+            <div class="tile" style="background: var(--growth-mesh); border: 1px solid rgba(255,255,255,0.05); transition: background 0.8s ease; width: 100%; max-width: none;">
+                
+                <div class="section-header" style="text-align: left; border-left: 4px solid var(--growth-accent); padding-left: 1.5rem; transition: border-color 0.4s;">
+                    <h2 class="section-title" style="font-size: 2rem; letter-spacing: -0.02em;">Digital growth <span style="color: var(--growth-accent); transition: color 0.4s;">Dashboard</span></h2>
+                    <p class="section-subtitle" style="max-width: 600px;">WHO Child Growth Standard Monitoring — Longitudinal Analysis v2.0</p>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
-                    <!-- Inputs -->
-                    <div class="odc-setup-card" style="position: sticky; top: 1rem;">
-                        <h4 style="color: var(--text-white); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span>👶</span> Child Details
-                        </h4>
-                        <div class="input-group">
-                            <label>Sex</label>
-                            <select id="growth-sex" onchange="updateGrowthChart()">
-                                <option value="male">Boy</option>
-                                <option value="female">Girl</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Age (Months: 0-60)</label>
-                            <input type="number" id="growth-age" min="0" max="60" value="24" oninput="updateGrowthChart()">
-                        </div>
-                        <div class="input-group">
-                            <label>Weight (kg)</label>
-                            <input type="number" id="growth-weight" step="0.1" value="12" oninput="updateGrowthChart()">
-                        </div>
-                        <div class="input-group">
-                            <label>Length/Height (cm)</label>
-                            <input type="number" id="growth-height" step="0.1" value="86" oninput="updateGrowthChart()">
-                        </div>
+                <div class="growth-grid">
+                    
+                    <!-- Unified Sidebar: Controls + Metrics + History -->
+                    <div style="display: flex; flex-direction: column; gap: 1rem; position: sticky; top: 1.5rem;">
                         
-                        <div style="margin-top: 1.5rem; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">
-                            <h4 style="color: #38bdf8; font-size: 0.95rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
-                                <span>📊</span> Clinical Interpretation
-                            </h4>
-                            <div id="growth-interpretation" style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
-                                Enter child details to see Z-score and WHO nutritional status.
+                        <!-- Sex Toggle -->
+                        <div class="odc-setup-card" style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); padding: 1rem;">
+                            <label style="display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--growth-accent); font-weight: 700; margin-bottom: 0.8rem;">Child Profile</label>
+                            <div style="display: flex; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                                <button onclick="setGrowthSex('male')" id="sex-btn-male" style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: var(--growth-accent); color: white; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.4s;">Boy</button>
+                                <button onclick="setGrowthSex('female')" id="sex-btn-female" style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text-dim); cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.4s;">Girl</button>
+                                <input type="hidden" id="growth-sex" value="male">
                             </div>
                         </div>
 
-                        <div style="margin-top: 1.5rem; font-size: 0.72rem; color: rgba(255,255,255,0.4); line-height: 1.5; font-style: italic;">
-                            <strong>Proper Citation:</strong> WHO Child Growth Standards based on length/height, weight and age. Acta Paediatrica, 2006; Suppl 450: 76-85. Implementing the WHO Anthro Software LMS methodology.
+                        <!-- Precision Inputs -->
+                        <div class="odc-setup-card" style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="input-group" style="margin-bottom: 1.2rem;">
+                                <label style="font-size: 0.75rem; color: var(--text-dim);">Post-Natal Age (Months)</label>
+                                <input type="number" id="growth-age" min="0" max="60" value="24" oninput="updateGrowthChart()" 
+                                       style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; width: 100%; font-size: 1.1rem; font-weight: 700;">
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.5rem;">
+                                <div class="input-group">
+                                    <label style="font-size: 0.75rem; color: var(--text-dim);">Weight (kg)</label>
+                                    <input type="number" id="growth-weight" step="0.1" value="12" oninput="updateGrowthChart()"
+                                           style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; width: 100%; font-size: 1.1rem; font-weight: 700;">
+                                </div>
+                                <div class="input-group">
+                                    <label style="font-size: 0.75rem; color: var(--text-dim);">Height (cm)</label>
+                                    <input type="number" id="growth-height" step="0.1" value="86" oninput="updateGrowthChart()"
+                                           style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: white; width: 100%; font-size: 1.1rem; font-weight: 700;">
+                                </div>
+                            </div>
+                            <button onclick="recordGrowthPoint()" style="width: 100%; background: var(--growth-accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: transform 0.2s;">
+                                <span>➕</span> Capture Trajectory Point
+                            </button>
+                        </div>
+
+                        <!-- Sidebar Z-Score Readout -->
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                            <div id="metric-wfa" class="odc-setup-card" style="background: rgba(15, 23, 42, 0.7); padding: 1.2rem; border: 1px solid rgba(255,255,255,0.05);">
+                                <div style="font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.4rem; letter-spacing: 0.05em;">Weight-for-Age (Z)</div>
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <span id="val-z-wfa" style="font-size: 1.8rem; font-weight: 800; color: #10b981;">--</span>
+                                    <span id="badge-wfa" style="font-size: 0.7rem; font-weight: 600;">Normal</span>
+                                </div>
+                            </div>
+                            <div id="metric-hfa" class="odc-setup-card" style="background: rgba(15, 23, 42, 0.7); padding: 1.2rem; border: 1px solid rgba(255,255,255,0.05);">
+                                <div style="font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.4rem; letter-spacing: 0.05em;">Height-for-Age (Z)</div>
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <span id="val-z-hfa" style="font-size: 1.8rem; font-weight: 800; color: #10b981;">--</span>
+                                    <span id="badge-hfa" style="font-size: 0.7rem; font-weight: 600;">Normal</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Legend & Interpretation Card -->
+                        <div class="odc-setup-card" style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 1.2rem; margin-bottom: 1rem;">
+                            <div style="font-size: 0.8rem; font-weight: 800; color: white; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                                📊 CHART LEGEND & THRESHOLDS
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 24px; height: 4px; background: #10b981; border-radius: 2px;"></div>
+                                    <span style="font-size: 0.75rem; color: var(--text-dim);"><strong style="color: #fff;">Median</strong> (Normal)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 24px; height: 2px; border-top: 2px dashed #f59e0b;"></div>
+                                    <span style="font-size: 0.75rem; color: var(--text-dim);"><strong style="color: #f59e0b;">±2 SD</strong> (Moderate)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 24px; height: 2px; border-top: 2px dashed #ef4444;"></div>
+                                    <span style="font-size: 0.75rem; color: var(--text-dim);"><strong style="color: #ef4444;">±3 SD</strong> (Severe)</span>
+                                </div>
+                                <div style="margin-top: 6px; padding: 8px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                                    <div style="font-size: 0.7rem; color: #10b981; font-weight: 700; margin-bottom: 2px;">Healthy Growth Zone</div>
+                                    <div style="font-size: 0.65rem; color: rgba(255,255,255,0.6); line-height: 1.3;">Shaded Green = Normal developmental range.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trajectory History List -->
+                        <div class="odc-setup-card" style="background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.1); padding: 1rem;">
+                            <h5 style="color: var(--text-white); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 1rem; display: flex; justify-content: space-between;">
+                                <span>📜 History Log</span>
+                                <span onclick="clearGrowthHistory()" style="font-size: 0.6rem; color: #ef4444; cursor: pointer; font-weight: 400;">Clear All</span>
+                            </h5>
+                            <div id="growth-history-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.75rem;">
+                                <div style="color: var(--text-dim); text-align: center; font-style: italic; padding: 1rem;">No records logged.</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Charts Area -->
-                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                        <div class="odc-setup-card" style="padding: 1.5rem; background: rgba(15, 23, 42, 0.4);">
-                            <h4 style="color: var(--text-white); margin-bottom: 1.5rem; font-size: 0.95rem; letter-spacing: 0.05em; text-transform: uppercase;">⚖️ Weight-for-Age (WFA)</h4>
-                            <div id="chart-wfa-container" style="width: 100%; min-height: 280px; position: relative;">
-                                <!-- SVG Chart will be injected here -->
+                    <!-- Main Chart Dashboard -->
+                    <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+                        
+                        <!-- High-Resolution Clinical Grid (Balanced Aspect Ratio) -->
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 2.5rem;">
+                            <div class="odc-setup-card" style="background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem; transition: all 0.3s ease;">
+                                <div style="padding: 1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem 1rem; background: rgba(0,0,0,0.2); margin: -0.5rem -0.5rem 0.5rem -0.5rem; border-radius: 12px 12px 0 0;">
+                                    <span style="font-size: 1rem; font-weight: 800; color: white; letter-spacing: 0.02em;">⚖️ Weight-for-Age (WFA)</span>
+                                    <button onclick="exportGrowthChart('chart-wfa-container', 'WFA')" style="background: var(--growth-accent); border: none; color: white; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">💾 DOWNLOAD</button>
+                                </div>
+                                <div id="chart-wfa-container" style="width: 100%; min-height: 600px; aspect-ratio: 4/3; position: relative; overflow: visible;"></div>
+                            </div>
+                            
+                            <div class="odc-setup-card" style="background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem; transition: all 0.3s ease;">
+                                <div style="padding: 1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem 1rem; background: rgba(0,0,0,0.2); margin: -0.5rem -0.5rem 0.5rem -0.5rem; border-radius: 12px 12px 0 0;">
+                                    <span style="font-size: 1rem; font-weight: 800; color: white; letter-spacing: 0.02em;">📏 Height-for-Age (HFA)</span>
+                                    <button onclick="exportGrowthChart('chart-lhfa-container', 'HFA')" style="background: var(--growth-accent); border: none; color: white; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">💾 DOWNLOAD</button>
+                                </div>
+                                <div id="chart-lhfa-container" style="width: 100%; min-height: 600px; aspect-ratio: 4/3; position: relative; overflow: visible;"></div>
                             </div>
                         </div>
-                        
-                        <div class="odc-setup-card" style="padding: 1.5rem; background: rgba(15, 23, 42, 0.4);">
-                            <h4 style="color: var(--text-white); margin-bottom: 1.5rem; font-size: 0.95rem; letter-spacing: 0.05em; text-transform: uppercase;">📏 Height-for-Age (HFA)</h4>
-                            <div id="chart-lhfa-container" style="width: 100%; min-height: 280px; position: relative;">
-                                <!-- SVG Chart will be injected here -->
-                            </div>
+
+                        <!-- Footer Meta -->
+                        <div style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 16px; color: rgba(255,255,255,0.25); font-size: 0.72rem; line-height: 1.6; border: 1px solid rgba(255,255,255,0.03);">
+                            <strong>Clinical Notice:</strong> These standards were developed from the WHO Multi-centre Growth Reference Study (MGRS). It is intended for use in identifying children with potential growth deficits or excesses relative to a global norm. 
+                            <br><em>The trajectory line represents serial measurements logged during this session.</em>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 11: Nutrition Tool (Elite Embedded IFCT 2017) -->
+        <div id="path-nutrition" class="path-section" style="--nutri-accent: #00A99D; --nutri-mesh: radial-gradient(at 0% 0%, rgba(0, 169, 157, 0.15) 0, transparent 50%), radial-gradient(at 100% 100%, rgba(0, 59, 92, 0.3) 0, transparent 50%); min-height: 100vh;">
+            <div class="tile" style="background: var(--nutri-mesh); border: 1px solid rgba(255,255,255,0.05); transition: background 0.8s ease; width: 100%; max-width: none;">
+                
+                <div class="section-header" style="text-align: left; border-left: 4px solid var(--nutri-accent); padding-left: 1.5rem; transition: border-color 0.4s; margin-bottom: 2rem;">
+                    <h2 class="section-title" style="font-size: 2rem; letter-spacing: -0.02em;">NutriSense <span style="color: var(--nutri-accent); transition: color 0.4s;">India</span></h2>
+                    <p class="section-subtitle" style="max-width: 600px;">Indian Food Composition Tables 2017 (IFCT) — Nutritional Value Calculator</p>
+                </div>
+
+                <div class="odc-setup-card" style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); padding: 0.5rem; border-radius: 20px; overflow: hidden; height: calc(100vh - 300px); min-height: 700px; position: relative;">
+                    <div style="position: absolute; top: 1rem; right: 1rem; z-index: 10; display: flex; gap: 0.5rem;">
+                        <a href="Nutrition/index.html" target="_blank" style="background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                            ↗️ Open Full Screen
+                        </a>
+                    </div>
+                    <iframe src="Nutrition/index.html" style="width: 100%; height: 100%; border: none; border-radius: 12px; background: #fff;" title="NutriSense India Embedded Tool"></iframe>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 16px; color: rgba(255,255,255,0.25); font-size: 0.72rem; line-height: 1.6; border: 1px solid rgba(255,255,255,0.03);">
+                    <strong>Data Source:</strong> IFCT 2017 by National Institute of Nutrition (NIN), ICMR. This tool calculates nutritional values for 542 Indian foods and evaluates adherence to DGI 2024 (Dietary Guidelines for Indians).
                 </div>
             </div>
         </div>
@@ -2969,6 +3100,14 @@
             // Update Sections
             document.querySelectorAll('.path-section').forEach(s => s.classList.remove('active'));
             document.getElementById(`path-${path}`).classList.add('active');
+
+            // Dynamic Container Width
+            const container = document.querySelector('.module-container');
+            if (path === 'growth-chart' || path === 'nutrition') {
+                container.style.setProperty('--container-width', '1600px');
+            } else {
+                container.style.setProperty('--container-width', '1100px');
+            }
 
             // Initialize Section Viz
             if (path === 'sampling') {
@@ -7121,12 +7260,85 @@
             return data[idx];
         }
 
+        let growthHistory = [];
+
+        function setGrowthSex(sex) {
+            document.getElementById('growth-sex').value = sex;
+            
+            // UI Toggle visual feedback
+            const maleBtn = document.getElementById('sex-btn-male');
+            const femaleBtn = document.getElementById('sex-btn-female');
+            
+            if (sex === 'male') {
+                maleBtn.style.background = 'var(--growth-accent)';
+                maleBtn.style.color = 'white';
+                femaleBtn.style.background = 'transparent';
+                femaleBtn.style.color = 'var(--text-dim)';
+            } else {
+                femaleBtn.style.background = 'var(--growth-accent)';
+                femaleBtn.style.color = 'white';
+                maleBtn.style.background = 'transparent';
+                maleBtn.style.color = 'var(--text-dim)';
+            }
+            
+            updateGrowthChart();
+        }
+
+        function recordGrowthPoint() {
+            const age = parseFloat(document.getElementById('growth-age').value);
+            const weight = parseFloat(document.getElementById('growth-weight').value);
+            const height = parseFloat(document.getElementById('growth-height').value);
+            const sex = document.getElementById('growth-sex').value;
+
+            if (isNaN(age) || (isNaN(weight) && isNaN(height))) return;
+
+            growthHistory.push({ age, weight, height, sex, ts: new Date().toLocaleTimeString() });
+            growthHistory.sort((a,b) => a.age - b.age);
+            
+            refreshGrowthHistoryUI();
+            updateGrowthChart();
+        }
+
+        function clearGrowthHistory() {
+            growthHistory = [];
+            refreshGrowthHistoryUI();
+            updateGrowthChart();
+        }
+
+        function refreshGrowthHistoryUI() {
+            const list = document.getElementById('growth-history-list');
+            if (growthHistory.length === 0) {
+                list.innerHTML = `<div style="color: var(--text-dim); text-align: center; font-style: italic; padding: 1rem;">No records logged.</div>`;
+                return;
+            }
+
+            list.innerHTML = growthHistory.map((pt, idx) => `
+                <div style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="color: var(--growth-accent); font-weight: 700;">${pt.age}m</span>: 
+                        <span style="color: #fff;">${pt.weight || '--'}kg</span> / 
+                        <span style="color: #fff;">${pt.height || '--'}cm</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function updateGrowthChart() {
             const sex = document.getElementById('growth-sex').value;
             const age = parseFloat(document.getElementById('growth-age').value) || 0;
             const weight = parseFloat(document.getElementById('growth-weight').value) || 0;
             const height = parseFloat(document.getElementById('growth-height').value) || 0;
 
+            // Dynamic Mesh Transitions
+            const accent = (sex === 'male') ? '#0ea5e9' : '#f472b6';
+            const mesh = (sex === 'male') 
+                ? `radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.3) 0, transparent 60%)`
+                : `radial-gradient(at 0% 0%, rgba(244, 114, 182, 0.15) 0, transparent 60%), radial-gradient(at 100% 100%, rgba(88, 28, 135, 0.3) 0, transparent 60%)`;
+            
+            const dashboard = document.getElementById('path-growth-chart');
+            dashboard.style.setProperty('--growth-accent', accent);
+            dashboard.style.setProperty('--growth-mesh', mesh);
+            
             const wfaParams = getGrowthReferenceParams('wfa', sex, age);
             const lhfaParams = getGrowthReferenceParams('lhfa', sex, age);
 
@@ -7134,93 +7346,191 @@
             if (wfaParams && weight > 0) zWeight = calculateGrowthZScore(weight, wfaParams);
             if (lhfaParams && height > 0) zHeight = calculateGrowthZScore(height, lhfaParams);
 
-            // Update Interpretation
-            const interpretEl = document.getElementById('growth-interpretation');
-            let statusHTML = `<div style="margin-bottom:0.8rem;">
-                <strong>Z-Scores:</strong><br>
-                Weight-for-Age: <span style="color:${Math.abs(zWeight) > 2 ? '#fb7185' : '#34d399'}">${zWeight.toFixed(2)}</span><br>
-                Height-for-Age: <span style="color:${Math.abs(zHeight) > 2 ? '#fb7185' : '#34d399'}">${zHeight.toFixed(2)}</span>
-            </div>`;
+            updateMetricCard('metric-wfa', 'val-z-wfa', 'badge-wfa', zWeight, weight > 0);
+            updateMetricCard('metric-hfa', 'val-z-hfa', 'badge-hfa', zHeight, height > 0);
 
-            let nutritionStatus = [];
-            if (zWeight < -3) nutritionStatus.push("Severely Underweight");
-            else if (zWeight < -2) nutritionStatus.push("Underweight");
-            
-            if (zHeight < -3) nutritionStatus.push("Severely Stunted");
-            else if (zHeight < -2) nutritionStatus.push("Stunted");
-
-            if (nutritionStatus.length === 0) nutritionStatus.push("Normal Growth");
-
-            statusHTML += `<strong>Nutritional Status:</strong><br>${nutritionStatus.join(' & ')}`;
-            interpretEl.innerHTML = statusHTML;
-
-            // Render Charts
-            renderGrowthChartSVG('chart-wfa-container', 'wfa', sex, age, weight);
-            renderGrowthChartSVG('chart-lhfa-container', 'lhfa', sex, age, height);
+            renderEliteChart('chart-wfa-container', 'wfa', sex, age, weight);
+            renderEliteChart('chart-lhfa-container', 'lhfa', sex, age, height);
         }
 
-        function renderGrowthChartSVG(containerId, type, sex, userAge, userVal) {
-            const container = document.getElementById(containerId);
+        function updateMetricCard(cardId, valId, badgeId, z, active) {
+            const valEl = document.getElementById(valId);
+            const badgeEl = document.getElementById(badgeId);
+            const cardEl = document.getElementById(cardId);
+            
+            if (!active) {
+                valEl.textContent = '--';
+                valEl.style.color = 'var(--text-dim)';
+                badgeEl.textContent = 'Enter Data';
+                badgeEl.style.color = 'var(--text-dim)';
+                return;
+            }
+
+            valEl.textContent = z.toFixed(2);
+            let color = '#10b981'; 
+            let status = 'Normal';
+
+            if (Math.abs(z) > 3) { color = '#ef4444'; status = z < 0 ? 'Severe Deficit' : 'Severe Excess'; }
+            else if (Math.abs(z) > 2) { color = '#f59e0b'; status = z < 0 ? 'Moderate Deficit' : 'Moderate Excess'; }
+
+            valEl.style.color = color;
+            badgeEl.textContent = status;
+            badgeEl.style.color = color;
+            cardEl.style.borderColor = `${color}44`;
+        }
+
+        function renderEliteChart(containerId, type, sex, userAge, userVal, mode = 'dark') {
+            const container = (typeof containerId === 'string') ? document.getElementById(containerId) : containerId;
             const key = `${type}_${sex === 'male' ? 'boys' : 'girls'}`;
             const refData = growthRefData[key];
             if (!refData) return;
 
-            const w = container.offsetWidth;
-            const h = container.offsetHeight;
-            const pad = { t: 20, r: 20, b: 30, l: 40 };
+            // CLINICAL DEPTH REFACTOR: Expanded width (1400) and padding to prevent clipping
+            const w = 1400; 
+            const h = 900;
+            const pad = { t: 80, r: 240, b: 80, l: 120 }; 
             
-            // Scales
             const minX = 0, maxX = 60;
             const minY = (type === 'wfa') ? 1 : 40;
-            const maxY = (type === 'wfa') ? 25 : 125;
+            const maxY = (type === 'wfa') ? 25 : 130;
 
             const scaleX = x => pad.l + (x / maxX) * (w - pad.l - pad.r);
             const scaleY = y => (h - pad.b) - ((y - minY) / (maxY - minY)) * (h - pad.t - pad.b);
 
-            // Z-score curves helper
             const getValForZ = (z, params) => {
                 const [m, L, M, S] = params;
-                // X = M * (1 + L*S*Z)^(1/L)
                 if (Math.abs(L) < 0.0001) return M * Math.exp(S * z);
                 const val = M * Math.pow(1 + L * S * z, 1 / L);
                 return isNaN(val) ? M : val;
             };
 
-            let svg = `<svg width="${w}" height="${h}" style="background:transparent; font-family:var(--font-main);">`;
+            const accent = (sex === 'male') ? '#0ea5e9' : '#f472b6';
+            const isDark = (mode === 'dark');
+            const colors = {
+                bg: isDark ? 'transparent' : 'white',
+                grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                axis: isDark ? 'rgba(255,255,255,0.4)' : '#1e293b',
+                label: isDark ? 'rgba(255,255,255,0.6)' : '#1e293b',
+                curve: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+                median: '#10b981'
+            };
+
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="background:${colors.bg}; overflow:visible;">
+                <defs>
+                    <filter id="glow-${containerId}" x="-100%" y="-100%" width="300%" height="300%">
+                        <feGaussianBlur stdDeviation="8" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>`;
             
-            // Grid lines
+            if (!isDark) svg += `<rect width="100%" height="100%" fill="white" />`;
+
+            // GRID & AXES
             for (let i = 0; i <= 5; i++) {
-                const x = i * 12;
-                svg += `<line x1="${scaleX(x)}" y1="${pad.t}" x2="${scaleX(x)}" y2="${h - pad.b}" stroke="rgba(255,255,255,0.05)" />`;
-                svg += `<text x="${scaleX(x)}" y="${h - 5}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">${i}y</text>`;
+                const x = scaleX(i * 12);
+                svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${h-pad.b}" stroke="${colors.grid}" />`;
+                svg += `<text x="${x}" y="${h - pad.b/2.5}" fill="${colors.label}" font-size="16" text-anchor="middle" font-weight="900">${i}yr (${i*12}m)</text>`;
+            }
+            svg += `<line x1="${pad.l}" y1="${h-pad.b}" x2="${w-pad.r}" y2="${h-pad.b}" stroke="${colors.axis}" stroke-width="3" />`;
+
+            const yStep = (type === 'wfa') ? 2 : 10;
+            for (let yVal = minY; yVal <= maxY; yVal += yStep) {
+                const y = scaleY(yVal);
+                svg += `<line x1="${pad.l}" y1="${y}" x2="${w-pad.r}" y2="${y}" stroke="${colors.grid}" />`;
+                svg += `<text x="${pad.l - 25}" y="${y}" fill="${colors.label}" font-size="14" text-anchor="end" alignment-baseline="middle" font-weight="700">${yVal}${type==='wfa'?'kg':'cm'}</text>`;
             }
 
-            // SD Curves (-3, -2, 0, 2, 3)
-            const zLevels = [-3, -2, 0, 2, 3];
-            const colors = ['#f43f5e', '#fb923c', '#10b981', '#fb923c', '#f43f5e'];
-            
-            zLevels.forEach((z, zi) => {
-                let path = `M ${scaleX(0)} ${scaleY(getValForZ(z, refData[0]))}`;
-                for (let m = 1; m <= 60; m++) {
-                    path += ` L ${scaleX(m)} ${scaleY(getValForZ(z, refData[m]))}`;
+            // Fill Zones (Depth Effect)
+            const drawZone = (z1, z2, color, opacity) => {
+                let p1 = "", p2 = "";
+                for(let m=0; m<=60; m++) {
+                    p1 += `${scaleX(m)},${scaleY(getValForZ(z1, refData[m]))} `;
+                    p2 = `${scaleX(m)},${scaleY(getValForZ(z2, refData[m]))} ` + p2;
                 }
-                svg += `<path d="${path}" fill="none" stroke="${colors[zi]}" stroke-width="1.5" stroke-dasharray="${z === 0 ? '' : '3,3'}" opacity="0.6" />`;
-                if (z !== 0) {
-                    svg += `<text x="${scaleX(60) + 2}" y="${scaleY(getValForZ(z, refData[60]))}" fill="${colors[zi]}" font-size="8">${z > 0 ? '+' : ''}${z} SD</text>`;
+                svg += `<polygon points="${p1} ${p2}" fill="${color}" opacity="${opacity}" />`;
+            };
+
+            const zOpac = isDark ? 0.08 : 0.12;
+            drawZone(-2, 2, '#10b981', zOpac);
+            drawZone(-3, -2, '#f59e0b', zOpac/2);
+            drawZone(2, 3, '#f59e0b', zOpac/2);
+
+            // WHO Curves
+            [-3, -2, -1, 0, 1, 2, 3].forEach(z => {
+                let d = `M ${scaleX(0)} ${scaleY(getValForZ(z, refData[0]))}`;
+                for (let m = 1; m <= 60; m++) d += ` L ${scaleX(m)} ${scaleY(getValForZ(z, refData[m]))}`;
+                
+                let color = colors.curve;
+                let width = 1.5;
+                if (z === 0) { color = colors.median; width = 5; }
+                else if (Math.abs(z) === 2) { color = isDark ? '#f59e0b' : '#d97706'; width = 2; }
+                else if (Math.abs(z) === 3) { color = isDark ? '#ef4444' : '#dc2626'; width = 2; }
+
+                svg += `<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" />`;
+                if (Math.abs(z) >= 2) {
+                    svg += `<text x="${scaleX(60)+25}" y="${scaleY(getValForZ(z, refData[60]))}" fill="${color}" font-size="15" font-weight="900" alignment-baseline="middle">${z>0?'+':''}${z}SD</text>`;
                 }
             });
 
-            // User Point
-            if (userAge >= 0 && userAge <= 60 && userVal > 0) {
-                const ux = scaleX(userAge);
-                const uy = scaleY(userVal);
-                svg += `<circle cx="${ux}" cy="${uy}" r="5" fill="#38bdf8" stroke="white" stroke-width="2">
-                    <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite" />
+            // Longitudinal Trajectory
+            const histPts = growthHistory.filter(pt => (type === 'wfa' ? pt.weight : pt.height) && pt.sex === sex);
+            if (histPts.length > 1) {
+                let trajPath = `M ${scaleX(histPts[0].age)} ${scaleY(type==='wfa' ? histPts[0].weight : histPts[0].height)}`;
+                for (let i = 1; i < histPts.length; i++) {
+                    trajPath += ` L ${scaleX(histPts[i].age)} ${scaleY(type==='wfa' ? histPts[i].weight : histPts[i].height)}`;
+                }
+                svg += `<path d="${trajPath}" fill="none" stroke="${accent}" stroke-width="7" stroke-linecap="round" filter="${isDark?`url(#glow-${containerId})`:''}" />`;
+            }
+
+            histPts.forEach(pt => {
+                const px = scaleX(pt.age), py = scaleY(type==='wfa' ? pt.weight : pt.height);
+                svg += `<circle cx="${px}" cy="${py}" r="8" fill="${accent}" stroke="white" stroke-width="3" />`;
+            });
+
+            // Live Marker
+            if (isDark && userAge >= 0 && userAge <= 60 && userVal > 0) {
+                const ux = scaleX(userAge), uy = scaleY(userVal);
+                svg += `<circle cx="${ux}" cy="${uy}" r="14" fill="${accent}" opacity="0.6" filter="url(#glow-${containerId})">
+                    <animate attributeName="r" values="14;32;14" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite" />
                 </circle>`;
+                svg += `<circle cx="${ux}" cy="${uy}" r="10" fill="${accent}" stroke="white" stroke-width="4" />`;
             }
 
             svg += `</svg>`;
-            container.innerHTML = svg;
+            if (typeof containerId === 'string') container.innerHTML = svg;
+            return svg;
+        }
+
+        async function exportGrowthChart(containerId, indicator) {
+            const sex = document.getElementById('growth-sex').value;
+            const age = parseFloat(document.getElementById('growth-age').value) || 0;
+            const weight = parseFloat(document.getElementById('growth-weight').value) || 0;
+            const height = parseFloat(document.getElementById('growth-height').value) || 0;
+            const val = (indicator === 'WFA' ? weight : height);
+            const type = (indicator === 'WFA' ? 'wfa' : 'lhfa');
+
+            const tempDiv = document.createElement('div');
+            const svgData = renderEliteChart(tempDiv, type, sex, age, val, 'light');
+            const name = `EpiSense_Growth_${indicator}_${new Date().getTime()}.png`;
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const dpr = 2;
+            // Match internal SVG aspect ratio (1400x900)
+            canvas.width = 1400 * dpr; 
+            canvas.height = 900 * dpr;
+            ctx.scale(dpr, dpr);
+            const img = new Image();
+            img.onload = () => {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 1400, 900);
+                ctx.drawImage(img, 0, 0, 1400, 900);
+                const link = document.createElement('a');
+                link.download = name;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
         }
 
         window.onload = () => {
