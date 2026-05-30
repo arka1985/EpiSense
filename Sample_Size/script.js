@@ -474,6 +474,75 @@ const MODES = {
             };
         }
     },
+    'two-proportions': {
+        inputs: [
+            { id: 'p1', label: 'Prop. Group 1 (%)', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 50, desc: 'Anticipated proportion in Group 1 (e.g., Control/Baseline).' },
+            { id: 'p2', label: 'Prop. Group 2 (%)', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 40, desc: 'Anticipated proportion in Group 2 (e.g., Treatment/Comparison).' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: 'Probability of detecting a true difference.' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Confidence level (1 - Alpha).' },
+            { id: 'ratio', label: 'Group Ratio (N2/N1) (r)', type: 'number', val: 1, desc: 'Ratio of Group 2 to Group 1 sample size.' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: 'Increases sample size to account for 10% dropout.' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.9em; line-height:1.4">
+                <strong>Kelsey Formula (Main):</strong><br>
+                N<sub>1</sub> = (Z<sub>α/2</sub>+Z<sub>β</sub>)<sup>2</sup> P(1-P)(r+1) / [r(P<sub>1</sub>-P<sub>2</sub>)<sup>2</sup>]<br>
+                <div style="font-size:0.8em; margin-top:5px; opacity:0.8">
+                    (See Interpretation regarding Fleiss & Fleiss CC methods)
+                </div>
+            </div>
+        `,
+        formulaSteps: `
+            <p><strong>P<sub>1</sub></strong> = Proportion in Group 1</p>
+            <p><strong>P<sub>2</sub></strong> = Proportion in Group 2</p>
+            <p><strong>r</strong> = Ratio (Group 2 / Group 1)</p>
+            <p>Calculates Sample Size using:</p>
+            <ul>
+                <li><strong>Kelsey</strong>: Standard approximation</li>
+                <li><strong>Fleiss</strong>: With Levin's modification</li>
+                <li><strong>Fleiss CC</strong>: With Continuity Correction</li>
+            </ul>
+        `,
+        interpretation: `
+            <p>Calculates sample size for comparing two independent proportions. Useful for comparing success/failure rates, prevalence between two groups, or risk rates.</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Formulas Used:</strong><br>
+                <strong>Kelsey:</strong> N<sub>1</sub> = (Z<sub>α/2</sub>+Z<sub>β</sub>)<sup>2</sup> P(1-P)(r+1) / [r(P<sub>1</sub>-P<sub>2</sub>)<sup>2</sup>]<br>
+                <strong>Fleiss:</strong> N<sub>1</sub> = [Z<sub>α/2</sub>&radic;((r+1)P(1-P)) + Z<sub>β</sub>&radic;(rP<sub>1</sub>(1-P<sub>1</sub>)+P<sub>2</sub>(1-P<sub>2</sub>))]<sup>2</sup> / [r(P<sub>1</sub>-P<sub>2</sub>)<sup>2</sup>]<br>
+                *N<sub>Fleiss,CC</sub> applies continuity correction to N<sub>Fleiss</sub>
+            </div>
+        `,
+        calc: (state) => {
+            const P1 = parseFloat(state.p1) / 100;
+            const P2 = parseFloat(state.p2) / 100;
+            const r = parseFloat(state.ratio) || 1;
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const alpha = (100 - conf) / 100;
+            const beta = (100 - power) / 100;
+
+            if (Math.abs(P1 - P2) < 0.0001) {
+                return { n: 'Error', display: 'P1 and P2 cannot be equal.', table: null };
+            }
+
+            const results = calculateAdvanced(P1, P2, r, alpha, beta, state.dropout);
+
+            let displayStr = `P1=${(P1 * 100).toFixed(2)}% P2=${(P2 * 100).toFixed(2)}% Power=${power}% Conf=${conf}%`;
+            if (state.dropout) displayStr += " (Incl. 10% Dropout)";
+
+            return {
+                n: results.fleiss.total,
+                display: displayStr,
+                table: results,
+                visualData: {
+                    n1: results.fleiss.n1,
+                    n2: results.fleiss.n2,
+                    label1: 'Group 1',
+                    label2: 'Group 2'
+                }
+            };
+        }
+    },
     'itt': {
         inputs: [
             { id: 'p1', label: 'Prop. Group 1 (Control) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 50, desc: 'Anticipated outcome in Control Group.' },
@@ -1177,6 +1246,10 @@ function calculate() {
                     if (input.id === 'ratio') label = 'r (Unexposed/Exposed Ratio)';
                 } else if (currentMode === 'rct') {
                     if (input.id === 'p1') label = 'P<sub>1</sub> (Prop. Group 1)'; // Actually typically Control in standard formula
+                    if (input.id === 'p2') label = 'P<sub>2</sub> (Prop. Group 2)';
+                    if (input.id === 'ratio') label = 'r (Group Ratio)';
+                } else if (currentMode === 'two-proportions') {
+                    if (input.id === 'p1') label = 'P<sub>1</sub> (Prop. Group 1)';
                     if (input.id === 'p2') label = 'P<sub>2</sub> (Prop. Group 2)';
                     if (input.id === 'ratio') label = 'r (Group Ratio)';
                 } else if (currentMode === 'two-means') {
