@@ -1238,6 +1238,7 @@ function setupMode(mode) {
                 el.value = input.val;
                 if (input.min) el.min = input.min;
                 if (input.max) el.max = input.max;
+                if (input.step) el.step = input.step;
                 if (input.type === 'range') el.className = 'slider';
 
                 el.addEventListener('input', (e) => {
