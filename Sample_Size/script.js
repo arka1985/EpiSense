@@ -543,6 +543,57 @@ const MODES = {
             };
         }
     },
+    'correlation': {
+        inputs: [
+            { id: 'r_expected', label: 'Expected Correlation (r)', type: 'range', min: 0.01, max: 0.99, step: 0.01, val: 0.3, desc: 'Anticipated correlation coefficient (Cohen\\'s r).' },
+            { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: 'Probability of detecting a true correlation.' },
+            { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Confidence level (1 - Alpha).' },
+            { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: 'Increases sample size to account for 10% dropout.' }
+        ],
+        formulaStr: `
+            <div style="font-size:0.9em; line-height:1.4">
+                <strong>Cohen's Formula (Fisher's z):</strong><br>
+                C = 0.5 * ln((1+r)/(1-r))<br>
+                N = [(Z<sub>&alpha;/2</sub> + Z<sub>&beta;</sub>) / C]<sup>2</sup> + 3
+            </div>
+        `,
+        formulaSteps: `
+            <p><strong>r</strong> = Expected Correlation Coefficient</p>
+            <p><strong>C</strong> = Fisher's z transformation of r</p>
+            <p><strong>Z<sub>&alpha;/2</sub></strong> = Z-score for alpha error</p>
+            <p><strong>Z<sub>&beta;</sub></strong> = Z-score for power</p>
+        `,
+        interpretation: `
+            <p>Calculates sample size for a correlational study to detect an expected correlation coefficient <i>r</i> based on Cohen's approach using Fisher's z transformation.</p>
+        `,
+        calc: (state) => {
+            const r_val = parseFloat(state.r_expected);
+            const power = parseInt(state.power);
+            const conf = parseInt(state.confidence) || 95;
+            const za = getZAlpha(conf);
+            const zb = getZBeta(power);
+
+            if (r_val === 0) {
+                return { n: 'Error', display: 'Correlation cannot be 0.', visualData: null };
+            }
+
+            const C = 0.5 * Math.log((1 + r_val) / (1 - r_val));
+            let n = Math.pow((za + zb) / C, 2) + 3;
+
+            n = Math.ceil(n);
+
+            if (state.dropout) n = Math.ceil(n / 0.9);
+
+            let displayStr = \`r=\${r_val} Power=\${power}% Conf=\${conf}%\`;
+            if (state.dropout) displayStr += " (Incl. 10% Dropout)";
+
+            return {
+                n: n,
+                display: displayStr,
+                visualData: null
+            };
+        }
+    },
     'itt': {
         inputs: [
             { id: 'p1', label: 'Prop. Group 1 (Control) %', type: 'range', min: 0.1, max: 99.9, step: 0.1, val: 50, desc: 'Anticipated outcome in Control Group.' },
@@ -1252,6 +1303,8 @@ function calculate() {
                     if (input.id === 'p1') label = 'P<sub>1</sub> (Prop. Group 1)';
                     if (input.id === 'p2') label = 'P<sub>2</sub> (Prop. Group 2)';
                     if (input.id === 'ratio') label = 'r (Group Ratio)';
+                } else if (currentMode === 'correlation') {
+                    if (input.id === 'r_expected') label = 'r (Expected Correlation)';
                 } else if (currentMode === 'two-means') {
                     if (input.id === 'mean1') label = '&mu;<sub>1</sub> (Mean Group 1)';
                     if (input.id === 'mean2') label = '&mu;<sub>2</sub> (Mean Group 2)';
