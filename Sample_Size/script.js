@@ -545,7 +545,7 @@ const MODES = {
     },
     'correlation': {
         inputs: [
-            { id: 'r_expected', label: 'Expected Correlation (r)', type: 'range', min: 0.01, max: 0.99, step: 0.01, val: 0.3, desc: 'Anticipated correlation coefficient (Cohen\\'s r).' },
+            { id: 'r_expected', label: 'Expected Correlation (r)', type: 'range', min: 0.01, max: 0.99, step: 0.01, val: 0.3, desc: "Anticipated correlation coefficient (Cohen's r)." },
             { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: 'Probability of detecting a true correlation.' },
             { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Confidence level (1 - Alpha).' },
             { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: 'Increases sample size to account for 10% dropout.' }
@@ -584,7 +584,7 @@ const MODES = {
 
             if (state.dropout) n = Math.ceil(n / 0.9);
 
-            let displayStr = \`r=\${r_val} Power=\${power}% Conf=\${conf}%\`;
+            let displayStr = `r=${r_val} Power=${power}% Conf=${conf}%`;
             if (state.dropout) displayStr += " (Incl. 10% Dropout)";
 
             return {
