@@ -127,6 +127,9 @@ const MODES = {
         `,
         interpretation: `
             <p>This formula determines the minimum number of participants needed to estimate a population prevalence with a specified level of precision and confidence (usually 95%).</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Reference:</strong> Daniel, W. W. (1999). Biostatistics: A Foundation for Analysis in the Health Sciences. 7th edition. New York: John Wiley & Sons.
+            </div>
         `,
         calc: (state) => {
             const P = state.prevalence / 100;
@@ -545,7 +548,7 @@ const MODES = {
     },
     'correlation': {
         inputs: [
-            { id: 'r_expected', label: 'Expected Correlation (r)', type: 'range', min: 0.01, max: 0.99, step: 0.01, val: 0.3, desc: "Anticipated correlation coefficient (Cohen's r)." },
+            { id: 'r_expected', label: 'Expected Correlation (r)', type: 'range', min: 0.1, max: 0.99, step: 0.01, val: 0.3, desc: "Anticipated correlation coefficient (Cohen's r)." },
             { id: 'power', label: 'Power (%)', type: 'range', min: 80, max: 99, val: 80, desc: 'Probability of detecting a true correlation.' },
             { id: 'confidence', label: 'Confidence Level (%)', type: 'range', min: 90, max: 99, val: 95, desc: 'Confidence level (1 - Alpha).' },
             { id: 'dropout', label: 'Add 10% for Non-response?', type: 'checkbox', val: false, desc: 'Increases sample size to account for 10% dropout.' }
@@ -565,6 +568,9 @@ const MODES = {
         `,
         interpretation: `
             <p>Calculates sample size for a correlational study to detect an expected correlation coefficient <i>r</i> based on Cohen's approach using Fisher's z transformation.</p>
+            <div style="font-size:0.85em; margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:5px;">
+                <strong>Reference:</strong> Cohen, J. (1988). Statistical Power Analysis for the Behavioral Sciences (2nd ed.). Lawrence Erlbaum Associates.
+            </div>
         `,
         calc: (state) => {
             const r_val = parseFloat(state.r_expected);
@@ -590,7 +596,7 @@ const MODES = {
             return {
                 n: n,
                 display: displayStr,
-                visualData: null
+                visualData: { n1: n, label1: 'Study Sample' }
             };
         }
     },
@@ -1539,11 +1545,12 @@ function drawPopulationGrid(ctx, w, h, data) {
     const contentW = w - padding * 2;
 
     const n1 = data.n1 || 0;
+    const isSingle = data.n2 === undefined;
     const n2 = data.n2 || 0;
 
     // Group Layout
     const gap = 40;
-    const groupW = (contentW - gap) / 2;
+    const groupW = isSingle ? Math.min(contentW * 0.6, 400) : (contentW - gap) / 2;
     // Increase bottom padding to prevent cutoff (was h - 60)
     const groupH = h - 80;
 
@@ -1622,11 +1629,15 @@ function drawPopulationGrid(ctx, w, h, data) {
         }
     }
 
-    const x1 = w / 2 - gap / 2 - groupW;
-    const x2 = w / 2 + gap / 2;
-
-    drawGroup(x1, sN1, '#28a745', data.label1, n1); // Green for Control/Unexposed
-    drawGroup(x2, sN2, '#e83e8c', data.label2, n2);
+    if (isSingle) {
+        const xCenter = w / 2 - groupW / 2;
+        drawGroup(xCenter, sN1, '#60a5fa', data.label1, n1); // Blue for Single Sample
+    } else {
+        const x1 = w / 2 - gap / 2 - groupW;
+        const x2 = w / 2 + gap / 2;
+        drawGroup(x1, sN1, '#28a745', data.label1, n1); // Green for Control/Unexposed
+        drawGroup(x2, sN2, '#e83e8c', data.label2, n2);
+    }
 
     // Legend -> HTML
     const legendEl = document.getElementById('visual-legend');
